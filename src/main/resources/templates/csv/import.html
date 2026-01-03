@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>CSV取込</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">CSV取込</h2>
+        
+        <div class="row">
+            <!-- 銀行取引CSV取込 -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">銀行取引CSV取込</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/csv/import/bank}" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="bankFile" class="form-label">CSVファイル</label>
+                                <input type="file" class="form-control" id="bankFile" name="file" accept=".csv" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bankType" class="form-label">金融機関</label>
+                                <select class="form-select" id="bankType" name="bankType" required>
+                                    <option value="">選択してください</option>
+                                    <option th:each="type : ${bankTypes}" 
+                                            th:value="${type}" 
+                                            th:text="${type}">金融機関</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="bankHasHeader" name="hasHeader" value="true">
+                                <label class="form-check-label" for="bankHasHeader">
+                                    ヘッダー行あり
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">取込</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- カード取引CSV取込 -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">カード取引CSV取込</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/csv/import/card}" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="cardFile" class="form-label">CSVファイル</label>
+                                <input type="file" class="form-control" id="cardFile" name="file" accept=".csv" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="cardBankType" class="form-label">カード会社</label>
+                                <select class="form-select" id="cardBankType" name="bankType" required>
+                                    <option value="">選択してください</option>
+                                    <option th:each="type : ${bankTypes}" 
+                                            th:value="${type}" 
+                                            th:text="${type}">カード会社</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="cardHasHeader" name="hasHeader" value="true">
+                                <label class="form-check-label" for="cardHasHeader">
+                                    ヘッダー行あり
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">取込</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

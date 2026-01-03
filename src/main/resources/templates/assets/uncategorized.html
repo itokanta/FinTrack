@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>カテゴリ未設定の資産</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">カテゴリ未設定の資産</h2>
+        
+        <form th:action="@{/assets/bulk-categorize}" method="post">
+            <div class="mb-3">
+                <label for="categoryId" class="form-label">カテゴリを選択</label>
+                <select class="form-select" id="categoryId" name="categoryId" required>
+                    <option value="">選択してください</option>
+                    <option th:each="category : ${categories}" 
+                            th:value="${category.id}" 
+                            th:text="${category.categoryName}">カテゴリ名</option>
+                </select>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onclick="toggleAll(this)">
+                            </th>
+                            <th>日付</th>
+                            <th>摘要</th>
+                            <th class="text-end">金額</th>
+                            <th>取引元</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="asset : ${assets}">
+                            <td>
+                                <input type="checkbox" name="assetIds" th:value="${asset.id}">
+                            </td>
+                            <td th:text="${asset.bankTransaction != null ? asset.bankTransaction.transactionDate : asset.cardTransaction.transactionDate}">2024-01-01</td>
+                            <td th:text="${asset.bankTransaction != null ? asset.bankTransaction.description : asset.cardTransaction.description}">摘要</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(asset.amount, 0, 'COMMA')} + '円'">0円</td>
+                            <td th:text="${asset.bankTransaction != null ? '銀行' : 'カード'}">銀行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">選択した項目にカテゴリを設定</button>
+            <a th:href="@{/assets}" class="btn btn-secondary">戻る</a>
+        </form>
+    </div>
+    
+    <script>
+        function toggleAll(source) {
+            const checkboxes = document.querySelectorAll('input[name="assetIds"]');
+            checkboxes.forEach(checkbox => checkbox.checked = source.checked);
+        }
+    </script>
+</body>
+</html>
+

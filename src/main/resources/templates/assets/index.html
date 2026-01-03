@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>資産</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">資産</h2>
+        
+        <!-- 総資産 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">総資産</h5>
+                <h2 class="text-primary" th:text="${#numbers.formatInteger(totalBalance, 0, 'COMMA')} + '円'">0円</h2>
+            </div>
+        </div>
+        
+        <!-- カテゴリ別残高 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">カテゴリ別残高</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th class="text-end">残高</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="entry : ${balances}">
+                            <td th:text="${entry.key.categoryName}">カテゴリ名</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- カテゴリ未設定 -->
+        <div class="card" th:if="${uncategorizedBalance != 0}">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">カテゴリ未設定</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    残高: <strong th:text="${#numbers.formatInteger(uncategorizedBalance, 0, 'COMMA')} + '円'">0円</strong>
+                </p>
+                <p class="text-muted">
+                    収入取引で分割パターンが未設定の場合、または支出取引で資産カテゴリが未設定の場合、この残高に計上されます。
+                    取引詳細画面からカテゴリを設定してください。
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
