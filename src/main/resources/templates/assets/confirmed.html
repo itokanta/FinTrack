@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>確定済み資産</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">確定済み資産</h2>
+            <a th:href="@{/assets}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 資産に戻る
+            </a>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            当月のクレジットカード取引を除外した資産状況です。実際に口座から引き落とされる前の状態を確認できます。
+        </div>
+        
+        <!-- 確定済み総資産 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">確定済み総資産</h5>
+                <h2 class="text-success" th:text="${#numbers.formatInteger(confirmedTotalBalance, 0, 'COMMA')} + '円'">0円</h2>
+                <p class="text-muted mb-0">
+                    通常の総資産: <span th:text="${#numbers.formatInteger(totalBalance, 0, 'COMMA')} + '円'">0円</span>
+                    <span class="ms-2">
+                        (差額: <span th:text="${#numbers.formatInteger(totalBalance - confirmedTotalBalance, 0, 'COMMA')} + '円'">0円</span>)
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- カテゴリ別確定済み残高 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">カテゴリ別確定済み残高</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th class="text-end">確定済み残高</th>
+                            <th class="text-end">通常残高</th>
+                            <th class="text-end">差額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="entry : ${confirmedBalances}">
+                            <td th:text="${entry.key.categoryName}">カテゴリ名</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end text-muted" th:text="${#numbers.formatInteger(balances.get(entry.key) ?: 0, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger((balances.get(entry.key) ?: 0) - entry.value, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                        <!-- 未分類の残高がある場合 -->
+                        <tr th:if="${confirmedUncategorizedBalance != 0}" class="table-warning">
+                            <td>未分類</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(confirmedUncategorizedBalance, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end text-muted" th:text="${#numbers.formatInteger(uncategorizedBalance, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(uncategorizedBalance - confirmedUncategorizedBalance, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                        <!-- データがない場合 -->
+                        <tr th:if="${#lists.isEmpty(confirmedBalances) && confirmedUncategorizedBalance == 0}">
+                            <td colspan="4" class="text-muted text-center">データがありません</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 除外された当月のクレジットカード取引 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">除外された当月のクレジットカード取引</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    当月のクレジットカード取引合計: 
+                    <strong th:text="${#numbers.formatInteger(currentMonthCreditTotal, 0, 'COMMA')} + '円'">0円</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

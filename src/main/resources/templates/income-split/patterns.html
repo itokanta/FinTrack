@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>収入分割パターン管理</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">収入分割パターン管理</h2>
+        
+        <div class="mb-3">
+            <a th:href="@{/income-split/patterns/new}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 新規パターン作成
+            </a>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">登録済みパターン</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>パターン名</th>
+                                <th>分割内容</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pattern : ${patterns}">
+                                <td>
+                                    <strong th:text="${pattern.patternName}">パターン名</strong>
+                                    <br>
+                                    <small class="text-muted">ID: <span th:text="${pattern.patternId}">1</span></small>
+                                </td>
+                                <td>
+                                    <div th:each="detail : ${pattern.details}" class="mb-1">
+                                        <span class="badge bg-info" th:text="${detail.categoryName}">カテゴリ</span>
+                                        <span th:text="${detail.splitRatio} + '%'">50%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form th:action="@{/income-split/patterns/{id}/delete(id=${pattern.patternId})}" 
+                                          method="post" 
+                                          class="d-inline"
+                                          onsubmit="return confirm('このパターンを削除してもよろしいですか？');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> 削除
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(patterns)}">
+                                <td colspan="3" class="text-center text-muted">
+                                    登録済みのパターンはありません
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

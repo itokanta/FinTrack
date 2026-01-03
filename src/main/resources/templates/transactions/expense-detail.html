@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>支出詳細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">支出詳細</h2>
+        
+        <!-- メッセージ表示 -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}">メッセージ</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}">エラー</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- 取引情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">取引情報</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">取引日</dt>
+                    <dd class="col-sm-9" th:text="${transaction.transactionDate}">2024-01-01</dd>
+                    
+                    <dt class="col-sm-3">摘要</dt>
+                    <dd class="col-sm-9" th:text="${transaction.description}">摘要</dd>
+                    
+                    <dt class="col-sm-3">金額</dt>
+                    <dd class="col-sm-9" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</dd>
+                    
+                    <dt class="col-sm-3">取引区分</dt>
+                    <dd class="col-sm-9" th:text="${type == 'bank' ? '銀行' : 'カード'}">銀行</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- カテゴリ変更フォーム -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">カテゴリ設定</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/transactions/expenses/{id}/update-category(id=${transaction.id})}" method="post">
+                    <input type="hidden" name="type" th:value="${type}">
+                    
+                    <div class="mb-3">
+                        <label for="assetCategoryId" class="form-label">資産カテゴリ（どの財布から支払ったか）</label>
+                        <select class="form-select" id="assetCategoryId" name="assetCategoryId">
+                            <option value="">未設定</option>
+                            <option th:each="category : ${assetCategories}" 
+                                    th:value="${category.id}" 
+                                    th:text="${category.categoryName}"
+                                    th:selected="${transaction.assetCategoryId != null && transaction.assetCategoryId == category.id}">
+                                カテゴリ名
+                            </option>
+                        </select>
+                        <div class="form-text">この支出がどの資産カテゴリから支払われたかを設定します。</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="expenseCategoryId" class="form-label">支出カテゴリ（何に使ったか）</label>
+                        <select class="form-select" id="expenseCategoryId" name="expenseCategoryId">
+                            <option value="">未設定</option>
+                            <option th:each="category : ${expenseCategories}" 
+                                    th:value="${category.id}" 
+                                    th:text="${category.categoryName}"
+                                    th:selected="${transaction.expenseCategoryId != null && transaction.expenseCategoryId == category.id}">
+                                カテゴリ名
+                            </option>
+                        </select>
+                        <div class="form-text">この支出の用途（食費、交通費など）を設定します。</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">更新</button>
+                    <a th:href="@{/transactions/expenses}" class="btn btn-secondary">戻る</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
