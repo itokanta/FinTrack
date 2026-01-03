@@ -63,7 +63,18 @@ public class TransactionController {
         List<TransactionService.TransactionWithAsset> expenses = 
                 transactionService.getExpensesByMonth(userId, yearMonth, page, 20);
         
+        // カテゴリ情報を取得してMapに変換
+        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        Map<Long, String> assetCategoryMap = assetCategories.stream()
+                .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
+        
+        List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserId(userId);
+        Map<Long, String> expenseCategoryMap = expenseCategories.stream()
+                .collect(Collectors.toMap(ExpenseCategory::getId, ExpenseCategory::getCategoryName));
+        
         model.addAttribute("expenses", expenses);
+        model.addAttribute("assetCategoryMap", assetCategoryMap);
+        model.addAttribute("expenseCategoryMap", expenseCategoryMap);
         model.addAttribute("currentMonth", yearMonth);
         model.addAttribute("prevMonth", yearMonth.minusMonths(1));
         model.addAttribute("nextMonth", yearMonth.plusMonths(1));
@@ -157,14 +168,14 @@ public class TransactionController {
         List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
         model.addAttribute("assetCategories", assetCategories);
         
-        // 分割パターン一覧を取得
-        List<Long> patternIds = incomeSplitService.getSplitPatternIds(userId);
-        Map<Long, List<IncomeSplitPattern>> patterns = patternIds.stream()
-                .collect(Collectors.toMap(
-                    patternId -> patternId,
-                    patternId -> incomeSplitService.getSplitPatternById(patternId)
-                ));
-        model.addAttribute("splitPatterns", patterns);
+        // 資産カテゴリのマップを作成（ID -> 名前）
+        Map<Long, String> assetCategoryMap = assetCategories.stream()
+                .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
+        model.addAttribute("assetCategoryMap", assetCategoryMap);
+        
+        // 分割パターンサマリーを取得
+        List<IncomeSplitService.PatternSummary> patternSummaries = incomeSplitService.getPatternSummaries(userId);
+        model.addAttribute("patternSummaries", patternSummaries);
         
         // 分割済みの情報を取得
         List<SplitIncome> splitIncomes = incomeSplitService.getSplitIncomesByTransaction(

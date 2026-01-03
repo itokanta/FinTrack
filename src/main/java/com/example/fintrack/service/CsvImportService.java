@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -66,8 +68,11 @@ public class CsvImportService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
         
-        // CSVを読み込み
-        List<CSVRecord> records = csvReader.read(file.getInputStream(), hasHeader);
+        // エンコーディングを決定
+        Charset charset = getCharsetForBankType(bankType);
+        
+        // CSVを読み込み（スキップ行数を考慮）
+        List<CSVRecord> records = csvReader.read(file.getInputStream(), hasHeader, charset, bankType.getSkipLines());
         
         // パーサーを取得
         CsvParser parser = csvParserFactory.getParser(bankType);
@@ -79,6 +84,17 @@ public class CsvImportService {
         Map<String, List<TransactionDTO>> newTransactions = new HashMap<>();
         for (CSVRecord record : records) {
             TransactionDTO dto = parser.parse(record);
+            
+            // パーサーがnullを返した場合はスキップ（除外対象）
+            if (dto == null) {
+                continue;
+            }
+            
+            // 「ラクテンカ－ドサ－ビス」を除外
+            if (dto.getDescription() != null && dto.getDescription().contains("ラクテンカ－ドサ－ビス")) {
+                continue;
+            }
+            
             TransactionDTO normalized = transactionNormalizer.normalize(dto);
             String fingerprint = fingerprintService.generateFingerprint(normalized);
             
@@ -104,11 +120,12 @@ public class CsvImportService {
             transaction.setTransactionDate(dto.getTransactionDate());
             transaction.setFingerprint(fingerprint);
             transaction.setUserId(userId);
+            transaction.setTransactionSource("BANK");
             
             // 自動カテゴリルールを適用
-            AssetCategory matchedCategory = findMatchingCategory(dto.getDescription(), rules);
-            if (matchedCategory != null) {
-                transaction.setAssetCategoryId(matchedCategory.getId());
+            Long matchedCategoryId = findMatchingCategoryId(dto.getDescription(), dto.getTransactionType(), rules);
+            if (matchedCategoryId != null) {
+                transaction.setAssetCategoryId(matchedCategoryId);
             }
             
             BankTransaction saved = bankTransactionRepository.save(transaction);
@@ -125,7 +142,7 @@ public class CsvImportService {
                 amountDelta = -dto.getAmount();
             }
             
-            assetService.updateBalance(assetCategoryId, amountDelta);
+            assetService.updateBalance(userId, assetCategoryId, amountDelta);
             count++;
         }
         
@@ -149,8 +166,11 @@ public class CsvImportService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("ユーザーが見つかりません"));
         
-        // CSVを読み込み
-        List<CSVRecord> records = csvReader.read(file.getInputStream(), hasHeader);
+        // エンコーディングを決定
+        Charset charset = getCharsetForBankType(bankType);
+        
+        // CSVを読み込み（スキップ行数を考慮）
+        List<CSVRecord> records = csvReader.read(file.getInputStream(), hasHeader, charset, bankType.getSkipLines());
         
         // パーサーを取得
         CsvParser parser = csvParserFactory.getParser(bankType);
@@ -162,6 +182,12 @@ public class CsvImportService {
         Map<String, List<TransactionDTO>> newTransactions = new HashMap<>();
         for (CSVRecord record : records) {
             TransactionDTO dto = parser.parse(record);
+            
+            // パーサーがnullを返した場合はスキップ（除外対象）
+            if (dto == null) {
+                continue;
+            }
+            
             TransactionDTO normalized = transactionNormalizer.normalize(dto);
             String fingerprint = fingerprintService.generateFingerprint(normalized);
             
@@ -187,11 +213,19 @@ public class CsvImportService {
             transaction.setTransactionDate(dto.getTransactionDate());
             transaction.setFingerprint(fingerprint);
             transaction.setUserId(userId);
+            transaction.setTransactionSource("CARD");
+            
+            // カード種別を設定
+            if (bankType == BankType.RAKUTEN_DEBIT) {
+                transaction.setCardType("DEBIT");
+            } else {
+                transaction.setCardType("CREDIT");
+            }
             
             // 自動カテゴリルールを適用
-            AssetCategory matchedCategory = findMatchingCategory(dto.getDescription(), rules);
-            if (matchedCategory != null) {
-                transaction.setAssetCategoryId(matchedCategory.getId());
+            Long matchedCategoryId = findMatchingCategoryId(dto.getDescription(), dto.getTransactionType(), rules);
+            if (matchedCategoryId != null) {
+                transaction.setAssetCategoryId(matchedCategoryId);
             }
             
             CardTransaction saved = cardTransactionRepository.save(transaction);
@@ -208,7 +242,7 @@ public class CsvImportService {
                 amountDelta = -dto.getAmount();
             }
             
-            assetService.updateBalance(assetCategoryId, amountDelta);
+            assetService.updateBalance(userId, assetCategoryId, amountDelta);
             count++;
         }
         
@@ -256,14 +290,28 @@ public class CsvImportService {
     }
     
     /**
-     * 摘要に一致する自動カテゴリルールを検索
+     * 摘要と収支区分に一致する自動カテゴリルールを検索
      */
-    private AssetCategory findMatchingCategory(String description, List<AutoCategoryRule> rules) {
+    private Long findMatchingCategoryId(String description, TransactionType transactionType, List<AutoCategoryRule> rules) {
         for (AutoCategoryRule rule : rules) {
-            if (description.contains(rule.getDescriptionPattern())) {
-                return rule.getAssetCategory();
+            // 収支区分が一致し、摘要が完全一致する場合
+            if (rule.getTransactionType() == transactionType && 
+                description.equals(rule.getDescriptionPattern())) {
+                return rule.getAssetCategoryId();
             }
         }
         return null;
+    }
+    
+    /**
+     * 金融機関種別に応じたエンコーディングを取得
+     */
+    private Charset getCharsetForBankType(BankType bankType) {
+        return switch (bankType) {
+            case RAKUTEN_BANK, RAKUTEN_DEBIT, MIZUHO_BANK, MUFG_BANK -> 
+                Charset.forName("Shift_JIS");
+            case RAKUTEN_CARD -> 
+                StandardCharsets.UTF_8;
+        };
     }
 }

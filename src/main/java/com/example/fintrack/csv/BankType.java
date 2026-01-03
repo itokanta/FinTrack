@@ -4,13 +4,25 @@ package com.example.fintrack.csv;
  * 金融機関種別
  */
 public enum BankType {
-    MUFG,           // 三菱UFJ銀行
-    MIZUHO,         // みずほ銀行
-    SMBC,           // 三井住友銀行
-    RAKUTEN,        // 楽天銀行
-    PAYPAY,         // PayPay銀行
-    SONY,           // ソニー銀行
-    SBI,            // SBI新生銀行
-    CREDIT_CARD_GENERIC  // 汎用クレジットカード
+    RAKUTEN_BANK("楽天銀行", 0),
+    RAKUTEN_CARD("楽天カード", 0),
+    RAKUTEN_DEBIT("楽天デビットカード", 0),
+    MIZUHO_BANK("みずほ銀行", 12),  // 最初の12行はメタデータ
+    MUFG_BANK("三菱UFJ銀行", 0);
+    
+    private final String displayName;
+    private final int skipLines;  // ヘッダー行より前にスキップする行数
+    
+    BankType(String displayName, int skipLines) {
+        this.displayName = displayName;
+        this.skipLines = skipLines;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+    
+    public int getSkipLines() {
+        return skipLines;
+    }
 }
-

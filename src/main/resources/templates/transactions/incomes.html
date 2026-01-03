@@ -38,11 +38,21 @@
                         <td th:text="${income.transactionDate}">2024-01-01</td>
                         <td th:text="${income.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(income.amount, 0, 'COMMA')} + '円'">0円</td>
-                        <td th:text="${income.transactionSource}">銀行</td>
                         <td>
-                            <span th:if="${income.asset != null && income.asset.assetCategory != null}" 
+                            <span th:if="${income.transactionSource == '銀行'}" class="badge bg-primary">
+                                <i class="bi bi-bank"></i> 銀行
+                            </span>
+                            <span th:if="${income.transactionSource == 'デビットカード'}" class="badge bg-success">
+                                <i class="bi bi-credit-card"></i> デビット
+                            </span>
+                            <span th:if="${income.transactionSource == 'クレジットカード'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> クレジット
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${income.incomeSplitPatternId != null}" 
                                   class="badge bg-success">分配済み</span>
-                            <span th:unless="${income.asset != null && income.asset.assetCategory != null}" 
+                            <span th:unless="${income.incomeSplitPatternId != null}" 
                                   class="badge bg-warning">未分配</span>
                         </td>
                         <td>

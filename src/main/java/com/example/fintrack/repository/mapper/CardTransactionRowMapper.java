@@ -42,6 +42,8 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
             transaction.setIncomeSplitPatternId(incomeSplitPatternId);
         }
         
+        transaction.setTransactionSource(rs.getString("transaction_source"));
+        transaction.setCardType(rs.getString("card_type"));
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         return transaction;
     }

@@ -22,5 +22,6 @@ public class BankTransaction {
     private Long assetCategoryId;
     private Long expenseCategoryId;
     private Long incomeSplitPatternId;
+    private String transactionSource; // BANK
     private LocalDateTime createdAt;
 }

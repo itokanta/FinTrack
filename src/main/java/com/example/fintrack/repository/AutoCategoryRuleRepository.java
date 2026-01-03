@@ -1,16 +1,14 @@
 package com.example.fintrack.repository;
 
-import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.AutoCategoryRule;
+import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.mapper.AutoCategoryRuleRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class AutoCategoryRuleRepository {
@@ -22,54 +20,72 @@ public class AutoCategoryRuleRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
     
+    public Optional<AutoCategoryRule> findById(Long id) {
+        String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
+                    "FROM auto_category_rules WHERE id = ?";
+        List<AutoCategoryRule> rules = jdbcTemplate.query(sql, rowMapper, id);
+        if (rules.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(rules.get(0));
+    }
+    
     public List<AutoCategoryRule> findAll() {
-        String sql = "SELECT * FROM auto_category_rules";
+        String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
+                    "FROM auto_category_rules ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, rowMapper);
     }
     
     public List<AutoCategoryRule> findByUserId(Long userId) {
-        String sql = "SELECT acr.* FROM auto_category_rules acr " +
-                    "JOIN asset_categories ac ON acr.asset_category_id = ac.id " +
-                    "WHERE ac.user_id = ?";
-        return jdbcTemplate.query(sql, new RowMapper<AutoCategoryRule>() {
-            @Override
-            public AutoCategoryRule mapRow(ResultSet rs, int rowNum) throws SQLException {
-                AutoCategoryRule rule = new AutoCategoryRule();
-                rule.setId(rs.getLong("id"));
-                rule.setAssetCategoryId(rs.getLong("asset_category_id"));
-                rule.setDescriptionPattern(rs.getString("description_pattern"));
-                rule.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                
-                // AssetCategoryも取得する場合は別途JOINが必要
-                AssetCategory category = new AssetCategory();
-                category.setId(rule.getAssetCategoryId());
-                rule.setAssetCategory(category);
-                
-                return rule;
-            }
-        }, userId);
+        String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
+                    "FROM auto_category_rules WHERE user_id = ? ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId);
+    }
+    
+    public List<AutoCategoryRule> findByUserIdAndTransactionType(Long userId, TransactionType transactionType) {
+        String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
+                    "FROM auto_category_rules WHERE user_id = ? AND transaction_type = ? ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
     }
     
     public List<AutoCategoryRule> findByAssetCategoryId(Long assetCategoryId) {
-        String sql = "SELECT * FROM auto_category_rules WHERE asset_category_id = ?";
+        String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
+                    "FROM auto_category_rules WHERE asset_category_id = ?";
         return jdbcTemplate.query(sql, rowMapper, assetCategoryId);
     }
     
     public AutoCategoryRule save(AutoCategoryRule rule) {
         if (rule.getId() == null) {
             // INSERT
-            String sql = "INSERT INTO auto_category_rules (asset_category_id, description_pattern, created_at) " +
-                        "VALUES (?, ?, ?) RETURNING id";
+            String sql = "INSERT INTO auto_category_rules " +
+                        "(user_id, asset_category_id, description_pattern, transaction_type, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
-                rule.getAssetCategoryId(), rule.getDescriptionPattern(), now);
+                rule.getUserId(),
+                rule.getAssetCategoryId(),
+                rule.getDescriptionPattern(),
+                rule.getTransactionType().name(),
+                now);
             rule.setId(id);
             rule.setCreatedAt(now);
         } else {
             // UPDATE
-            String sql = "UPDATE auto_category_rules SET asset_category_id = ?, description_pattern = ? WHERE id = ?";
-            jdbcTemplate.update(sql, rule.getAssetCategoryId(), rule.getDescriptionPattern(), rule.getId());
+            String sql = "UPDATE auto_category_rules SET " +
+                        "user_id = ?, asset_category_id = ?, description_pattern = ?, transaction_type = ? " +
+                        "WHERE id = ?";
+            jdbcTemplate.update(sql,
+                rule.getUserId(),
+                rule.getAssetCategoryId(),
+                rule.getDescriptionPattern(),
+                rule.getTransactionType().name(),
+                rule.getId());
         }
         return rule;
+    }
+    
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM auto_category_rules WHERE id = ?";
+        jdbcTemplate.update(sql, id);
     }
 }

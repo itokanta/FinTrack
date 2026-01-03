@@ -62,14 +62,14 @@
                     </thead>
                     <tbody>
                         <tr th:each="split : ${splitIncomes}">
-                            <td th:text="${split.assetCategory.categoryName}">カテゴリ名</td>
+                            <td th:text="${assetCategoryMap.get(split.assetCategoryId)}">カテゴリ名</td>
                             <td class="text-end" th:text="${#numbers.formatInteger(split.amount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
                             <th>合計</th>
-                            <th class="text-end" th:text="${#numbers.formatInteger(#aggregates.sum(splitIncomes.![amount]), 0, 'COMMA')} + '円'">0円</th>
+                            <th class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -119,9 +119,9 @@
                             <label for="patternId" class="form-label">分割パターン</label>
                             <select class="form-select" id="patternId" name="patternId" required>
                                 <option value="">選択してください</option>
-                                <option th:each="entry : ${splitPatterns}" 
-                                        th:value="${entry.key}" 
-                                        th:text="'パターン ' + ${entry.key} + ' (' + ${#strings.listJoin(entry.value.![assetCategory.categoryName + ' ' + splitRatio + '%'], ', ')} + ')'">
+                                <option th:each="pattern : ${patternSummaries}" 
+                                        th:value="${pattern.id}" 
+                                        th:text="${pattern.name}">
                                     パターン
                                 </option>
                             </select>

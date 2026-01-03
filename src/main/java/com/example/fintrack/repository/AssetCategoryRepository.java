@@ -50,4 +50,9 @@ public class AssetCategoryRepository {
         }
         return category;
     }
+    
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM asset_categories WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }

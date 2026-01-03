@@ -41,11 +41,28 @@ public class IncomeSplitController {
     @GetMapping("/patterns")
     public String patterns(Authentication authentication, Model model) {
         Long userId = getUserId(authentication);
-        List<Long> patternIds = incomeSplitService.getSplitPatternIds(userId);
+        List<IncomeSplitService.PatternSummary> patternSummaries = incomeSplitService.getPatternSummaries(userId);
         
-        model.addAttribute("patternIds", patternIds);
+        model.addAttribute("patternSummaries", patternSummaries);
         
         return "income-split/patterns";
+    }
+    
+    /**
+     * 分割パターン削除
+     */
+    @PostMapping("/patterns/{id}/delete")
+    public String deletePattern(@PathVariable Long id,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            incomeSplitService.deletePattern(id);
+            redirectAttributes.addFlashAttribute("message", "分割パターンを削除しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                    "分割パターンの削除に失敗しました: " + e.getMessage());
+        }
+        
+        return "redirect:/income-split/patterns";
     }
     
     /**

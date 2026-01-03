@@ -12,8 +12,10 @@ import java.time.LocalDateTime;
 public class AutoCategoryRule {
     
     private Long id;
+    private Long userId;
     private Long assetCategoryId;
     private String descriptionPattern;
+    private TransactionType transactionType;
     private LocalDateTime createdAt;
     
     // JOIN時に使用

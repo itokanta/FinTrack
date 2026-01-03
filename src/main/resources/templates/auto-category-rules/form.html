@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${rule != null ? 'ルール編集' : '新規ルール作成'}">ルール作成</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4" th:text="${rule != null ? 'ルール編集' : '新規ルール作成'}">ルール作成</h2>
+        
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/auto-category-rules}" method="post">
+                    <input type="hidden" name="id" th:value="${rule?.id}">
+                    
+                    <div class="mb-3">
+                        <label for="descriptionPattern" class="form-label">
+                            摘要パターン <span class="text-danger">*</span>
+                        </label>
+                        <div class="position-relative">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="descriptionPattern" 
+                                   name="descriptionPattern" 
+                                   th:value="${rule?.descriptionPattern}"
+                                   placeholder="例: PAYPAY, セブンイレブン, 楽天"
+                                   autocomplete="off"
+                                   required>
+                            <div id="descriptionSuggestions" class="list-group position-absolute w-100" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
+                        </div>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i> 過去の取引履歴から検索できます。入力すると候補が表示されます。
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="transactionType" class="form-label">
+                            収支区分 <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" 
+                                id="transactionType" 
+                                name="transactionType" 
+                                required>
+                            <option value="">選択してください</option>
+                            <option value="EXPENSE" 
+                                    th:selected="${rule?.transactionType?.name() == 'EXPENSE'}">
+                                支出
+                            </option>
+                            <option value="INCOME" 
+                                    th:selected="${rule?.transactionType?.name() == 'INCOME'}">
+                                収入
+                            </option>
+                        </select>
+                        <div class="form-text">
+                            このルールを適用する取引の種類を選択してください
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="assetCategoryId" class="form-label">
+                            資産カテゴリ <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" 
+                                id="assetCategoryId" 
+                                name="assetCategoryId" 
+                                required>
+                            <option value="">選択してください</option>
+                            <option th:each="category : ${assetCategories}" 
+                                    th:value="${category.id}" 
+                                    th:text="${category.categoryName}"
+                                    th:selected="${rule?.assetCategoryId == category.id}">
+                                カテゴリ名
+                            </option>
+                        </select>
+                        <div class="form-text">
+                            自動的に設定する資産カテゴリを選択してください
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> 保存
+                        </button>
+                        <a th:href="@{/auto-category-rules}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> キャンセル
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-4 alert alert-light">
+            <h5><i class="bi bi-lightbulb"></i> 使用例</h5>
+            <ul>
+                <li><strong>摘要パターン:</strong> PAYPAY → PayPayでの支払いを自動分類</li>
+                <li><strong>摘要パターン:</strong> セブンイレブン → セブンイレブンでの購入を自動分類</li>
+                <li><strong>摘要パターン:</strong> 給与 → 給与振込を自動分類</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script layout:fragment="scripts">
+        document.addEventListener('DOMContentLoaded', function() {
+            const descriptionInput = document.getElementById('descriptionPattern');
+            const suggestionsDiv = document.getElementById('descriptionSuggestions');
+            
+            if (!descriptionInput || !suggestionsDiv) {
+                return;
+            }
+            
+            let debounceTimer;
+            
+            // 入力時の検索
+            descriptionInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+                
+                debounceTimer = setTimeout(() => {
+                    fetch(`/auto-category-rules/search-descriptions?query=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.length === 0) {
+                                suggestionsDiv.style.display = 'none';
+                                return;
+                            }
+                            
+                            suggestionsDiv.innerHTML = '';
+                            data.forEach(item => {
+                                const button = document.createElement('button');
+                                button.type = 'button';
+                                button.className = 'list-group-item list-group-item-action';
+                                button.innerHTML = `
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>${escapeHtml(item.description)}</span>
+                                        <span class="badge bg-secondary">${item.source}</span>
+                                    </div>
+                                `;
+                                button.addEventListener('click', function() {
+                                    descriptionInput.value = item.description;
+                                    suggestionsDiv.style.display = 'none';
+                                });
+                                suggestionsDiv.appendChild(button);
+                            });
+                            
+                            suggestionsDiv.style.display = 'block';
+                        })
+                        .catch(error => {
+                            console.error('検索エラー:', error);
+                            suggestionsDiv.style.display = 'none';
+                        });
+                }, 300);
+            });
+            
+            // 外側をクリックしたら候補を閉じる
+            document.addEventListener('click', function(e) {
+                if (!descriptionInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                    suggestionsDiv.style.display = 'none';
+                }
+            });
+            
+            // HTMLエスケープ
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        });
+    </script>
+</body>
+</html>
+

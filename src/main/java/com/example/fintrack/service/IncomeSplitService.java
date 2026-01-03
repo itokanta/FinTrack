@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 収入分割管理サービス
@@ -52,6 +53,39 @@ public class IncomeSplitService {
     }
     
     /**
+     * ユーザーの分割パターンサマリーを取得
+     */
+    public List<PatternSummary> getPatternSummaries(Long userId) {
+        List<Long> patternIds = incomeSplitPatternRepository.findDistinctIdsByUserId(userId);
+        List<PatternSummary> summaries = new ArrayList<>();
+
+        for (Long patternId : patternIds) {
+            List<IncomeSplitPattern> patterns = incomeSplitPatternRepository.findById(patternId);
+            if (!patterns.isEmpty()) {
+                String patternName = patterns.get(0).getPatternName();
+                List<PatternDetail> details = patterns.stream()
+                        .map(p -> {
+                            String categoryName = assetCategoryRepository.findById(p.getAssetCategoryId())
+                                    .map(AssetCategory::getCategoryName)
+                                    .orElse("不明なカテゴリ");
+                            return new PatternDetail(categoryName, p.getSplitRatio());
+                        })
+                        .collect(Collectors.toList());
+                summaries.add(new PatternSummary(patternId, patternName, details));
+            }
+        }
+        return summaries;
+    }
+    
+    /**
+     * 分割パターンを削除
+     */
+    @Transactional
+    public void deletePattern(Long patternId) {
+        incomeSplitPatternRepository.deleteById(patternId);
+    }
+    
+    /**
      * 新しい分割パターンを作成
      */
     @Transactional
@@ -73,12 +107,15 @@ public class IncomeSplitService {
         
         // パターンを保存
         for (Map.Entry<Long, BigDecimal> entry : categoryRatios.entrySet()) {
-            AssetCategory category = assetCategoryRepository.findById(entry.getKey())
+            Long categoryId = entry.getKey();
+            
+            // カテゴリの存在確認
+            assetCategoryRepository.findById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
             
             IncomeSplitPattern pattern = new IncomeSplitPattern();
             pattern.setId(newPatternId);
-            pattern.setAssetCategory(category);
+            pattern.setAssetCategoryId(categoryId);
             pattern.setSplitRatio(entry.getValue());
             pattern.setPatternName(patternName);
             
@@ -95,6 +132,7 @@ public class IncomeSplitService {
     public void splitIncome(Long bankTransactionId, Long cardTransactionId, Long patternId) {
         // 取引を取得
         Long totalAmount;
+        Long userId;
         BankTransaction bankTransaction = null;
         CardTransaction cardTransaction = null;
         
@@ -102,6 +140,7 @@ public class IncomeSplitService {
             bankTransaction = bankTransactionRepository.findById(bankTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             totalAmount = bankTransaction.getAmount();
+            userId = bankTransaction.getUserId();
             
             // 取引に分割パターンIDを設定
             bankTransaction.setIncomeSplitPatternId(patternId);
@@ -110,6 +149,7 @@ public class IncomeSplitService {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
+            userId = cardTransaction.getUserId();
             
             // 取引に分割パターンIDを設定
             cardTransaction.setIncomeSplitPatternId(patternId);
@@ -156,11 +196,11 @@ public class IncomeSplitService {
         
         // 各資産カテゴリの残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
-        assetService.updateBalance(null, -totalAmount);
+        assetService.updateBalance(userId, null, -totalAmount);
         
         // 各カテゴリに分割金額を加算
         for (SplitIncome split : splits) {
-            assetService.updateBalance(split.getAssetCategoryId(), split.getAmount());
+            assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
         }
     }
     
@@ -183,6 +223,7 @@ public class IncomeSplitService {
     public void splitIncomeSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId) {
         // 取引を取得
         Long totalAmount;
+        Long userId;
         BankTransaction bankTransaction = null;
         CardTransaction cardTransaction = null;
         
@@ -190,6 +231,7 @@ public class IncomeSplitService {
             bankTransaction = bankTransactionRepository.findById(bankTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             totalAmount = bankTransaction.getAmount();
+            userId = bankTransaction.getUserId();
             
             // 取引に分割パターンID=0を設定（単一カテゴリ分配）
             bankTransaction.setIncomeSplitPatternId(0L);
@@ -198,6 +240,7 @@ public class IncomeSplitService {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
+            userId = cardTransaction.getUserId();
             
             // 取引に分割パターンID=0を設定（単一カテゴリ分配）
             cardTransaction.setIncomeSplitPatternId(0L);
@@ -222,9 +265,39 @@ public class IncomeSplitService {
         
         // 資産残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
-        assetService.updateBalance(null, -totalAmount);
+        assetService.updateBalance(userId, null, -totalAmount);
         
         // 指定カテゴリに全額を加算
-        assetService.updateBalance(categoryId, totalAmount);
+        assetService.updateBalance(userId, categoryId, totalAmount);
+    }
+    
+    // DTOs for pattern summaries
+    public static class PatternSummary {
+        private Long id;
+        private String name;
+        private List<PatternDetail> details;
+
+        public PatternSummary(Long id, String name, List<PatternDetail> details) {
+            this.id = id;
+            this.name = name;
+            this.details = details;
+        }
+
+        public Long getId() { return id; }
+        public String getName() { return name; }
+        public List<PatternDetail> getDetails() { return details; }
+    }
+
+    public static class PatternDetail {
+        private String categoryName;
+        private BigDecimal splitRatio;
+
+        public PatternDetail(String categoryName, BigDecimal splitRatio) {
+            this.categoryName = categoryName;
+            this.splitRatio = splitRatio;
+        }
+
+        public String getCategoryName() { return categoryName; }
+        public BigDecimal getSplitRatio() { return splitRatio; }
     }
 }

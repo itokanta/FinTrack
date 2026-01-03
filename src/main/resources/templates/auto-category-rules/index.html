@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>自動カテゴリルール管理</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">自動カテゴリルール管理</h2>
+        
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            CSV取込時に、摘要が完全一致する取引を自動的にカテゴリ分類します。
+        </div>
+        
+        <div class="mb-3">
+            <a th:href="@{/auto-category-rules/new}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 新規ルール作成
+            </a>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>摘要パターン</th>
+                                <th>収支区分</th>
+                                <th>資産カテゴリ</th>
+                                <th>作成日時</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="rule : ${rules}">
+                                <td>
+                                    <code th:text="${rule.descriptionPattern}">パターン</code>
+                                </td>
+                                <td>
+                                    <span th:if="${rule.transactionType.name() == 'EXPENSE'}" 
+                                          class="badge bg-danger">
+                                        <i class="bi bi-arrow-down-circle"></i> 支出
+                                    </span>
+                                    <span th:if="${rule.transactionType.name() == 'INCOME'}" 
+                                          class="badge bg-success">
+                                        <i class="bi bi-arrow-up-circle"></i> 収入
+                                    </span>
+                                </td>
+                                <td th:text="${assetCategoryMap.get(rule.assetCategoryId)}">カテゴリ名</td>
+                                <td th:text="${#temporals.format(rule.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</td>
+                                <td>
+                                    <a th:href="@{/auto-category-rules/{id}/edit(id=${rule.id})}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> 編集
+                                    </a>
+                                    <form th:action="@{/auto-category-rules/{id}/delete(id=${rule.id})}" 
+                                          method="post" 
+                                          style="display: inline;"
+                                          onsubmit="return confirm('このルールを削除してもよろしいですか？');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> 削除
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(rules)}">
+                                <td colspan="5" class="text-center text-muted">
+                                    ルールが登録されていません
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

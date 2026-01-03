@@ -16,16 +16,51 @@
         </div>
         
         <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">登録済みパターン</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">登録済みパターン</h5>
-                <ul class="list-group">
-                    <li class="list-group-item" th:each="patternId : ${patternIds}">
-                        パターンID: <span th:text="${patternId}">1</span>
-                    </li>
-                </ul>
-                <p th:if="${#lists.isEmpty(patternIds)}" class="text-muted mt-3">
-                    登録済みのパターンはありません
-                </p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>パターン名</th>
+                                <th>分割内容</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pattern : ${patterns}">
+                                <td>
+                                    <strong th:text="${pattern.patternName}">パターン名</strong>
+                                    <br>
+                                    <small class="text-muted">ID: <span th:text="${pattern.patternId}">1</span></small>
+                                </td>
+                                <td>
+                                    <div th:each="detail : ${pattern.details}" class="mb-1">
+                                        <span class="badge bg-info" th:text="${detail.categoryName}">カテゴリ</span>
+                                        <span th:text="${detail.splitRatio} + '%'">50%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form th:action="@{/income-split/patterns/{id}/delete(id=${pattern.patternId})}" 
+                                          method="post" 
+                                          class="d-inline"
+                                          onsubmit="return confirm('このパターンを削除してもよろしいですか？');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> 削除
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(patterns)}">
+                                <td colspan="3" class="text-center text-muted">
+                                    登録済みのパターンはありません
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

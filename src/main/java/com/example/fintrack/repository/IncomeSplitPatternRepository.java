@@ -57,4 +57,9 @@ public class IncomeSplitPatternRepository {
         pattern.setCreatedAt(now);
         return pattern;
     }
+    
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM income_split_patterns WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }

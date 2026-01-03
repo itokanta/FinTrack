@@ -13,6 +13,14 @@ public class AssetRowMapper implements RowMapper<Asset> {
         Asset asset = new Asset();
         asset.setId(rs.getLong("id"));
         
+        // user_id
+        long userId = rs.getLong("user_id");
+        if (rs.wasNull()) {
+            asset.setUserId(null);
+        } else {
+            asset.setUserId(userId);
+        }
+        
         // NULL許容のカラム
         long assetCategoryId = rs.getLong("asset_category_id");
         if (rs.wasNull()) {

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class Asset {
     
     private Long id;
+    private Long userId;
     private Long assetCategoryId;
     private Long amount;
     private LocalDateTime createdAt;

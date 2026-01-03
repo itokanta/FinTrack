@@ -6,6 +6,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -21,18 +22,28 @@ public class CsvReader {
      * 
      * @param inputStream CSVファイルの入力ストリーム
      * @param hasHeader ヘッダー行の有無
+     * @param charset 文字エンコーディング
+     * @param skipLines 読み飛ばす行数（ヘッダー行より前の行）
      * @return CSVRecordのリスト
      * @throws IOException ファイル読み込みエラー
      */
-    public List<CSVRecord> read(InputStream inputStream, boolean hasHeader) throws IOException {
-        // BOM除去のためのReader
-        Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+    public List<CSVRecord> read(InputStream inputStream, boolean hasHeader, Charset charset, int skipLines) throws IOException {
+        // 指定されたエンコーディングでReader作成
+        // BufferedReaderでラップしてmark/resetを使用可能にする
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
         
-        // BOMがある場合はスキップ
-        reader.mark(1);
-        int firstChar = reader.read();
-        if (firstChar != 0xFEFF) {
-            reader.reset();
+        // UTF-8の場合はBOM除去
+        if (charset.equals(StandardCharsets.UTF_8)) {
+            reader.mark(1);
+            int firstChar = reader.read();
+            if (firstChar != 0xFEFF) {
+                reader.reset();
+            }
+        }
+        
+        // 指定された行数をスキップ
+        for (int i = 0; i < skipLines; i++) {
+            reader.readLine();
         }
         
         // CSVFormatの設定
@@ -53,17 +64,27 @@ public class CsvReader {
     }
     
     /**
-     * CSVファイルパスから読み込み
+     * CSVファイルを読み込み、CSVRecordのリストを返す
      * 
-     * @param filePath CSVファイルパス
+     * @param inputStream CSVファイルの入力ストリーム
+     * @param hasHeader ヘッダー行の有無
+     * @param charset 文字エンコーディング
+     * @return CSVRecordのリスト
+     * @throws IOException ファイル読み込みエラー
+     */
+    public List<CSVRecord> read(InputStream inputStream, boolean hasHeader, Charset charset) throws IOException {
+        return read(inputStream, hasHeader, charset, 0);
+    }
+    
+    /**
+     * CSVファイルを読み込み（UTF-8デフォルト）
+     * 
+     * @param inputStream CSVファイルの入力ストリーム
      * @param hasHeader ヘッダー行の有無
      * @return CSVRecordのリスト
      * @throws IOException ファイル読み込みエラー
      */
-    public List<CSVRecord> read(String filePath, boolean hasHeader) throws IOException {
-        try (InputStream inputStream = new FileInputStream(filePath)) {
-            return read(inputStream, hasHeader);
-        }
+    public List<CSVRecord> read(InputStream inputStream, boolean hasHeader) throws IOException {
+        return read(inputStream, hasHeader, StandardCharsets.UTF_8);
     }
 }
-

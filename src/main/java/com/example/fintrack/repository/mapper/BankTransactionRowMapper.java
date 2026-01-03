@@ -42,6 +42,7 @@ public class BankTransactionRowMapper implements RowMapper<BankTransaction> {
             transaction.setIncomeSplitPatternId(incomeSplitPatternId);
         }
         
+        transaction.setTransactionSource(rs.getString("transaction_source"));
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         return transaction;
     }

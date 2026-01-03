@@ -22,5 +22,7 @@ public class CardTransaction {
     private Long assetCategoryId;
     private Long expenseCategoryId;
     private Long incomeSplitPatternId;
+    private String transactionSource; // CARD
+    private String cardType; // DEBIT or CREDIT
     private LocalDateTime createdAt;
 }

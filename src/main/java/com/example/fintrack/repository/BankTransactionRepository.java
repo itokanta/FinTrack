@@ -56,6 +56,22 @@ public class BankTransactionRepository {
         return fingerprintCounts;
     }
     
+    public List<BankTransaction> findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM bank_transactions " +
+                    "WHERE user_id = ? AND asset_category_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
+    public List<BankTransaction> findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM bank_transactions " +
+                    "WHERE user_id = ? AND income_split_pattern_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
     public List<BankTransaction> findByUserIdAndTransactionDateBetween(
             Long userId, LocalDate startDate, LocalDate endDate, int offset, int limit) {
         String sql = "SELECT * FROM bank_transactions " +
@@ -75,13 +91,20 @@ public class BankTransactionRepository {
         return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name(), startDate, endDate, limit, offset);
     }
     
+    public List<String> findDistinctDescriptionsByUserId(Long userId) {
+        String sql = "SELECT DISTINCT description FROM bank_transactions " +
+                    "WHERE user_id = ? AND description IS NOT NULL " +
+                    "ORDER BY description";
+        return jdbcTemplate.queryForList(sql, String.class, userId);
+    }
+    
     public BankTransaction save(BankTransaction transaction) {
         if (transaction.getId() == null) {
             // INSERT
             String sql = "INSERT INTO bank_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, income_split_pattern_id, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "asset_category_id, expense_category_id, income_split_pattern_id, transaction_source, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
                 transaction.getDescription(),
@@ -93,6 +116,7 @@ public class BankTransactionRepository {
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
                 transaction.getIncomeSplitPatternId(),
+                transaction.getTransactionSource(),
                 now);
             transaction.setId(id);
             transaction.setCreatedAt(now);
@@ -101,7 +125,8 @@ public class BankTransactionRepository {
             String sql = "UPDATE bank_transactions SET " +
                         "description = ?, amount = ?, transaction_type = ?, " +
                         "transaction_date = ?, fingerprint = ?, user_id = ?, " +
-                        "asset_category_id = ?, expense_category_id = ?, income_split_pattern_id = ? " +
+                        "asset_category_id = ?, expense_category_id = ?, income_split_pattern_id = ?, " +
+                        "transaction_source = ? " +
                         "WHERE id = ?";
             jdbcTemplate.update(sql,
                 transaction.getDescription(),
@@ -113,6 +138,7 @@ public class BankTransactionRepository {
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
                 transaction.getIncomeSplitPatternId(),
+                transaction.getTransactionSource(),
                 transaction.getId());
         }
         return transaction;

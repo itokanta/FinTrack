@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class IncomeSplitPattern {
     
     private Long id;
+    private Long userId;
     private Long assetCategoryId;
     private BigDecimal splitRatio;
     private String patternName;

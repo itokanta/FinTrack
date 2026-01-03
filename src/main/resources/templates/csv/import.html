@@ -29,7 +29,7 @@
                                     <option value="">選択してください</option>
                                     <option th:each="type : ${bankTypes}" 
                                             th:value="${type}" 
-                                            th:text="${type}">金融機関</option>
+                                            th:text="${type.displayName}">金融機関</option>
                                 </select>
                             </div>
                             
@@ -65,7 +65,7 @@
                                     <option value="">選択してください</option>
                                     <option th:each="type : ${bankTypes}" 
                                             th:value="${type}" 
-                                            th:text="${type}">カード会社</option>
+                                            th:text="${type.displayName}">カード会社</option>
                                 </select>
                             </div>
                             

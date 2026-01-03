@@ -50,4 +50,9 @@ public class ExpenseCategoryRepository {
         }
         return category;
     }
+    
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM expense_categories WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }

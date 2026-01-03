@@ -56,6 +56,22 @@ public class CardTransactionRepository {
         return fingerprintCounts;
     }
     
+    public List<CardTransaction> findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM card_transactions " +
+                    "WHERE user_id = ? AND asset_category_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
+    public List<CardTransaction> findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM card_transactions " +
+                    "WHERE user_id = ? AND income_split_pattern_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
     public List<CardTransaction> findByUserIdAndTransactionDateBetween(
             Long userId, LocalDate startDate, LocalDate endDate, int offset, int limit) {
         String sql = "SELECT * FROM card_transactions " +
@@ -75,13 +91,20 @@ public class CardTransactionRepository {
         return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name(), startDate, endDate, limit, offset);
     }
     
+    public List<String> findDistinctDescriptionsByUserId(Long userId) {
+        String sql = "SELECT DISTINCT description FROM card_transactions " +
+                    "WHERE user_id = ? AND description IS NOT NULL " +
+                    "ORDER BY description";
+        return jdbcTemplate.queryForList(sql, String.class, userId);
+    }
+    
     public CardTransaction save(CardTransaction transaction) {
         if (transaction.getId() == null) {
             // INSERT
             String sql = "INSERT INTO card_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, income_split_pattern_id, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "asset_category_id, expense_category_id, income_split_pattern_id, transaction_source, card_type, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
                 transaction.getDescription(),
@@ -93,6 +116,8 @@ public class CardTransactionRepository {
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
                 transaction.getIncomeSplitPatternId(),
+                transaction.getTransactionSource(),
+                transaction.getCardType(),
                 now);
             transaction.setId(id);
             transaction.setCreatedAt(now);
@@ -101,7 +126,8 @@ public class CardTransactionRepository {
             String sql = "UPDATE card_transactions SET " +
                         "description = ?, amount = ?, transaction_type = ?, " +
                         "transaction_date = ?, fingerprint = ?, user_id = ?, " +
-                        "asset_category_id = ?, expense_category_id = ?, income_split_pattern_id = ? " +
+                        "asset_category_id = ?, expense_category_id = ?, income_split_pattern_id = ?, " +
+                        "transaction_source = ?, card_type = ? " +
                         "WHERE id = ?";
             jdbcTemplate.update(sql,
                 transaction.getDescription(),
@@ -113,6 +139,8 @@ public class CardTransactionRepository {
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
                 transaction.getIncomeSplitPatternId(),
+                transaction.getTransactionSource(),
+                transaction.getCardType(),
                 transaction.getId());
         }
         return transaction;
