@@ -172,7 +172,7 @@ public class AssetRepository {
     }
     
     /**
-     * 確定済み総資産を取得（当月のクレジットカード取引を除外）
+     * 確定済み総資産を取得（当月と前月のクレジットカード取引を除外）
      */
     public Long getConfirmedTotalBalance(Long userId) {
         String sql = "SELECT COALESCE(SUM(a.amount), 0) " +
@@ -180,7 +180,7 @@ public class AssetRepository {
                     "WHERE a.user_id = ?";
         Long assetsTotal = jdbcTemplate.queryForObject(sql, Long.class, userId);
         
-        // 当月のクレジットカード取引の合計を取得
+        // 当月と前月のクレジットカード取引の合計を取得
         String creditSql = "SELECT COALESCE(SUM(" +
                           "CASE " +
                           "  WHEN transaction_type = 'INCOME' THEN amount " +
@@ -190,14 +190,15 @@ public class AssetRepository {
                           "FROM card_transactions " +
                           "WHERE user_id = ? " +
                           "AND card_type = 'CREDIT' " +
-                          "AND DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE)";
-        Long currentMonthCreditTotal = jdbcTemplate.queryForObject(creditSql, Long.class, userId);
+                          "AND (DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
+                          "     OR DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month'))";
+        Long currentAndPreviousMonthCreditTotal = jdbcTemplate.queryForObject(creditSql, Long.class, userId);
         
-        return assetsTotal - currentMonthCreditTotal;
+        return assetsTotal - currentAndPreviousMonthCreditTotal;
     }
     
     /**
-     * カテゴリ別の確定済み残高を取得（当月のクレジットカード取引を除外）
+     * カテゴリ別の確定済み残高を取得（当月と前月のクレジットカード取引を除外）
      */
     public Map<AssetCategory, Long> getConfirmedBalanceByCategory(Long userId) {
         // 通常の残高をカテゴリ別に取得
@@ -208,7 +209,7 @@ public class AssetRepository {
             normalBalances.put(category, balance);
         }
         
-        // 当月のクレジットカード取引をカテゴリ別に集計
+        // 当月と前月のクレジットカード取引をカテゴリ別に集計
         String sql = "SELECT ct.asset_category_id, " +
                     "SUM(CASE " +
                     "  WHEN ct.transaction_type = 'INCOME' THEN ct.amount " +
@@ -219,7 +220,8 @@ public class AssetRepository {
                     "WHERE ct.user_id = ? " +
                     "AND ct.card_type = 'CREDIT' " +
                     "AND ct.asset_category_id IS NOT NULL " +
-                    "AND DATE_TRUNC('month', ct.transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
+                    "AND (DATE_TRUNC('month', ct.transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
+                    "     OR DATE_TRUNC('month', ct.transaction_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')) " +
                     "GROUP BY ct.asset_category_id";
         
         Map<Long, Long> creditTotalsByCategory = new HashMap<>();
@@ -227,7 +229,7 @@ public class AssetRepository {
             creditTotalsByCategory.put(rs.getLong("asset_category_id"), rs.getLong("total"));
         }, userId);
         
-        // 通常の残高から当月のクレジットカード取引を差し引く
+        // 通常の残高から当月と前月のクレジットカード取引を差し引く
         Map<AssetCategory, Long> confirmedBalances = new HashMap<>();
         for (Map.Entry<AssetCategory, Long> entry : normalBalances.entrySet()) {
             Long categoryId = entry.getKey().getId();
@@ -240,12 +242,12 @@ public class AssetRepository {
     }
     
     /**
-     * 未分類の確定済み残高を取得（当月のクレジットカード取引を除外）
+     * 未分類の確定済み残高を取得（当月と前月のクレジットカード取引を除外）
      */
     public Long getConfirmedUncategorizedBalance(Long userId) {
         Long normalUncategorized = getUncategorizedBalance(userId);
         
-        // 当月の未分類クレジットカード取引の合計を取得
+        // 当月と前月の未分類クレジットカード取引の合計を取得
         String sql = "SELECT COALESCE(SUM(" +
                     "CASE " +
                     "  WHEN transaction_type = 'INCOME' THEN amount " +
@@ -256,9 +258,10 @@ public class AssetRepository {
                     "WHERE user_id = ? " +
                     "AND card_type = 'CREDIT' " +
                     "AND asset_category_id IS NULL " +
-                    "AND DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE)";
-        Long currentMonthCreditUncategorized = jdbcTemplate.queryForObject(sql, Long.class, userId);
+                    "AND (DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
+                    "     OR DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month'))";
+        Long currentAndPreviousMonthCreditUncategorized = jdbcTemplate.queryForObject(sql, Long.class, userId);
         
-        return normalUncategorized - currentMonthCreditUncategorized;
+        return normalUncategorized - currentAndPreviousMonthCreditUncategorized;
     }
 }

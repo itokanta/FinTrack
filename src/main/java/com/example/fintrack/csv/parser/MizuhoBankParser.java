@@ -26,15 +26,20 @@ public class MizuhoBankParser implements CsvParser {
             return null; // 列数が足りない場合はスキップ
         }
         
+        // 日付が空の場合はスキップ（空行やフッター行）
+        String dateStr = record.get(1);
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        
         TransactionDTO dto = new TransactionDTO();
         
         // 日付（yyyy.MM.dd形式）
-        String dateStr = record.get(1);
         dto.setTransactionDate(LocalDate.parse(dateStr, DATE_FORMATTER));
         
         // 引落金額と預入金額で入出金を判定
-        String withdrawalStr = record.get(2).replace(",", "");
-        String depositStr = record.get(3).replace(",", "");
+        String withdrawalStr = record.get(2).replace(",", "").trim();
+        String depositStr = record.get(3).replace(",", "").trim();
         
         if (!withdrawalStr.isEmpty()) {
             // 引落（支出）
@@ -45,8 +50,8 @@ public class MizuhoBankParser implements CsvParser {
             dto.setTransactionType(TransactionType.INCOME);
             dto.setAmount(Long.parseLong(depositStr));
         } else {
-            // 金額が両方空の場合はスキップ（エラーレコード）
-            throw new IllegalArgumentException("金額が設定されていません");
+            // 金額が両方空の場合はスキップ（空行やフッター行）
+            return null;
         }
         
         // 摘要
