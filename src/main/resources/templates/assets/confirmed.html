@@ -16,7 +16,7 @@
         
         <div class="alert alert-info">
             <i class="bi bi-info-circle"></i>
-            当月のクレジットカード取引を除外した資産状況です。実際に口座から引き落とされる前の状態を確認できます。
+            引き落とし前のクレジットカード取引を除外した資産状況です。実際に口座から引き落とされる前の状態を確認できます。
         </div>
         
         <!-- 確定済み総資産 -->
@@ -71,14 +71,14 @@
             </div>
         </div>
         
-        <!-- 除外された当月のクレジットカード取引 -->
+        <!-- 除外されたクレジットカード取引 -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">除外された当月のクレジットカード取引</h5>
+                <h5 class="mb-0">除外されたクレジットカード取引</h5>
             </div>
             <div class="card-body">
                 <p class="text-muted">
-                    当月のクレジットカード取引合計: 
+                    引き落とし前のクレジットカード取引合計: 
                     <strong th:text="${#numbers.formatInteger(currentMonthCreditTotal, 0, 'COMMA')} + '円'">0円</strong>
                 </p>
             </div>

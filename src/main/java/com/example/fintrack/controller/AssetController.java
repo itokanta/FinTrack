@@ -64,7 +64,7 @@ public class AssetController {
     }
     
     /**
-     * 確定済み資産画面（当月のクレジットカード取引を除外）
+     * 確定済み資産画面（当月と前月のクレジットカード取引を除外）
      */
     @GetMapping("/confirmed")
     public String confirmed(Authentication authentication, Model model) {
@@ -75,12 +75,12 @@ public class AssetController {
         Long totalBalance = assetService.getTotalBalance(userId);
         Long uncategorizedBalance = assetService.getUncategorizedBalance(userId);
         
-        // 確定済み残高を取得（当月のクレジットカード取引を除外）
+        // 確定済み残高を取得（当月と前月のクレジットカード取引を除外）
         Map<AssetCategory, Long> confirmedBalances = assetService.getConfirmedBalanceByCategory(userId);
         Long confirmedTotalBalance = assetService.getConfirmedTotalBalance(userId);
         Long confirmedUncategorizedBalance = assetService.getConfirmedUncategorizedBalance(userId);
         
-        // 当月のクレジットカード取引合計を計算
+        // 当月と前月のクレジットカード取引合計を計算
         Long currentMonthCreditTotal = totalBalance - confirmedTotalBalance;
         
         model.addAttribute("balances", balances);

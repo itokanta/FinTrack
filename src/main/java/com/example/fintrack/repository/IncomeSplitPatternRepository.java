@@ -29,27 +29,25 @@ public class IncomeSplitPatternRepository {
     }
     
     public List<IncomeSplitPattern> findByUserId(Long userId) {
-        String sql = "SELECT isp.* FROM income_split_patterns isp " +
-                    "JOIN asset_categories ac ON isp.asset_category_id = ac.id " +
-                    "WHERE ac.user_id = ?";
+        String sql = "SELECT * FROM income_split_patterns WHERE user_id = ?";
         return jdbcTemplate.query(sql, rowMapper, userId);
     }
     
     public List<Long> findDistinctIdsByUserId(Long userId) {
-        String sql = "SELECT DISTINCT isp.id FROM income_split_patterns isp " +
-                    "JOIN asset_categories ac ON isp.asset_category_id = ac.id " +
-                    "WHERE ac.user_id = ? " +
-                    "ORDER BY isp.id";
+        String sql = "SELECT DISTINCT id FROM income_split_patterns " +
+                    "WHERE user_id = ? " +
+                    "ORDER BY id";
         return jdbcTemplate.queryForList(sql, Long.class, userId);
     }
     
     public IncomeSplitPattern save(IncomeSplitPattern pattern) {
         // 複合キーなので常にINSERT
-        String sql = "INSERT INTO income_split_patterns (id, asset_category_id, split_ratio, pattern_name, created_at) " +
-                    "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO income_split_patterns (id, user_id, asset_category_id, split_ratio, pattern_name, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?)";
         LocalDateTime now = LocalDateTime.now();
         jdbcTemplate.update(sql,
             pattern.getId(),
+            pattern.getUserId(),
             pattern.getAssetCategoryId(),
             pattern.getSplitRatio(),
             pattern.getPatternName(),

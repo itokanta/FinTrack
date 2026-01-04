@@ -43,7 +43,7 @@ public class IncomeSplitController {
         Long userId = getUserId(authentication);
         List<IncomeSplitService.PatternSummary> patternSummaries = incomeSplitService.getPatternSummaries(userId);
         
-        model.addAttribute("patternSummaries", patternSummaries);
+        model.addAttribute("patterns", patternSummaries);
         
         return "income-split/patterns";
     }
@@ -82,10 +82,13 @@ public class IncomeSplitController {
      * 分割パターン登録
      */
     @PostMapping("/patterns")
-    public String createPattern(@RequestParam String patternName,
+    public String createPattern(Authentication authentication,
+                               @RequestParam String patternName,
                                @RequestParam Map<String, String> params,
                                RedirectAttributes redirectAttributes) {
         try {
+            Long userId = getUserId(authentication);
+            
             // カテゴリIDと割合のマップを作成
             Map<Long, BigDecimal> categoryRatios = new HashMap<>();
             
@@ -97,7 +100,7 @@ public class IncomeSplitController {
                 }
             }
             
-            Long patternId = incomeSplitService.createSplitPattern(patternName, categoryRatios);
+            Long patternId = incomeSplitService.createSplitPattern(userId, patternName, categoryRatios);
             redirectAttributes.addFlashAttribute("message", 
                     "分割パターンを登録しました (ID: " + patternId + ")");
         } catch (Exception e) {

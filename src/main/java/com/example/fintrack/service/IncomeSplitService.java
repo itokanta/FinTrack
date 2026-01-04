@@ -89,7 +89,7 @@ public class IncomeSplitService {
      * 新しい分割パターンを作成
      */
     @Transactional
-    public Long createSplitPattern(String patternName, Map<Long, BigDecimal> categoryRatios) {
+    public Long createSplitPattern(Long userId, String patternName, Map<Long, BigDecimal> categoryRatios) {
         // 新しいパターンIDを生成
         Long maxId = incomeSplitPatternRepository.findMaxId();
         if (maxId == null) {
@@ -109,12 +109,17 @@ public class IncomeSplitService {
         for (Map.Entry<Long, BigDecimal> entry : categoryRatios.entrySet()) {
             Long categoryId = entry.getKey();
             
-            // カテゴリの存在確認
-            assetCategoryRepository.findById(categoryId)
+            // カテゴリの存在確認とユーザー所有確認
+            AssetCategory category = assetCategoryRepository.findById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
+            
+            if (!category.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
+            }
             
             IncomeSplitPattern pattern = new IncomeSplitPattern();
             pattern.setId(newPatternId);
+            pattern.setUserId(userId);
             pattern.setAssetCategoryId(categoryId);
             pattern.setSplitRatio(entry.getValue());
             pattern.setPatternName(patternName);
@@ -284,7 +289,9 @@ public class IncomeSplitService {
         }
 
         public Long getId() { return id; }
+        public Long getPatternId() { return id; }  // テンプレート用のエイリアス
         public String getName() { return name; }
+        public String getPatternName() { return name; }  // テンプレート用のエイリアス
         public List<PatternDetail> getDetails() { return details; }
     }
 
