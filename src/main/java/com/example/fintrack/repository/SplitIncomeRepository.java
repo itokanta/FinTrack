@@ -42,12 +42,13 @@ public class SplitIncomeRepository {
         if (splitIncome.getId() == null) {
             // INSERT
             String sql = "INSERT INTO split_incomes " +
-                        "(asset_category_id, split_pattern_id, amount, bank_transaction_id, card_transaction_id, created_at, updated_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "(asset_category_id, split_pattern_id, split_method, amount, bank_transaction_id, card_transaction_id, created_at, updated_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
                 splitIncome.getAssetCategoryId(),
                 splitIncome.getSplitPatternId(),
+                splitIncome.getSplitMethod(),
                 splitIncome.getAmount(),
                 splitIncome.getBankTransactionId(),
                 splitIncome.getCardTransactionId(),
@@ -59,13 +60,14 @@ public class SplitIncomeRepository {
         } else {
             // UPDATE
             String sql = "UPDATE split_incomes SET " +
-                        "asset_category_id = ?, split_pattern_id = ?, amount = ?, " +
+                        "asset_category_id = ?, split_pattern_id = ?, split_method = ?, amount = ?, " +
                         "bank_transaction_id = ?, card_transaction_id = ?, updated_at = ? " +
                         "WHERE id = ?";
             LocalDateTime now = LocalDateTime.now();
             jdbcTemplate.update(sql,
                 splitIncome.getAssetCategoryId(),
                 splitIncome.getSplitPatternId(),
+                splitIncome.getSplitMethod(),
                 splitIncome.getAmount(),
                 splitIncome.getBankTransactionId(),
                 splitIncome.getCardTransactionId(),

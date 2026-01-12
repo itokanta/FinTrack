@@ -13,7 +13,16 @@ public class SplitIncomeRowMapper implements RowMapper<SplitIncome> {
         SplitIncome splitIncome = new SplitIncome();
         splitIncome.setId(rs.getLong("id"));
         splitIncome.setAssetCategoryId(rs.getLong("asset_category_id"));
-        splitIncome.setSplitPatternId(rs.getLong("split_pattern_id"));
+        
+        // split_pattern_idはNULL許容
+        long splitPatternId = rs.getLong("split_pattern_id");
+        if (rs.wasNull()) {
+            splitIncome.setSplitPatternId(null);
+        } else {
+            splitIncome.setSplitPatternId(splitPatternId);
+        }
+        
+        splitIncome.setSplitMethod(rs.getString("split_method"));
         splitIncome.setAmount(rs.getLong("amount"));
         
         // NULL許容のカラム
