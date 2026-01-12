@@ -40,7 +40,12 @@
                     
                     <dt class="col-sm-3">分配ステータス</dt>
                     <dd class="col-sm-9">
-                        <span th:if="${isSplit}" class="badge bg-success">分配済み</span>
+                        <span th:if="${isSplit}" class="badge bg-success">
+                            分配済み
+                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == 'PATTERN'}" class="ms-1">(パターン)</span>
+                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == 'MANUAL'}" class="ms-1">(手動)</span>
+                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == 'SINGLE'}" class="ms-1">(単一)</span>
+                        </span>
                         <span th:unless="${isSplit}" class="badge bg-warning">未分配</span>
                     </dd>
                 </dl>
@@ -102,6 +107,94 @@
                         
                         <button type="submit" class="btn btn-primary">分配する</button>
                     </form>
+                </div>
+            </div>
+            
+            <!-- 手動で金額を指定して分割 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">金額を指定して分割</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/transactions/incomes/{id}/split-manual(id=${transaction.id})}" method="post" id="manualSplitForm">
+                        <input type="hidden" name="type" th:value="${type}">
+                        
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                <strong>収入金額: <span th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')}">0</span>円</strong><br>
+                                <small>各資産カテゴリへの分割金額を入力してください。合計が収入金額と一致する必要があります。</small>
+                            </div>
+                        </div>
+                        
+                        <div id="categoriesContainer">
+                            <div class="row mb-2" th:each="category : ${assetCategories}">
+                                <label class="col-sm-4 col-form-label" th:text="${category.categoryName}">カテゴリ名</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control category-amount" 
+                                               th:name="'categoryAmount_' + ${category.id}" 
+                                               th:id="'amount_' + ${category.id}"
+                                               min="0" 
+                                               step="1"
+                                               placeholder="0">
+                                        <span class="input-group-text">円</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="alert alert-secondary" role="alert">
+                                <strong>合計: <span id="totalAmount">0</span>円</strong>
+                                <span id="difference" class="ms-2"></span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="submitManualSplit">分配する</button>
+                    </form>
+                    
+                    <script th:inline="javascript">
+                        const totalIncomeAmount = /*[[${transaction.amount}]]*/ 0;
+                        
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const inputs = document.querySelectorAll('.category-amount');
+                            const totalSpan = document.getElementById('totalAmount');
+                            const differenceSpan = document.getElementById('difference');
+                            const submitButton = document.getElementById('submitManualSplit');
+                            
+                            function updateTotal() {
+                                let total = 0;
+                                inputs.forEach(input => {
+                                    const value = parseInt(input.value) || 0;
+                                    total += value;
+                                });
+                                
+                                totalSpan.textContent = total.toLocaleString();
+                                
+                                const diff = totalIncomeAmount - total;
+                                if (diff === 0 && total > 0) {
+                                    differenceSpan.innerHTML = '<span class="text-success">✓ 金額が一致しています</span>';
+                                    submitButton.disabled = false;
+                                } else if (diff > 0) {
+                                    differenceSpan.innerHTML = '<span class="text-warning">残り: ' + diff.toLocaleString() + '円</span>';
+                                    submitButton.disabled = true;
+                                } else if (diff < 0) {
+                                    differenceSpan.innerHTML = '<span class="text-danger">超過: ' + Math.abs(diff).toLocaleString() + '円</span>';
+                                    submitButton.disabled = true;
+                                } else {
+                                    differenceSpan.innerHTML = '';
+                                    submitButton.disabled = true;
+                                }
+                            }
+                            
+                            inputs.forEach(input => {
+                                input.addEventListener('input', updateTotal);
+                            });
+                            
+                            updateTotal();
+                        });
+                    </script>
                 </div>
             </div>
             

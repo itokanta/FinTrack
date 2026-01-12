@@ -189,6 +189,7 @@ public class IncomeSplitService {
             SplitIncome split = new SplitIncome();
             split.setAssetCategoryId(pattern.getAssetCategoryId());
             split.setSplitPatternId(patternId);
+            split.setSplitMethod("PATTERN");
             split.setAmount(splitAmount);
             split.setBankTransactionId(bankTransactionId);
             split.setCardTransactionId(cardTransactionId);
@@ -219,6 +220,86 @@ public class IncomeSplitService {
             return splitIncomeRepository.findByCardTransactionId(cardTransactionId);
         }
         return List.of();
+    }
+    
+    /**
+     * 収入を手動で金額指定して分割
+     */
+    @Transactional
+    public void splitIncomeManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts) {
+        // 取引を取得
+        Long totalAmount;
+        Long userId;
+        BankTransaction bankTransaction = null;
+        CardTransaction cardTransaction = null;
+        
+        if (bankTransactionId != null) {
+            bankTransaction = bankTransactionRepository.findById(bankTransactionId)
+                    .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
+            totalAmount = bankTransaction.getAmount();
+            userId = bankTransaction.getUserId();
+            
+            // 取引に分割パターンID=-1を設定（手動分割）
+            bankTransaction.setIncomeSplitPatternId(-1L);
+            bankTransactionRepository.save(bankTransaction);
+        } else if (cardTransactionId != null) {
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+                    .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
+            totalAmount = cardTransaction.getAmount();
+            userId = cardTransaction.getUserId();
+            
+            // 取引に分割パターンID=-1を設定（手動分割）
+            cardTransaction.setIncomeSplitPatternId(-1L);
+            cardTransactionRepository.save(cardTransaction);
+        } else {
+            throw new IllegalArgumentException("取引IDが指定されていません");
+        }
+        
+        // 合計金額のチェック
+        long totalSplit = categoryAmounts.values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
+        
+        if (totalSplit != totalAmount) {
+            throw new IllegalArgumentException("分割金額の合計が取引金額と一致しません");
+        }
+        
+        // 各カテゴリに分割収入を作成
+        List<SplitIncome> splits = new ArrayList<>();
+        for (Map.Entry<Long, Long> entry : categoryAmounts.entrySet()) {
+            Long categoryId = entry.getKey();
+            Long amount = entry.getValue();
+            
+            // カテゴリの存在確認とユーザー所有確認
+            AssetCategory category = assetCategoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
+            
+            if (!category.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
+            }
+            
+            SplitIncome split = new SplitIncome();
+            split.setAssetCategoryId(categoryId);
+            split.setSplitPatternId(null); // 手動分割の場合はNULL
+            split.setSplitMethod("MANUAL");
+            split.setAmount(amount);
+            split.setBankTransactionId(bankTransactionId);
+            split.setCardTransactionId(cardTransactionId);
+            
+            splits.add(split);
+        }
+        
+        // 保存
+        splitIncomeRepository.saveAll(splits);
+        
+        // 資産残高を更新
+        // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
+        assetService.updateBalance(userId, null, -totalAmount);
+        
+        // 各カテゴリに分割金額を加算
+        for (SplitIncome split : splits) {
+            assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
+        }
     }
     
     /**
@@ -258,10 +339,11 @@ public class IncomeSplitService {
         assetCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
         
-        // 分割収入を作成（パターンIDは0を使用）
+        // 分割収入を作成（パターンIDはNULL）
         SplitIncome split = new SplitIncome();
         split.setAssetCategoryId(categoryId);
-        split.setSplitPatternId(0L); // 単一カテゴリ分配の場合は0
+        split.setSplitPatternId(null); // 単一カテゴリ分配の場合はNULL
+        split.setSplitMethod("SINGLE");
         split.setAmount(totalAmount);
         split.setBankTransactionId(bankTransactionId);
         split.setCardTransactionId(cardTransactionId);

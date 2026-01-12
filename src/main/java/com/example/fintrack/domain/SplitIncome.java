@@ -13,7 +13,8 @@ public class SplitIncome {
     
     private Long id;
     private Long assetCategoryId;
-    private Long splitPatternId;
+    private Long splitPatternId;  // パターン使用時のみ設定、それ以外はNULL
+    private String splitMethod;   // 'PATTERN', 'MANUAL', 'SINGLE'
     private Long amount;
     private Long bankTransactionId;
     private Long cardTransactionId;
