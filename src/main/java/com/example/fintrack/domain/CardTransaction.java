@@ -21,7 +21,9 @@ public class CardTransaction {
     private Long userId;
     private Long assetCategoryId;
     private Long expenseCategoryId;
-    private Long incomeSplitPatternId;
+    private Long incomeSplitPatternId;  // 後方互換性のため残す（非推奨）
+    private Long expenseSplitPatternId; // 後方互換性のため残す（非推奨）
+    private Long splitPatternId;        // 統合版（推奨）
     private String transactionSource; // CARD
     private String cardType; // DEBIT or CREDIT
     private LocalDateTime createdAt;

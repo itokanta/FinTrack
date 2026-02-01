@@ -67,7 +67,23 @@ public class CardTransactionRepository {
     public List<CardTransaction> findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
             Long userId, TransactionType transactionType) {
         String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND income_split_pattern_id IS NULL AND transaction_type = ? " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
+    public List<CardTransaction> findByUserIdAndSplitPatternIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM card_transactions " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
+    public List<CardTransaction> findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM card_transactions " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND asset_category_id IS NULL AND transaction_type = ? " +
                     "ORDER BY transaction_date DESC";
         return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
     }
@@ -103,9 +119,13 @@ public class CardTransactionRepository {
             // INSERT
             String sql = "INSERT INTO card_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, income_split_pattern_id, transaction_source, card_type, created_at) " +
+                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, created_at) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
+            // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
+            Long splitPatternId = transaction.getSplitPatternId() != null 
+                ? transaction.getSplitPatternId() 
+                : transaction.getIncomeSplitPatternId();
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
                 transaction.getDescription(),
                 transaction.getAmount(),
@@ -115,7 +135,7 @@ public class CardTransactionRepository {
                 transaction.getUserId(),
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
-                transaction.getIncomeSplitPatternId(),
+                splitPatternId,
                 transaction.getTransactionSource(),
                 transaction.getCardType(),
                 now);
@@ -126,9 +146,13 @@ public class CardTransactionRepository {
             String sql = "UPDATE card_transactions SET " +
                         "description = ?, amount = ?, transaction_type = ?, " +
                         "transaction_date = ?, fingerprint = ?, user_id = ?, " +
-                        "asset_category_id = ?, expense_category_id = ?, income_split_pattern_id = ?, " +
+                        "asset_category_id = ?, expense_category_id = ?, split_pattern_id = ?, " +
                         "transaction_source = ?, card_type = ? " +
                         "WHERE id = ?";
+            // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
+            Long splitPatternId = transaction.getSplitPatternId() != null 
+                ? transaction.getSplitPatternId() 
+                : transaction.getIncomeSplitPatternId();
             jdbcTemplate.update(sql,
                 transaction.getDescription(),
                 transaction.getAmount(),
@@ -138,7 +162,7 @@ public class CardTransactionRepository {
                 transaction.getUserId(),
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
-                transaction.getIncomeSplitPatternId(),
+                splitPatternId,
                 transaction.getTransactionSource(),
                 transaction.getCardType(),
                 transaction.getId());

@@ -27,17 +27,20 @@ public class AssetController {
     private final TransactionService transactionService;
     private final AssetCategoryRepository assetCategoryRepository;
     private final IncomeSplitService incomeSplitService;
+    private final com.example.fintrack.service.SplitService splitService;
     
     public AssetController(AssetService assetService,
                           UserRepository userRepository,
                           TransactionService transactionService,
                           AssetCategoryRepository assetCategoryRepository,
-                          IncomeSplitService incomeSplitService) {
+                          IncomeSplitService incomeSplitService,
+                          com.example.fintrack.service.SplitService splitService) {
         this.assetService = assetService;
         this.userRepository = userRepository;
         this.transactionService = transactionService;
         this.assetCategoryRepository = assetCategoryRepository;
         this.incomeSplitService = incomeSplitService;
+        this.splitService = splitService;
     }
     
     /**
@@ -123,6 +126,11 @@ public class AssetController {
             // 資産カテゴリ一覧を取得
             List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
+            
+            // 分割パターンサマリーを取得（支出用）
+            List<com.example.fintrack.service.SplitService.PatternSummary> patternSummaries = 
+                splitService.getPatternSummaries(userId, "EXPENSE");
+            model.addAttribute("patternSummaries", patternSummaries);
         }
         
         model.addAttribute("transactions", transactions);
@@ -237,6 +245,78 @@ public class AssetController {
         }
         
         return "redirect:/assets/uncategorized?type=income";
+    }
+    
+    /**
+     * 未分類の支出を単一カテゴリに一括分配
+     */
+    @PostMapping("/uncategorized/bulk-split-expense-single")
+    public String bulkSplitExpenseSingle(@RequestParam Long categoryId,
+                                         @RequestParam(required = false) List<String> transactionIds,
+                                         RedirectAttributes redirectAttributes) {
+        if (transactionIds == null || transactionIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "取引を選択してください");
+            return "redirect:/assets/uncategorized?type=expense";
+        }
+        
+        try {
+            int count = 0;
+            for (String transactionId : transactionIds) {
+                if (transactionId.startsWith("bank_")) {
+                    Long bankId = Long.parseLong(transactionId.substring(5));
+                    splitService.splitExpenseSingle(bankId, null, categoryId);
+                    count++;
+                } else if (transactionId.startsWith("card_")) {
+                    Long cardId = Long.parseLong(transactionId.substring(5));
+                    splitService.splitExpenseSingle(null, cardId, categoryId);
+                    count++;
+                }
+            }
+            
+            redirectAttributes.addFlashAttribute("message", 
+                    count + "件の支出を1つのカテゴリに分配しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                    "支出の分配に失敗しました: " + e.getMessage());
+        }
+        
+        return "redirect:/assets/uncategorized?type=expense";
+    }
+    
+    /**
+     * 未分類の支出を分割パターンで一括分配
+     */
+    @PostMapping("/uncategorized/bulk-split-expense")
+    public String bulkSplitExpense(@RequestParam Long patternId,
+                                   @RequestParam(required = false) List<String> transactionIds,
+                                   RedirectAttributes redirectAttributes) {
+        if (transactionIds == null || transactionIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "取引を選択してください");
+            return "redirect:/assets/uncategorized?type=expense";
+        }
+        
+        try {
+            int count = 0;
+            for (String transactionId : transactionIds) {
+                if (transactionId.startsWith("bank_")) {
+                    Long bankId = Long.parseLong(transactionId.substring(5));
+                    splitService.splitExpense(bankId, null, patternId);
+                    count++;
+                } else if (transactionId.startsWith("card_")) {
+                    Long cardId = Long.parseLong(transactionId.substring(5));
+                    splitService.splitExpense(null, cardId, patternId);
+                    count++;
+                }
+            }
+            
+            redirectAttributes.addFlashAttribute("message", 
+                    count + "件の支出を分割パターンで分配しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", 
+                    "支出の分配に失敗しました: " + e.getMessage());
+        }
+        
+        return "redirect:/assets/uncategorized?type=expense";
     }
     
     /**
