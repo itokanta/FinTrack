@@ -47,6 +47,16 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
         
         transaction.setTransactionSource(rs.getString("transaction_source"));
         transaction.setCardType(rs.getString("card_type"));
+        transaction.setPaymentMonth(rs.getString("payment_month"));
+        
+        // is_paidを読み取り（NULL許容）
+        Boolean isPaid = rs.getBoolean("is_paid");
+        if (rs.wasNull()) {
+            transaction.setIsPaid(null);  // デビットカードはNULL
+        } else {
+            transaction.setIsPaid(isPaid);
+        }
+        
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         return transaction;
     }

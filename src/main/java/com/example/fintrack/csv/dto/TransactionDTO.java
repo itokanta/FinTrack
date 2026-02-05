@@ -18,5 +18,6 @@ public class TransactionDTO {
     private Long amount;
     private String description;
     private TransactionType transactionType;
+    private String paymentMonth;
 }
 

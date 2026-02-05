@@ -44,7 +44,9 @@ public class TransactionService {
                         userId, TransactionType.EXPENSE, startDate, endDate, 0, Integer.MAX_VALUE);
         
         for (BankTransaction bt : bankTransactions) {
-            result.add(new TransactionWithAsset(bt, null));
+            if (bt.getIsCardPayment() == null || !bt.getIsCardPayment()) {
+                result.add(new TransactionWithAsset(bt, null));
+            }
         }
         
         // カード取引を全件取得

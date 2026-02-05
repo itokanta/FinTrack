@@ -56,6 +56,16 @@ public class CardTransactionRepository {
         return fingerprintCounts;
     }
     
+    /**
+     * fingerprint全件を取得
+     */
+    public List<CardTransaction> findAllByUserId(Long userId) {
+        String sql = "SELECT * FROM card_transactions WHERE user_id = ? ORDER BY created_at ASC";
+        List<CardTransaction> transactions = jdbcTemplate.query(sql, rowMapper, userId);
+        
+        return transactions;
+    }
+    
     public List<CardTransaction> findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
             Long userId, TransactionType transactionType) {
         String sql = "SELECT * FROM card_transactions " +
@@ -115,17 +125,22 @@ public class CardTransactionRepository {
     }
     
     public CardTransaction save(CardTransaction transaction) {
+        Long splitPatternId;
+        if (transaction.getSplitPatternId() != null) {
+            splitPatternId = transaction.getSplitPatternId();
+        } else {
+            splitPatternId = transaction.getIncomeSplitPatternId();
+        }
+
         if (transaction.getId() == null) {
             // INSERT
             String sql = "INSERT INTO card_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
             // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
-            Long splitPatternId = transaction.getSplitPatternId() != null 
-                ? transaction.getSplitPatternId() 
-                : transaction.getIncomeSplitPatternId();
+
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
                 transaction.getDescription(),
                 transaction.getAmount(),
@@ -138,6 +153,8 @@ public class CardTransactionRepository {
                 splitPatternId,
                 transaction.getTransactionSource(),
                 transaction.getCardType(),
+                transaction.getPaymentMonth(),
+                transaction.getIsPaid(),
                 now);
             transaction.setId(id);
             transaction.setCreatedAt(now);
@@ -147,12 +164,9 @@ public class CardTransactionRepository {
                         "description = ?, amount = ?, transaction_type = ?, " +
                         "transaction_date = ?, fingerprint = ?, user_id = ?, " +
                         "asset_category_id = ?, expense_category_id = ?, split_pattern_id = ?, " +
-                        "transaction_source = ?, card_type = ? " +
+                        "transaction_source = ?, card_type = ?, payment_month = ?, is_paid = ? " +
                         "WHERE id = ?";
             // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
-            Long splitPatternId = transaction.getSplitPatternId() != null 
-                ? transaction.getSplitPatternId() 
-                : transaction.getIncomeSplitPatternId();
             jdbcTemplate.update(sql,
                 transaction.getDescription(),
                 transaction.getAmount(),
@@ -165,8 +179,49 @@ public class CardTransactionRepository {
                 splitPatternId,
                 transaction.getTransactionSource(),
                 transaction.getCardType(),
+                transaction.getPaymentMonth(),
+                transaction.getIsPaid(),
                 transaction.getId());
         }
         return transaction;
+    }
+
+    /**
+     * 指定した支払い月のカード取引を取得
+     */
+    public List<CardTransaction> findByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
+        String sql = "SELECT * FROM card_transactions " +
+                "WHERE user_id = ? AND payment_month = ? " +
+                "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, paymentMonth);
+    }
+
+    /**
+     * 指定した支払い月のカード取引合計金額を取得
+     */
+    public Long sumAmountByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM card_transactions " +
+                "WHERE user_id = ? AND payment_month = ? AND transaction_type = 'EXPENSE'";
+        return jdbcTemplate.queryForObject(sql, Long.class, userId, paymentMonth);
+    }
+    
+    /**
+     * 未払いのクレジットカード取引合計を取得
+     */
+    public Long sumUnpaidCreditAmount(Long userId) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM card_transactions " +
+                    "WHERE user_id = ? AND card_type = 'CREDIT' " +
+                    "AND is_paid = FALSE " +
+                    "AND transaction_type = 'EXPENSE'";
+        return jdbcTemplate.queryForObject(sql, Long.class, userId);
+    }
+    
+    /**
+     * 指定した支払い月のカード取引を引き落とし済みに更新
+     */
+    public void markAsPaidByPaymentMonth(Long userId, String paymentMonth) {
+        String sql = "UPDATE card_transactions SET is_paid = TRUE " +
+                    "WHERE user_id = ? AND payment_month = ? AND card_type = 'CREDIT'";
+        jdbcTemplate.update(sql, userId, paymentMonth);
     }
 }

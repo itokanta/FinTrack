@@ -45,7 +45,15 @@ public class BankTransactionRowMapper implements RowMapper<BankTransaction> {
             transaction.setIncomeSplitPatternId(splitPatternId);
         }
         
+        // is_card_paymentを読み取り
         transaction.setTransactionSource(rs.getString("transaction_source"));
+        Boolean isCardPayment = rs.getBoolean("is_card_payment");
+        if (rs.wasNull()) {
+            transaction.setIsCardPayment(false);
+        } else {
+            transaction.setIsCardPayment(isCardPayment);
+        }
+
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         return transaction;
     }

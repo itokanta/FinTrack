@@ -24,6 +24,7 @@ public class BankTransaction {
     private Long incomeSplitPatternId;  // 後方互換性のため残す（非推奨）
     private Long expenseSplitPatternId; // 後方互換性のため残す（非推奨）
     private Long splitPatternId;        // 統合版（推奨）
+    private Boolean isCardPayment; // カード引き落としフラグ
     private String transactionSource; // BANK
     private LocalDateTime createdAt;
 }

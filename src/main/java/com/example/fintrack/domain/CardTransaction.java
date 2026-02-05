@@ -26,5 +26,7 @@ public class CardTransaction {
     private Long splitPatternId;        // 統合版（推奨）
     private String transactionSource; // CARD
     private String cardType; // DEBIT or CREDIT
+    private String paymentMonth; // YYYY-MM形式（例: "2025-01"）
+    private Boolean isPaid; // 引き落とし済みフラグ（クレジットのみ、デビットはNULL）
     private LocalDateTime createdAt;
 }

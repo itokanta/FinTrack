@@ -73,6 +73,24 @@
                                 <i class="bi bi-magic"></i> 自動分類ルール
                             </a>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="cardPaymentDropdown" role="button" 
+                               data-bs-toggle="dropdown">
+                                <i class="bi bi-credit-card"></i> カード管理
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/card-payments/by-month}">
+                                        <i class="bi bi-calendar-month"></i> 支払い月別明細
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/card-payments/discrepancies}">
+                                        <i class="bi bi-exclamation-triangle"></i> カード差異
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     </ul>
                     <div class="d-flex align-items-center">
                         <span class="navbar-text me-3">
