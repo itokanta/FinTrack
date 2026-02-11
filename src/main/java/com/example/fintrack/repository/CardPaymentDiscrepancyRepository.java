@@ -40,49 +40,49 @@ public class CardPaymentDiscrepancyRepository {
     }
 
     public CardPaymentDiscrepancy save(CardPaymentDiscrepancy discrepancy) {
-      if (discrepancy.getId() == null) {
-        // INSERT
-        String sql = "INSERT INTO card_payment_discrepancies " +
-            "(user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
-            "difference_amount, is_resolved, created_at) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-        LocalDateTime now = LocalDateTime.now();
-        Long id = jdbcTemplate.queryForObject(sql, Long.class,
-            discrepancy.getUserId(),
-            discrepancy.getPaymentMonth(),
-            discrepancy.getBankTransactionId(),
-            discrepancy.getExpectedAmount(),
-            discrepancy.getActualAmount(),
-            discrepancy.getDifferenceAmount(),
-            false,
-            now);
-        discrepancy.setId(id);
-        discrepancy.setCreatedAt(now);
-      } else {
-        // UPDATE
-        String sql = "UPDATE card_payment_discrepancies SET " +
-            "user_id = ?, payment_month = ?, bank_transaction_id = ?, " +
-            "expected_amount = ?, actual_amount = ?, difference_amount = ?, " +
-            "is_resolved = ?, resolved_at = ? " +
-            "WHERE id = ?";
-        jdbcTemplate.update(sql,
-            discrepancy.getUserId(),
-            discrepancy.getPaymentMonth(),
-            discrepancy.getBankTransactionId(),
-            discrepancy.getExpectedAmount(),
-            discrepancy.getActualAmount(),
-            discrepancy.getDifferenceAmount(),
-            discrepancy.getIsResolved(),
-            discrepancy.getResolvedAt(),
-            discrepancy.getId());
-      }
-      return discrepancy;
+        if (discrepancy.getId() == null) {
+            // INSERT
+            String sql = "INSERT INTO card_payment_discrepancies " +
+                    "(user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
+                    "difference_amount, is_resolved, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+            LocalDateTime now = LocalDateTime.now();
+            Long id = jdbcTemplate.queryForObject(sql, Long.class,
+                    discrepancy.getUserId(),
+                    discrepancy.getPaymentMonth(),
+                    discrepancy.getBankTransactionId(),
+                    discrepancy.getExpectedAmount(),
+                    discrepancy.getActualAmount(),
+                    discrepancy.getDifferenceAmount(),
+                    false,
+                    now);
+            discrepancy.setId(id);
+            discrepancy.setCreatedAt(now);
+        } else {
+            // UPDATE
+            String sql = "UPDATE card_payment_discrepancies SET " +
+                    "user_id = ?, payment_month = ?, bank_transaction_id = ?, " +
+                    "expected_amount = ?, actual_amount = ?, difference_amount = ?, " +
+                    "is_resolved = ?, resolved_at = ? " +
+                    "WHERE id = ?";
+            jdbcTemplate.update(sql,
+                    discrepancy.getUserId(),
+                    discrepancy.getPaymentMonth(),
+                    discrepancy.getBankTransactionId(),
+                    discrepancy.getExpectedAmount(),
+                    discrepancy.getActualAmount(),
+                    discrepancy.getDifferenceAmount(),
+                    discrepancy.getIsResolved(),
+                    discrepancy.getResolvedAt(),
+                    discrepancy.getId());
+        }
+        return discrepancy;
     }
 
     public void markAsResolved(Long id) {
-      String sql = "UPDATE card_payment_discrepancies SET " +
-          "is_resolved = TRUE, resolved_at = ? " +
-          "WHERE id = ?";
-      jdbcTemplate.update(sql, LocalDateTime.now(), id);
+        String sql = "UPDATE card_payment_discrepancies SET " +
+                "is_resolved = TRUE, resolved_at = ? " +
+                "WHERE id = ?";
+        jdbcTemplate.update(sql, LocalDateTime.now(), id);
     }
 }

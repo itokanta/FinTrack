@@ -133,44 +133,6 @@ public class AssetRepository {
         }
     }
     
-    public Asset save(Asset asset) {
-        if (asset.getId() == null) {
-            // INSERT
-            String sql = "INSERT INTO assets " +
-                        "(user_id, asset_category_id, amount, created_at, updated_at) " +
-                        "VALUES (?, ?, ?, ?, ?) RETURNING id";
-            LocalDateTime now = LocalDateTime.now();
-            Long id = jdbcTemplate.queryForObject(sql, Long.class,
-                asset.getUserId(),
-                asset.getAssetCategoryId(),
-                asset.getAmount(),
-                now,
-                now);
-            asset.setId(id);
-            asset.setCreatedAt(now);
-            asset.setUpdatedAt(now);
-        } else {
-            // UPDATE
-            String sql = "UPDATE assets SET " +
-                        "user_id = ?, asset_category_id = ?, amount = ?, updated_at = ? " +
-                        "WHERE id = ?";
-            LocalDateTime now = LocalDateTime.now();
-            jdbcTemplate.update(sql,
-                asset.getUserId(),
-                asset.getAssetCategoryId(),
-                asset.getAmount(),
-                now,
-                asset.getId());
-            asset.setUpdatedAt(now);
-        }
-        return asset;
-    }
-    
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM assets WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
-    
     /**
      * 確定済み総資産を取得（未払いのクレジットカード取引を除外）
      */
@@ -260,5 +222,38 @@ public class AssetRepository {
         Long unpaidCreditUncategorized = jdbcTemplate.queryForObject(sql, Long.class, userId);
         
         return normalUncategorized - unpaidCreditUncategorized;
+    }
+
+    private Asset save(Asset asset) {
+        if (asset.getId() == null) {
+            // INSERT
+            String sql = "INSERT INTO assets " +
+                    "(user_id, asset_category_id, amount, created_at, updated_at) " +
+                    "VALUES (?, ?, ?, ?, ?) RETURNING id";
+            LocalDateTime now = LocalDateTime.now();
+            Long id = jdbcTemplate.queryForObject(sql, Long.class,
+                    asset.getUserId(),
+                    asset.getAssetCategoryId(),
+                    asset.getAmount(),
+                    now,
+                    now);
+            asset.setId(id);
+            asset.setCreatedAt(now);
+            asset.setUpdatedAt(now);
+        } else {
+            // UPDATE
+            String sql = "UPDATE assets SET " +
+                    "user_id = ?, asset_category_id = ?, amount = ?, updated_at = ? " +
+                    "WHERE id = ?";
+            LocalDateTime now = LocalDateTime.now();
+            jdbcTemplate.update(sql,
+                    asset.getUserId(),
+                    asset.getAssetCategoryId(),
+                    asset.getAmount(),
+                    now,
+                    asset.getId());
+            asset.setUpdatedAt(now);
+        }
+        return asset;
     }
 }

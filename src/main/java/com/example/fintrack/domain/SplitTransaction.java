@@ -23,6 +23,7 @@ public class SplitTransaction {
     private Long amount;
     private Long bankTransactionId;
     private Long cardTransactionId;
+    private Long discrepancyTransactionId; // 差異取引ID
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     

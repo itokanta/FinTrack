@@ -41,6 +41,13 @@ public class SplitTransactionRowMapper implements RowMapper<SplitTransaction> {
             splitTransaction.setCardTransactionId(cardTransactionId);
         }
         
+        long discrepancyTransactionId = rs.getLong("discrepancy_transaction_id");
+        if (rs.wasNull()) {
+            splitTransaction.setDiscrepancyTransactionId(null);
+        } else {
+            splitTransaction.setDiscrepancyTransactionId(discrepancyTransactionId);
+        }
+        
         splitTransaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         splitTransaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
         

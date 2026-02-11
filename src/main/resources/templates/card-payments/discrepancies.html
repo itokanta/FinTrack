@@ -49,12 +49,10 @@
                         </td>
                         <td th:text="${#temporals.format(discrepancy.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 00:00</td>
                         <td>
-                            <form th:action="@{/card-payments/discrepancies/{id}/resolve(id=${discrepancy.id})}" 
-                                  method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="bi bi-check-circle"></i> 解決済みにする
-                                </button>
-                            </form>
+                            <a th:href="@{/discrepancy-transactions/{id}/resolve(id=${discrepancy.id})}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil-square"></i> 解決する
+                            </a>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(unresolvedDiscrepancies)}">
