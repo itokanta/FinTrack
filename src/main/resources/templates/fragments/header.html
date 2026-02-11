@@ -45,10 +45,23 @@
                                 <i class="bi bi-file-earmark-arrow-up"></i> CSV取込
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/income-split/patterns}">
-                                <i class="bi bi-pie-chart"></i> 収入分割管理
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="splitDropdown" role="button" 
+                               data-bs-toggle="dropdown">
+                                <i class="bi bi-pie-chart"></i> 分割管理
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/split/income/patterns}">
+                                        <i class="bi bi-arrow-up-circle text-success"></i> 収入分割パターン
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/split/expense/patterns}">
+                                        <i class="bi bi-arrow-down-circle text-danger"></i> 支出分割パターン
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/categories}">
@@ -59,6 +72,24 @@
                             <a class="nav-link" th:href="@{/auto-category-rules}">
                                 <i class="bi bi-magic"></i> 自動分類ルール
                             </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="cardPaymentDropdown" role="button" 
+                               data-bs-toggle="dropdown">
+                                <i class="bi bi-credit-card"></i> カード管理
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/card-payments/by-month}">
+                                        <i class="bi bi-calendar-month"></i> 支払い月別明細
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/card-payments/discrepancies}">
+                                        <i class="bi bi-exclamation-triangle"></i> カード差異
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                     <div class="d-flex align-items-center">

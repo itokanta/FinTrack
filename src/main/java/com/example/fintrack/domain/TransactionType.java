@@ -1,9 +1,16 @@
 package com.example.fintrack.domain;
 
 /**
- * 取引タイプ
+ * 収支の種類を表すEnum
  */
 public enum TransactionType {
-    INCOME,   // 収入
-    EXPENSE   // 支出
+    /**
+     * 収入
+     */
+    INCOME,
+    
+    /**
+     * 支出
+     */
+    EXPENSE
 }

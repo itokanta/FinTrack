@@ -32,6 +32,9 @@ public class TransactionNormalizer {
         
         // 入出金区分はそのまま
         normalized.setTransactionType(dto.getTransactionType());
+
+        // 支払い月はそのまま
+        normalized.setPaymentMonth(dto.getPaymentMonth());
         
         return normalized;
     }

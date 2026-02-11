@@ -35,15 +35,28 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
             transaction.setExpenseCategoryId(expenseCategoryId);
         }
         
-        long incomeSplitPatternId = rs.getLong("income_split_pattern_id");
+        // split_pattern_idを読み取り、後方互換性のためincomeSplitPatternIdにも設定
+        long splitPatternId = rs.getLong("split_pattern_id");
         if (rs.wasNull()) {
+            transaction.setSplitPatternId(null);
             transaction.setIncomeSplitPatternId(null);
         } else {
-            transaction.setIncomeSplitPatternId(incomeSplitPatternId);
+            transaction.setSplitPatternId(splitPatternId);
+            transaction.setIncomeSplitPatternId(splitPatternId);
         }
         
         transaction.setTransactionSource(rs.getString("transaction_source"));
         transaction.setCardType(rs.getString("card_type"));
+        transaction.setPaymentMonth(rs.getString("payment_month"));
+        
+        // is_paidを読み取り（NULL許容）
+        Boolean isPaid = rs.getBoolean("is_paid");
+        if (rs.wasNull()) {
+            transaction.setIsPaid(null);  // デビットカードはNULL
+        } else {
+            transaction.setIsPaid(isPaid);
+        }
+        
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         return transaction;
     }

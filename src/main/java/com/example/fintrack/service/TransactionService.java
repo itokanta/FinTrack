@@ -44,7 +44,9 @@ public class TransactionService {
                         userId, TransactionType.EXPENSE, startDate, endDate, 0, Integer.MAX_VALUE);
         
         for (BankTransaction bt : bankTransactions) {
-            result.add(new TransactionWithAsset(bt, null));
+            if (bt.getIsCardPayment() == null || !bt.getIsCardPayment()) {
+                result.add(new TransactionWithAsset(bt, null));
+            }
         }
         
         // カード取引を全件取得
@@ -68,22 +70,23 @@ public class TransactionService {
     
     /**
      * 未分類の支出一覧を取得（銀行+カード）
+     * split_pattern_idがNULLかつasset_category_idがNULLの取引のみ
      */
     public List<TransactionWithAsset> getUncategorizedExpenses(Long userId) {
         List<TransactionWithAsset> result = new ArrayList<>();
         
-        // 未分類の銀行取引を取得
+        // 未分類の銀行取引を取得（split_pattern_idがNULLかつasset_category_idがNULLかつ支出）
         List<BankTransaction> bankTransactions = bankTransactionRepository
-                .findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
+                .findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
                         userId, TransactionType.EXPENSE);
         
         for (BankTransaction bt : bankTransactions) {
             result.add(new TransactionWithAsset(bt, null));
         }
         
-        // 未分類のカード取引を取得
+        // 未分類のカード取引を取得（split_pattern_idがNULLかつasset_category_idがNULLかつ支出）
         List<CardTransaction> cardTransactions = cardTransactionRepository
-                .findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
+                .findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
                         userId, TransactionType.EXPENSE);
         
         for (CardTransaction ct : cardTransactions) {
@@ -335,6 +338,13 @@ public class TransactionService {
                 return bankTransaction.getIncomeSplitPatternId();
             }
             return cardTransaction.getIncomeSplitPatternId();
+        }
+        
+        public Long getSplitPatternId() {
+            if (bankTransaction != null) {
+                return bankTransaction.getSplitPatternId();
+            }
+            return cardTransaction.getSplitPatternId();
         }
     }
 }

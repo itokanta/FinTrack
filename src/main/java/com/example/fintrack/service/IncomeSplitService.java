@@ -17,21 +17,24 @@ import java.util.stream.Collectors;
 @Service
 public class IncomeSplitService {
     
-    private final IncomeSplitPatternRepository incomeSplitPatternRepository;
-    private final SplitIncomeRepository splitIncomeRepository;
+    private final SplitPatternRepository splitPatternRepository;
+    private final SplitTransactionRepository splitTransactionRepository;
     private final AssetCategoryRepository assetCategoryRepository;
     private final AssetService assetService;
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
     
-    public IncomeSplitService(IncomeSplitPatternRepository incomeSplitPatternRepository,
-                             SplitIncomeRepository splitIncomeRepository,
+    private static final String TRANSACTION_TYPE_INCOME = "INCOME";
+    private static final String SPLIT_TYPE_RATIO = "RATIO";
+    
+    public IncomeSplitService(SplitPatternRepository splitPatternRepository,
+                             SplitTransactionRepository splitTransactionRepository,
                              AssetCategoryRepository assetCategoryRepository,
                              AssetService assetService,
                              BankTransactionRepository bankTransactionRepository,
                              CardTransactionRepository cardTransactionRepository) {
-        this.incomeSplitPatternRepository = incomeSplitPatternRepository;
-        this.splitIncomeRepository = splitIncomeRepository;
+        this.splitPatternRepository = splitPatternRepository;
+        this.splitTransactionRepository = splitTransactionRepository;
         this.assetCategoryRepository = assetCategoryRepository;
         this.assetService = assetService;
         this.bankTransactionRepository = bankTransactionRepository;
@@ -42,25 +45,25 @@ public class IncomeSplitService {
      * ユーザーの分割パターン一覧を取得
      */
     public List<Long> getSplitPatternIds(Long userId) {
-        return incomeSplitPatternRepository.findDistinctIdsByUserId(userId);
+        return splitPatternRepository.findDistinctPatternIdsByUserIdAndTransactionType(userId, TRANSACTION_TYPE_INCOME);
     }
     
     /**
      * 特定の分割パターンを取得
      */
-    public List<IncomeSplitPattern> getSplitPatternById(Long patternId) {
-        return incomeSplitPatternRepository.findById(patternId);
+    public List<SplitPattern> getSplitPatternById(Long patternId) {
+        return splitPatternRepository.findById(patternId);
     }
     
     /**
      * ユーザーの分割パターンサマリーを取得
      */
     public List<PatternSummary> getPatternSummaries(Long userId) {
-        List<Long> patternIds = incomeSplitPatternRepository.findDistinctIdsByUserId(userId);
+        List<Long> patternIds = splitPatternRepository.findDistinctPatternIdsByUserIdAndTransactionType(userId, TRANSACTION_TYPE_INCOME);
         List<PatternSummary> summaries = new ArrayList<>();
 
         for (Long patternId : patternIds) {
-            List<IncomeSplitPattern> patterns = incomeSplitPatternRepository.findById(patternId);
+            List<SplitPattern> patterns = splitPatternRepository.findById(patternId);
             if (!patterns.isEmpty()) {
                 String patternName = patterns.get(0).getPatternName();
                 List<PatternDetail> details = patterns.stream()
@@ -82,7 +85,7 @@ public class IncomeSplitService {
      */
     @Transactional
     public void deletePattern(Long patternId) {
-        incomeSplitPatternRepository.deleteById(patternId);
+        splitPatternRepository.deleteByPatternId(patternId);
     }
     
     /**
@@ -91,7 +94,7 @@ public class IncomeSplitService {
     @Transactional
     public Long createSplitPattern(Long userId, String patternName, Map<Long, BigDecimal> categoryRatios) {
         // 新しいパターンIDを生成
-        Long maxId = incomeSplitPatternRepository.findMaxId();
+        Long maxId = splitPatternRepository.findMaxPatternId();
         if (maxId == null) {
             maxId = 0L;
         }
@@ -117,14 +120,17 @@ public class IncomeSplitService {
                 throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
             }
             
-            IncomeSplitPattern pattern = new IncomeSplitPattern();
-            pattern.setId(newPatternId);
+            SplitPattern pattern = new SplitPattern();
+            pattern.setPatternId(newPatternId);
             pattern.setUserId(userId);
+            pattern.setTransactionType(TRANSACTION_TYPE_INCOME);
+            pattern.setSplitType(SPLIT_TYPE_RATIO);
             pattern.setAssetCategoryId(categoryId);
             pattern.setSplitRatio(entry.getValue());
+            pattern.setSplitAmount(null);
             pattern.setPatternName(patternName);
             
-            incomeSplitPatternRepository.save(pattern);
+            splitPatternRepository.save(pattern);
         }
         
         return newPatternId;
@@ -164,17 +170,17 @@ public class IncomeSplitService {
         }
         
         // 分割パターンを取得
-        List<IncomeSplitPattern> patterns = incomeSplitPatternRepository.findById(patternId);
+        List<SplitPattern> patterns = splitPatternRepository.findById(patternId);
         if (patterns.isEmpty()) {
             throw new IllegalArgumentException("分割パターンが見つかりません");
         }
         
         // 分割金額を計算
-        List<SplitIncome> splits = new ArrayList<>();
+        List<SplitTransaction> splits = new ArrayList<>();
         long totalSplit = 0;
         
         for (int i = 0; i < patterns.size(); i++) {
-            IncomeSplitPattern pattern = patterns.get(i);
+            SplitPattern pattern = patterns.get(i);
             long splitAmount;
             
             if (i == patterns.size() - 1) {
@@ -186,7 +192,8 @@ public class IncomeSplitService {
             
             totalSplit += splitAmount;
             
-            SplitIncome split = new SplitIncome();
+            SplitTransaction split = new SplitTransaction();
+            split.setTransactionType(TRANSACTION_TYPE_INCOME);
             split.setAssetCategoryId(pattern.getAssetCategoryId());
             split.setSplitPatternId(patternId);
             split.setSplitMethod("PATTERN");
@@ -198,14 +205,14 @@ public class IncomeSplitService {
         }
         
         // 保存
-        splitIncomeRepository.saveAll(splits);
+        splitTransactionRepository.saveAll(splits);
         
         // 各資産カテゴリの残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
         assetService.updateBalance(userId, null, -totalAmount);
         
         // 各カテゴリに分割金額を加算
-        for (SplitIncome split : splits) {
+        for (SplitTransaction split : splits) {
             assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
         }
     }
@@ -213,11 +220,11 @@ public class IncomeSplitService {
     /**
      * 取引の分割状況を取得
      */
-    public List<SplitIncome> getSplitIncomesByTransaction(Long bankTransactionId, Long cardTransactionId) {
+    public List<SplitTransaction> getSplitIncomesByTransaction(Long bankTransactionId, Long cardTransactionId) {
         if (bankTransactionId != null) {
-            return splitIncomeRepository.findByBankTransactionId(bankTransactionId);
+            return splitTransactionRepository.findByBankTransactionId(bankTransactionId);
         } else if (cardTransactionId != null) {
-            return splitIncomeRepository.findByCardTransactionId(cardTransactionId);
+            return splitTransactionRepository.findByCardTransactionId(cardTransactionId);
         }
         return List.of();
     }
@@ -265,7 +272,7 @@ public class IncomeSplitService {
         }
         
         // 各カテゴリに分割収入を作成
-        List<SplitIncome> splits = new ArrayList<>();
+        List<SplitTransaction> splits = new ArrayList<>();
         for (Map.Entry<Long, Long> entry : categoryAmounts.entrySet()) {
             Long categoryId = entry.getKey();
             Long amount = entry.getValue();
@@ -278,7 +285,8 @@ public class IncomeSplitService {
                 throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
             }
             
-            SplitIncome split = new SplitIncome();
+            SplitTransaction split = new SplitTransaction();
+            split.setTransactionType(TRANSACTION_TYPE_INCOME);
             split.setAssetCategoryId(categoryId);
             split.setSplitPatternId(null); // 手動分割の場合はNULL
             split.setSplitMethod("MANUAL");
@@ -290,14 +298,14 @@ public class IncomeSplitService {
         }
         
         // 保存
-        splitIncomeRepository.saveAll(splits);
+        splitTransactionRepository.saveAll(splits);
         
         // 資産残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
         assetService.updateBalance(userId, null, -totalAmount);
         
         // 各カテゴリに分割金額を加算
-        for (SplitIncome split : splits) {
+        for (SplitTransaction split : splits) {
             assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
         }
     }
@@ -340,7 +348,8 @@ public class IncomeSplitService {
                 .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
         
         // 分割収入を作成（パターンIDはNULL）
-        SplitIncome split = new SplitIncome();
+        SplitTransaction split = new SplitTransaction();
+        split.setTransactionType(TRANSACTION_TYPE_INCOME);
         split.setAssetCategoryId(categoryId);
         split.setSplitPatternId(null); // 単一カテゴリ分配の場合はNULL
         split.setSplitMethod("SINGLE");
@@ -348,7 +357,7 @@ public class IncomeSplitService {
         split.setBankTransactionId(bankTransactionId);
         split.setCardTransactionId(cardTransactionId);
         
-        splitIncomeRepository.save(split);
+        splitTransactionRepository.save(split);
         
         // 資産残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）

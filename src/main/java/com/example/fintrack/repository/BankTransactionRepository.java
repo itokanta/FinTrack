@@ -67,7 +67,23 @@ public class BankTransactionRepository {
     public List<BankTransaction> findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
             Long userId, TransactionType transactionType) {
         String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND income_split_pattern_id IS NULL AND transaction_type = ? " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
+    public List<BankTransaction> findByUserIdAndSplitPatternIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM bank_transactions " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
+                    "ORDER BY transaction_date DESC";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+    }
+    
+    public List<BankTransaction> findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
+            Long userId, TransactionType transactionType) {
+        String sql = "SELECT * FROM bank_transactions " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND asset_category_id IS NULL AND transaction_type = ? " +
                     "ORDER BY transaction_date DESC";
         return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
     }
@@ -99,13 +115,29 @@ public class BankTransactionRepository {
     }
     
     public BankTransaction save(BankTransaction transaction) {
+        // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
+        Long splitPatternId;
+        if (transaction.getSplitPatternId() != null) {
+            splitPatternId = transaction.getSplitPatternId();
+        } else {
+            splitPatternId = transaction.getIncomeSplitPatternId();
+        }
+
+        Boolean isCardPayment;
+        if (transaction.getIsCardPayment() != null) {
+            isCardPayment = transaction.getIsCardPayment();
+        } else {
+            isCardPayment = false;
+        }
+
         if (transaction.getId() == null) {
             // INSERT
             String sql = "INSERT INTO bank_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, income_split_pattern_id, transaction_source, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, is_card_payment, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
+
             Long id = jdbcTemplate.queryForObject(sql, Long.class,
                 transaction.getDescription(),
                 transaction.getAmount(),
@@ -115,8 +147,9 @@ public class BankTransactionRepository {
                 transaction.getUserId(),
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
-                transaction.getIncomeSplitPatternId(),
+                splitPatternId,
                 transaction.getTransactionSource(),
+                isCardPayment,
                 now);
             transaction.setId(id);
             transaction.setCreatedAt(now);
@@ -125,9 +158,11 @@ public class BankTransactionRepository {
             String sql = "UPDATE bank_transactions SET " +
                         "description = ?, amount = ?, transaction_type = ?, " +
                         "transaction_date = ?, fingerprint = ?, user_id = ?, " +
-                        "asset_category_id = ?, expense_category_id = ?, income_split_pattern_id = ?, " +
-                        "transaction_source = ? " +
+                        "asset_category_id = ?, expense_category_id = ?, split_pattern_id = ?, " +
+                        "transaction_source = ?, is_card_payment = ? " +
                         "WHERE id = ?";
+            // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
+
             jdbcTemplate.update(sql,
                 transaction.getDescription(),
                 transaction.getAmount(),
@@ -137,10 +172,25 @@ public class BankTransactionRepository {
                 transaction.getUserId(),
                 transaction.getAssetCategoryId(),
                 transaction.getExpenseCategoryId(),
-                transaction.getIncomeSplitPatternId(),
+                splitPatternId,
                 transaction.getTransactionSource(),
+                isCardPayment,
                 transaction.getId());
         }
         return transaction;
+    }
+
+    /**
+     * カード引き落としの取引を除外して取得
+     */
+    public List<BankTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetweenExcludingCardPayment(
+            Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate,
+            int offset, int limit) {
+        String sql = "SELECT * FROM bank_transactions " +
+                "WHERE user_id = ? AND transaction_type = ? AND transaction_date BETWEEN ? AND ? " +
+                "AND (is_card_payment = FALSE OR is_card_payment IS NULL) " +
+                "ORDER BY transaction_date DESC " +
+                "LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name(), startDate, endDate, limit, offset);
     }
 }

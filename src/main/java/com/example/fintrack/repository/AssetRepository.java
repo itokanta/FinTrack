@@ -133,46 +133,8 @@ public class AssetRepository {
         }
     }
     
-    public Asset save(Asset asset) {
-        if (asset.getId() == null) {
-            // INSERT
-            String sql = "INSERT INTO assets " +
-                        "(user_id, asset_category_id, amount, created_at, updated_at) " +
-                        "VALUES (?, ?, ?, ?, ?) RETURNING id";
-            LocalDateTime now = LocalDateTime.now();
-            Long id = jdbcTemplate.queryForObject(sql, Long.class,
-                asset.getUserId(),
-                asset.getAssetCategoryId(),
-                asset.getAmount(),
-                now,
-                now);
-            asset.setId(id);
-            asset.setCreatedAt(now);
-            asset.setUpdatedAt(now);
-        } else {
-            // UPDATE
-            String sql = "UPDATE assets SET " +
-                        "user_id = ?, asset_category_id = ?, amount = ?, updated_at = ? " +
-                        "WHERE id = ?";
-            LocalDateTime now = LocalDateTime.now();
-            jdbcTemplate.update(sql,
-                asset.getUserId(),
-                asset.getAssetCategoryId(),
-                asset.getAmount(),
-                now,
-                asset.getId());
-            asset.setUpdatedAt(now);
-        }
-        return asset;
-    }
-    
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM assets WHERE id = ?";
-        jdbcTemplate.update(sql, id);
-    }
-    
     /**
-     * 確定済み総資産を取得（当月と前月のクレジットカード取引を除外）
+     * 確定済み総資産を取得（未払いのクレジットカード取引を除外）
      */
     public Long getConfirmedTotalBalance(Long userId) {
         String sql = "SELECT COALESCE(SUM(a.amount), 0) " +
@@ -180,7 +142,7 @@ public class AssetRepository {
                     "WHERE a.user_id = ?";
         Long assetsTotal = jdbcTemplate.queryForObject(sql, Long.class, userId);
         
-        // 当月と前月のクレジットカード取引の合計を取得
+        // 未払いのクレジットカード取引の合計を取得
         String creditSql = "SELECT COALESCE(SUM(" +
                           "CASE " +
                           "  WHEN transaction_type = 'INCOME' THEN amount " +
@@ -190,11 +152,10 @@ public class AssetRepository {
                           "FROM card_transactions " +
                           "WHERE user_id = ? " +
                           "AND card_type = 'CREDIT' " +
-                          "AND (DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
-                          "     OR DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month'))";
-        Long currentAndPreviousMonthCreditTotal = jdbcTemplate.queryForObject(creditSql, Long.class, userId);
+                          "AND is_paid = FALSE";
+        Long unpaidCreditTotal = jdbcTemplate.queryForObject(creditSql, Long.class, userId);
         
-        return assetsTotal - currentAndPreviousMonthCreditTotal;
+        return assetsTotal - unpaidCreditTotal;
     }
     
     /**
@@ -209,7 +170,7 @@ public class AssetRepository {
             normalBalances.put(category, balance);
         }
         
-        // 当月と前月のクレジットカード取引をカテゴリ別に集計
+        // 未払いのクレジットカード取引をカテゴリ別に集計
         String sql = "SELECT ct.asset_category_id, " +
                     "SUM(CASE " +
                     "  WHEN ct.transaction_type = 'INCOME' THEN ct.amount " +
@@ -220,34 +181,33 @@ public class AssetRepository {
                     "WHERE ct.user_id = ? " +
                     "AND ct.card_type = 'CREDIT' " +
                     "AND ct.asset_category_id IS NOT NULL " +
-                    "AND (DATE_TRUNC('month', ct.transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
-                    "     OR DATE_TRUNC('month', ct.transaction_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')) " +
+                    "AND ct.is_paid = FALSE " +
                     "GROUP BY ct.asset_category_id";
         
-        Map<Long, Long> creditTotalsByCategory = new HashMap<>();
+        Map<Long, Long> unpaidCreditTotalsByCategory = new HashMap<>();
         jdbcTemplate.query(sql, rs -> {
-            creditTotalsByCategory.put(rs.getLong("asset_category_id"), rs.getLong("total"));
+            unpaidCreditTotalsByCategory.put(rs.getLong("asset_category_id"), rs.getLong("total"));
         }, userId);
         
-        // 通常の残高から当月と前月のクレジットカード取引を差し引く
+        // 通常の残高から未払いのクレジットカード取引を差し引く
         Map<AssetCategory, Long> confirmedBalances = new HashMap<>();
         for (Map.Entry<AssetCategory, Long> entry : normalBalances.entrySet()) {
             Long categoryId = entry.getKey().getId();
             Long normalBalance = entry.getValue();
-            Long creditTotal = creditTotalsByCategory.getOrDefault(categoryId, 0L);
-            confirmedBalances.put(entry.getKey(), normalBalance - creditTotal);
+            Long unpaidCreditTotal = unpaidCreditTotalsByCategory.getOrDefault(categoryId, 0L);
+            confirmedBalances.put(entry.getKey(), normalBalance - unpaidCreditTotal);
         }
         
         return confirmedBalances;
     }
     
     /**
-     * 未分類の確定済み残高を取得（当月と前月のクレジットカード取引を除外）
+     * 未分類の確定済み残高を取得（未払いのクレジットカード取引を除外）
      */
     public Long getConfirmedUncategorizedBalance(Long userId) {
         Long normalUncategorized = getUncategorizedBalance(userId);
         
-        // 当月と前月の未分類クレジットカード取引の合計を取得
+        // 未払いの未分類クレジットカード取引の合計を取得
         String sql = "SELECT COALESCE(SUM(" +
                     "CASE " +
                     "  WHEN transaction_type = 'INCOME' THEN amount " +
@@ -258,10 +218,42 @@ public class AssetRepository {
                     "WHERE user_id = ? " +
                     "AND card_type = 'CREDIT' " +
                     "AND asset_category_id IS NULL " +
-                    "AND (DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE) " +
-                    "     OR DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month'))";
-        Long currentAndPreviousMonthCreditUncategorized = jdbcTemplate.queryForObject(sql, Long.class, userId);
+                    "AND is_paid = FALSE";
+        Long unpaidCreditUncategorized = jdbcTemplate.queryForObject(sql, Long.class, userId);
         
-        return normalUncategorized - currentAndPreviousMonthCreditUncategorized;
+        return normalUncategorized - unpaidCreditUncategorized;
+    }
+
+    private Asset save(Asset asset) {
+        if (asset.getId() == null) {
+            // INSERT
+            String sql = "INSERT INTO assets " +
+                    "(user_id, asset_category_id, amount, created_at, updated_at) " +
+                    "VALUES (?, ?, ?, ?, ?) RETURNING id";
+            LocalDateTime now = LocalDateTime.now();
+            Long id = jdbcTemplate.queryForObject(sql, Long.class,
+                    asset.getUserId(),
+                    asset.getAssetCategoryId(),
+                    asset.getAmount(),
+                    now,
+                    now);
+            asset.setId(id);
+            asset.setCreatedAt(now);
+            asset.setUpdatedAt(now);
+        } else {
+            // UPDATE
+            String sql = "UPDATE assets SET " +
+                    "user_id = ?, asset_category_id = ?, amount = ?, updated_at = ? " +
+                    "WHERE id = ?";
+            LocalDateTime now = LocalDateTime.now();
+            jdbcTemplate.update(sql,
+                    asset.getUserId(),
+                    asset.getAssetCategoryId(),
+                    asset.getAmount(),
+                    now,
+                    asset.getId());
+            asset.setUpdatedAt(now);
+        }
+        return asset;
     }
 }

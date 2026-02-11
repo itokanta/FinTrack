@@ -37,53 +37,245 @@
                     
                     <dt class="col-sm-3">取引区分</dt>
                     <dd class="col-sm-9" th:text="${type == 'bank' ? '銀行' : 'カード'}">銀行</dd>
+                    
+                    <dt class="col-sm-3">分配ステータス</dt>
+                    <dd class="col-sm-9">
+                        <!-- split_pattern_id = 0: 単一カテゴリ -->
+                        <span th:if="${transaction.splitPatternId != null && transaction.splitPatternId == 0}" 
+                              class="badge bg-success">
+                            分配済み <span class="ms-1">(単一)</span>
+                        </span>
+                        
+                        <!-- split_pattern_id >= 1: パターン分割 -->
+                        <span th:if="${transaction.splitPatternId != null && transaction.splitPatternId > 0}" 
+                              class="badge bg-success">
+                            分配済み <span class="ms-1">(パターン)</span>
+                        </span>
+                        
+                        <!-- split_pattern_id = -1: 手動分割 -->
+                        <span th:if="${transaction.splitPatternId != null && transaction.splitPatternId == -1}" 
+                              class="badge bg-success">
+                            分配済み <span class="ms-1">(手動)</span>
+                        </span>
+                        
+                        <!-- split_pattern_id = null: 未分配 -->
+                        <span th:if="${transaction.splitPatternId == null}" 
+                              class="badge bg-warning">未分配</span>
+                    </dd>
                 </dl>
             </div>
         </div>
         
-        <!-- カテゴリ変更フォーム -->
-        <div class="card mb-4">
+        <!-- 分配済みの場合は分配内容を表示 -->
+        <!-- split_pattern_id = 0: 単一カテゴリの場合 -->
+        <div th:if="${transaction.splitPatternId != null && transaction.splitPatternId == 0}" class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">カテゴリ設定</h5>
+                <h5 class="mb-0">分配内容</h5>
             </div>
             <div class="card-body">
-                <form th:action="@{/transactions/expenses/{id}/update-category(id=${transaction.id})}" method="post">
-                    <input type="hidden" name="type" th:value="${type}">
-                    
-                    <div class="mb-3">
-                        <label for="assetCategoryId" class="form-label">資産カテゴリ（どの財布から支払ったか）</label>
-                        <select class="form-select" id="assetCategoryId" name="assetCategoryId">
-                            <option value="">未設定</option>
-                            <option th:each="category : ${assetCategories}" 
-                                    th:value="${category.id}" 
-                                    th:text="${category.categoryName}"
-                                    th:selected="${transaction.assetCategoryId != null && transaction.assetCategoryId == category.id}">
-                                カテゴリ名
-                            </option>
-                        </select>
-                        <div class="form-text">この支出がどの資産カテゴリから支払われたかを設定します。</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="expenseCategoryId" class="form-label">支出カテゴリ（何に使ったか）</label>
-                        <select class="form-select" id="expenseCategoryId" name="expenseCategoryId">
-                            <option value="">未設定</option>
-                            <option th:each="category : ${expenseCategories}" 
-                                    th:value="${category.id}" 
-                                    th:text="${category.categoryName}"
-                                    th:selected="${transaction.expenseCategoryId != null && transaction.expenseCategoryId == category.id}">
-                                カテゴリ名
-                            </option>
-                        </select>
-                        <div class="form-text">この支出の用途（食費、交通費など）を設定します。</div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">更新</button>
-                    <a th:href="@{/transactions/expenses}" class="btn btn-secondary">戻る</a>
-                </form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>資産カテゴリ</th>
+                            <th class="text-end">金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td th:text="${assetCategoryMap.get(transaction.assetCategoryId)}">カテゴリ名</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>合計</th>
+                            <th class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</th>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
+        
+        <!-- split_pattern_id >= 1 or -1: 分割の場合 -->
+        <div th:if="${transaction.splitPatternId != null && transaction.splitPatternId != 0}" class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">分配内容</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>資産カテゴリ</th>
+                            <th class="text-end">金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="split : ${splitTransactions}">
+                            <td th:text="${assetCategoryMap.get(split.assetCategoryId)}">カテゴリ名</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(split.amount, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>合計</th>
+                            <th class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 未分配の場合は分配フォームを表示 -->
+        <div th:if="${transaction.splitPatternId == null}">
+            <!-- 全額を1つのカテゴリに登録 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">全額を1つのカテゴリに分配</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/split/expense/split-single}" method="post">
+                        <input type="hidden" name="bankTransactionId" th:value="${type == 'bank' ? transaction.id : null}">
+                        <input type="hidden" name="cardTransactionId" th:value="${type == 'card' ? transaction.id : null}">
+                        
+                        <div class="mb-3">
+                            <label for="singleCategoryId" class="form-label">資産カテゴリ</label>
+                            <select class="form-select" id="singleCategoryId" name="categoryId" required>
+                                <option value="">選択してください</option>
+                                <option th:each="category : ${assetCategories}" 
+                                        th:value="${category.id}" 
+                                        th:text="${category.categoryName}">
+                                    カテゴリ名
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">分配する</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 手動で金額を指定して分割 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">金額を指定して分割</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/split/expense/split-manual}" method="post" id="manualSplitForm">
+                        <input type="hidden" name="bankTransactionId" th:value="${type == 'bank' ? transaction.id : null}">
+                        <input type="hidden" name="cardTransactionId" th:value="${type == 'card' ? transaction.id : null}">
+                        
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                <strong>支出金額: <span th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')}">0</span>円</strong><br>
+                                <small>各資産カテゴリへの分割金額を入力してください。合計が支出金額と一致する必要があります。</small>
+                            </div>
+                        </div>
+                        
+                        <div id="categoriesContainer">
+                            <div class="row mb-2" th:each="category : ${assetCategories}">
+                                <label class="col-sm-4 col-form-label" th:text="${category.categoryName}">カテゴリ名</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control category-amount" 
+                                               th:name="'category_' + ${category.id}" 
+                                               th:id="'amount_' + ${category.id}"
+                                               min="0" 
+                                               step="1"
+                                               placeholder="0">
+                                        <span class="input-group-text">円</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="alert alert-secondary" role="alert">
+                                <strong>合計: <span id="totalAmount">0</span>円</strong>
+                                <span id="difference" class="ms-2"></span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="submitManualSplit">分配する</button>
+                    </form>
+                    
+                    <script th:inline="javascript">
+                        const totalExpenseAmount = /*[[${transaction.amount}]]*/ 0;
+                        
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const inputs = document.querySelectorAll('.category-amount');
+                            const totalSpan = document.getElementById('totalAmount');
+                            const differenceSpan = document.getElementById('difference');
+                            const submitButton = document.getElementById('submitManualSplit');
+                            
+                            function updateTotal() {
+                                let total = 0;
+                                inputs.forEach(input => {
+                                    const value = parseInt(input.value) || 0;
+                                    total += value;
+                                });
+                                
+                                totalSpan.textContent = total.toLocaleString();
+                                
+                                const diff = totalExpenseAmount - total;
+                                if (diff === 0 && total > 0) {
+                                    differenceSpan.innerHTML = '<span class="text-success">✓ 金額が一致しています</span>';
+                                    submitButton.disabled = false;
+                                } else if (diff > 0) {
+                                    differenceSpan.innerHTML = '<span class="text-warning">残り: ' + diff.toLocaleString() + '円</span>';
+                                    submitButton.disabled = true;
+                                } else if (diff < 0) {
+                                    differenceSpan.innerHTML = '<span class="text-danger">超過: ' + Math.abs(diff).toLocaleString() + '円</span>';
+                                    submitButton.disabled = true;
+                                } else {
+                                    differenceSpan.innerHTML = '';
+                                    submitButton.disabled = true;
+                                }
+                            }
+                            
+                            inputs.forEach(input => {
+                                input.addEventListener('input', updateTotal);
+                            });
+                            
+                            updateTotal();
+                        });
+                    </script>
+                </div>
+            </div>
+            
+            <!-- 分割パターンで分配 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">分割パターンで分配</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/split/expense/split}" method="post">
+                        <input type="hidden" name="bankTransactionId" th:value="${type == 'bank' ? transaction.id : null}">
+                        <input type="hidden" name="cardTransactionId" th:value="${type == 'card' ? transaction.id : null}">
+                        
+                        <div class="mb-3">
+                            <label for="patternId" class="form-label">分割パターン</label>
+                            <select class="form-select" id="patternId" name="patternId" required>
+                                <option value="">選択してください</option>
+                                <option th:each="pattern : ${patternSummaries}" 
+                                        th:value="${pattern.id}" 
+                                        th:text="${pattern.name} + ' (' + ${pattern.splitType == 'RATIO' ? '割合指定' : '金額指定'} + ')'">
+                                    パターン
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">分配する</button>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <a th:href="@{/split/expense/patterns}" class="btn btn-sm btn-outline-secondary">分割パターン管理</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <a th:href="@{/transactions/expenses}" class="btn btn-secondary">戻る</a>
     </div>
 </body>
 </html>
-

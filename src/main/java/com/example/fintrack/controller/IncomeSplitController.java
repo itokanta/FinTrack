@@ -1,7 +1,7 @@
 package com.example.fintrack.controller;
 
 import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.domain.SplitIncome;
+import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.IncomeSplitService;
@@ -156,7 +156,7 @@ public class IncomeSplitController {
     public String splitDetails(@RequestParam(required = false) Long bankTransactionId,
                               @RequestParam(required = false) Long cardTransactionId,
                               Model model) {
-        List<SplitIncome> splits = incomeSplitService.getSplitIncomesByTransaction(
+        List<SplitTransaction> splits = incomeSplitService.getSplitIncomesByTransaction(
                 bankTransactionId, cardTransactionId);
         
         model.addAttribute("splits", splits);
