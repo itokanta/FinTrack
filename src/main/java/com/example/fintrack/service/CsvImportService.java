@@ -152,6 +152,7 @@ public class CsvImportService {
             Long matchedCategoryId = findMatchingCategoryId(dto.getDescription(), dto.getTransactionType(), rules);
             if (matchedCategoryId != null) {
                 transaction.setAssetCategoryId(matchedCategoryId);
+                transaction.setSplitPatternId(0L);
             }
 
             BankTransaction saved = bankTransactionRepository.save(transaction);
@@ -302,6 +303,7 @@ public class CsvImportService {
             Long matchedCategoryId = findMatchingCategoryId(dto.getDescription(), dto.getTransactionType(), rules);
             if (matchedCategoryId != null) {
                 transaction.setAssetCategoryId(matchedCategoryId);
+                transaction.setSplitPatternId(0L);
             }
 
             CardTransaction saved = cardTransactionRepository.save(transaction);
@@ -506,12 +508,10 @@ public class CsvImportService {
     /**
      * 摘要と収支区分に一致する自動カテゴリルールを検索
      */
-    private Long findMatchingCategoryId(String description, TransactionType transactionType,
-            List<AutoCategoryRule> rules) {
+    private Long findMatchingCategoryId(String description, TransactionType transactionType, List<AutoCategoryRule> rules) {
         for (AutoCategoryRule rule : rules) {
             // 収支区分が一致し、摘要が完全一致する場合
-            if (rule.getTransactionType() == transactionType &&
-                    description.equals(rule.getDescriptionPattern())) {
+            if (rule.getTransactionType() == transactionType && description.equals(rule.getDescriptionPattern())) {
                 return rule.getAssetCategoryId();
             }
         }
