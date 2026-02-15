@@ -141,7 +141,8 @@ public class CsvImportService {
             transaction.setTransactionSource("BANK");
 
             if (dto.getDescription() != null
-                    && (dto.getDescription().contains("ラクテンカ－ドサービス") || dto.getDescription().contains("ラクテンカ−ドサ−ビ"))) {
+                    && (dto.getDescription().contains("ラクテンカ－ドサービス") || dto.getDescription().contains("ラクテンカ−ドサ−ビ")
+                            || dto.getDescription().contains("ラクテンカ−ト゛サ−ヒ゛ス"))) {
                 transaction.setIsCardPayment(true);
             } else {
                 transaction.setIsCardPayment(false);
