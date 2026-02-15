@@ -1,21 +1,33 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.*;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.IncomeSplitService;
-import com.example.fintrack.service.TransactionService;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.BankTransaction;
+import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.domain.ExpenseCategory;
+import com.example.fintrack.domain.SplitTransaction;
+import com.example.fintrack.repository.AssetCategoryRepository;
+import com.example.fintrack.repository.ExpenseCategoryRepository;
+import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.IncomeSplitService;
+import com.example.fintrack.service.SplitService;
+import com.example.fintrack.service.SplitService.PatternSummary;
+import com.example.fintrack.service.TransactionService;
+import com.example.fintrack.service.TransactionService.TransactionWithAsset;
 
 /**
  * 取引管理コントローラー
@@ -26,14 +38,14 @@ public class TransactionController {
     
     private final TransactionService transactionService;
     private final IncomeSplitService incomeSplitService;
-    private final com.example.fintrack.service.SplitService splitService;
+    private final SplitService splitService;
     private final UserRepository userRepository;
     private final AssetCategoryRepository assetCategoryRepository;
     private final ExpenseCategoryRepository expenseCategoryRepository;
     
     public TransactionController(TransactionService transactionService,
                                 IncomeSplitService incomeSplitService,
-                                com.example.fintrack.service.SplitService splitService,
+                                SplitService splitService,
                                 UserRepository userRepository,
                                 AssetCategoryRepository assetCategoryRepository,
                                 ExpenseCategoryRepository expenseCategoryRepository) {
@@ -63,7 +75,7 @@ public class TransactionController {
             yearMonth = YearMonth.now();
         }
         
-        List<TransactionService.TransactionWithAsset> expenses = 
+        List<TransactionWithAsset> expenses = 
                 transactionService.getExpensesByMonth(userId, yearMonth, page, 20);
         
         // カテゴリ情報を取得してMapに変換
@@ -76,12 +88,12 @@ public class TransactionController {
                 .collect(Collectors.toMap(ExpenseCategory::getId, ExpenseCategory::getCategoryName));
         
         // 分割パターン情報を取得してMapに変換
-        List<com.example.fintrack.service.SplitService.PatternSummary> patternSummaries = 
+        List<PatternSummary> patternSummaries = 
             splitService.getPatternSummaries(userId, "EXPENSE");
         Map<Long, String> splitPatternMap = patternSummaries.stream()
                 .collect(Collectors.toMap(
-                    com.example.fintrack.service.SplitService.PatternSummary::getPatternId,
-                    com.example.fintrack.service.SplitService.PatternSummary::getPatternName
+                    PatternSummary::getPatternId,
+                    PatternSummary::getPatternName
                 ));
         
         model.addAttribute("expenses", expenses);
@@ -114,7 +126,7 @@ public class TransactionController {
             yearMonth = YearMonth.now();
         }
         
-        List<TransactionService.TransactionWithAsset> incomes = 
+        List<TransactionWithAsset> incomes = 
                 transactionService.getIncomesByMonth(userId, yearMonth, page, 20);
         
         model.addAttribute("incomes", incomes);
@@ -159,7 +171,7 @@ public class TransactionController {
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
         // 分割パターンサマリーを取得
-        List<com.example.fintrack.service.SplitService.PatternSummary> patternSummaries = 
+        List<PatternSummary> patternSummaries = 
             splitService.getPatternSummaries(userId, "EXPENSE");
         model.addAttribute("patternSummaries", patternSummaries);
         
