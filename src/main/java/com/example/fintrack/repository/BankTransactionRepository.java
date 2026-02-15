@@ -83,7 +83,7 @@ public class BankTransactionRepository {
     public List<BankTransaction> findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
             Long userId, TransactionType transactionType) {
         String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND asset_category_id IS NULL AND transaction_type = ? " +
+                    "WHERE user_id = ? AND split_pattern_id IS NULL AND asset_category_id IS NULL AND is_card_payment = FALSE AND transaction_type = ? " +
                     "ORDER BY transaction_date DESC";
         return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
     }
