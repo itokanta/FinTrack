@@ -1,50 +1,47 @@
 package com.example.fintrack.repository;
 
-import com.example.fintrack.domain.BankTransaction;
-import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.mapper.BankTransactionRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+import com.example.fintrack.domain.BankTransaction;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.mapper.BankTransactionRowMapper;
 
 @Repository
 public class BankTransactionRepository {
     
-    private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate template;
     private final BankTransactionRowMapper rowMapper = new BankTransactionRowMapper();
     
-    public BankTransactionRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public BankTransactionRepository(NamedParameterJdbcTemplate template) {
+        this.template = template;
     }
     
     public Optional<BankTransaction> findById(Long id) {
-        String sql = "SELECT * FROM bank_transactions WHERE id = ?";
-        List<BankTransaction> transactions = jdbcTemplate.query(sql, rowMapper, id);
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
+                    "user_id, asset_category_id, expense_category_id, split_pattern_id, transaction_source, " +
+                    "is_card_payment, created_at, csv_import_history_id FROM bank_transactions WHERE id = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+        List<BankTransaction> transactions = template.query(sql, params, rowMapper);
         if (transactions.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(transactions.get(0));
     }
     
-    public boolean existsByFingerprint(String fingerprint) {
-        String sql = "SELECT COUNT(*) FROM bank_transactions WHERE fingerprint = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, fingerprint);
-        return count != null && count > 0;
-    }
-    
     public Map<String, Long> countByFingerprintGrouped(Long userId) {
-        String sql = "SELECT fingerprint, COUNT(*) as count " +
+        String sql = "SELECT fingerprint, COUNT(fingerprint) as count " +
                     "FROM bank_transactions " +
-                    "WHERE user_id = ? " +
+                    "WHERE user_id = :userId " +
                     "GROUP BY fingerprint";
-        
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, userId);
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
+        List<Map<String, Object>> results = template.queryForList(sql, params);
         Map<String, Long> fingerprintCounts = new HashMap<>();
         
         for (Map<String, Object> row : results) {
@@ -56,62 +53,37 @@ public class BankTransactionRepository {
         return fingerprintCounts;
     }
     
-    public List<BankTransaction> findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
-            Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND asset_category_id IS NULL AND transaction_type = ? " +
-                    "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
-    public List<BankTransaction> findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
-            Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
-                    "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
     public List<BankTransaction> findByUserIdAndSplitPatternIdIsNullAndTransactionType(
             Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, expense_category_id, split_pattern_id, " +
+                    "transaction_source, is_card_payment, created_at, csv_import_history_id " +
+                    "FROM bank_transactions " +
+                    "WHERE user_id = :userId AND split_pattern_id IS NULL AND is_card_payment = FALSE AND transaction_type = :transactionType " +
                     "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
-    public List<BankTransaction> findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
-            Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND asset_category_id IS NULL AND is_card_payment = FALSE AND transaction_type = ? " +
-                    "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
-    public List<BankTransaction> findByUserIdAndTransactionDateBetween(
-            Long userId, LocalDate startDate, LocalDate endDate, int offset, int limit) {
-        String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND transaction_date BETWEEN ? AND ? " +
-                    "ORDER BY transaction_date DESC " +
-                    "LIMIT ? OFFSET ?";
-        return jdbcTemplate.query(sql, rowMapper, userId, startDate, endDate, limit, offset);
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name());
+        return template.query(sql, params, rowMapper);
     }
     
     public List<BankTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetween(
             Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate, 
             int offset, int limit) {
-        String sql = "SELECT * FROM bank_transactions " +
-                    "WHERE user_id = ? AND transaction_type = ? AND transaction_date BETWEEN ? AND ? " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, expense_category_id, split_pattern_id, " +
+                    "transaction_source, is_card_payment, created_at, csv_import_history_id " +
+                    "FROM bank_transactions " +
+                    "WHERE user_id = :userId AND transaction_type = :transactionType AND transaction_date BETWEEN :startDate AND :endDate " +
                     "ORDER BY transaction_date DESC " +
-                    "LIMIT ? OFFSET ?";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name(), startDate, endDate, limit, offset);
+                    "LIMIT :limit OFFSET :offset";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name())
+                        .addValue("startDate", startDate).addValue("endDate", endDate).addValue("limit", limit).addValue("offset", offset);
+        return template.query(sql, params, rowMapper);
     }
     
     public List<String> findDistinctDescriptionsByUserId(Long userId) {
         String sql = "SELECT DISTINCT description FROM bank_transactions " +
-                    "WHERE user_id = ? AND description IS NOT NULL " +
+                    "WHERE user_id = :userId AND description IS NOT NULL " +
                     "ORDER BY description";
-        return jdbcTemplate.queryForList(sql, String.class, userId);
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
+        return template.queryForList(sql, params, String.class);
     }
     
     public BankTransaction save(BankTransaction transaction) {
@@ -134,63 +106,52 @@ public class BankTransactionRepository {
             // INSERT
             String sql = "INSERT INTO bank_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, is_card_payment, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, is_card_payment, created_at, csv_import_history_id) " +
+                        "VALUES (:description, :amount, :transactionType, :transactionDate, :fingerprint, :userId, :assetCategoryId, :expenseCategoryId, :splitPatternId, " +
+                        ":transactionSource, :isCardPayment, :createdAt, :csvImportHistoryId) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("description", transaction.getDescription())
+                .addValue("amount", transaction.getAmount())
+                .addValue("transactionType", transaction.getTransactionType().name())
+                .addValue("transactionDate", transaction.getTransactionDate())
+                .addValue("fingerprint", transaction.getFingerprint())
+                .addValue("userId", transaction.getUserId())
+                .addValue("assetCategoryId", transaction.getAssetCategoryId())
+                .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
+                .addValue("splitPatternId", splitPatternId)
+                .addValue("transactionSource", transaction.getTransactionSource())
+                .addValue("isCardPayment", isCardPayment)
+                .addValue("createdAt", now)
+                .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId());
 
-            Long id = jdbcTemplate.queryForObject(sql, Long.class,
-                transaction.getDescription(),
-                transaction.getAmount(),
-                transaction.getTransactionType().name(),
-                transaction.getTransactionDate(),
-                transaction.getFingerprint(),
-                transaction.getUserId(),
-                transaction.getAssetCategoryId(),
-                transaction.getExpenseCategoryId(),
-                splitPatternId,
-                transaction.getTransactionSource(),
-                isCardPayment,
-                now);
+            Long id = template.queryForObject(sql, params, Long.class);
             transaction.setId(id);
             transaction.setCreatedAt(now);
         } else {
             // UPDATE
             String sql = "UPDATE bank_transactions SET " +
-                        "description = ?, amount = ?, transaction_type = ?, " +
-                        "transaction_date = ?, fingerprint = ?, user_id = ?, " +
-                        "asset_category_id = ?, expense_category_id = ?, split_pattern_id = ?, " +
-                        "transaction_source = ?, is_card_payment = ? " +
-                        "WHERE id = ?";
-            // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
+                        "description = :description, amount = :amount, transaction_type = :transactionType, " +
+                        "transaction_date = :transactionDate, fingerprint = :fingerprint, user_id = :userId, " +
+                        "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, split_pattern_id = :splitPatternId, " +
+                        "transaction_source = :transactionSource, is_card_payment = :isCardPayment " +
+                        "WHERE id = :id";
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("description", transaction.getDescription())
+                .addValue("amount", transaction.getAmount())
+                .addValue("transactionType", transaction.getTransactionType().name())
+                .addValue("transactionDate", transaction.getTransactionDate())
+                .addValue("fingerprint", transaction.getFingerprint())
+                .addValue("userId", transaction.getUserId())
+                .addValue("assetCategoryId", transaction.getAssetCategoryId())
+                .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
+                .addValue("splitPatternId", splitPatternId)
+                .addValue("transactionSource", transaction.getTransactionSource())
+                .addValue("isCardPayment", isCardPayment)
+                .addValue("id", transaction.getId());
 
-            jdbcTemplate.update(sql,
-                transaction.getDescription(),
-                transaction.getAmount(),
-                transaction.getTransactionType().name(),
-                transaction.getTransactionDate(),
-                transaction.getFingerprint(),
-                transaction.getUserId(),
-                transaction.getAssetCategoryId(),
-                transaction.getExpenseCategoryId(),
-                splitPatternId,
-                transaction.getTransactionSource(),
-                isCardPayment,
-                transaction.getId());
+            template.update(sql, params);
         }
         return transaction;
-    }
-
-    /**
-     * カード引き落としの取引を除外して取得
-     */
-    public List<BankTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetweenExcludingCardPayment(
-            Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate,
-            int offset, int limit) {
-        String sql = "SELECT * FROM bank_transactions " +
-                "WHERE user_id = ? AND transaction_type = ? AND transaction_date BETWEEN ? AND ? " +
-                "AND (is_card_payment = FALSE OR is_card_payment IS NULL) " +
-                "ORDER BY transaction_date DESC " +
-                "LIMIT ? OFFSET ?";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name(), startDate, endDate, limit, offset);
     }
 }

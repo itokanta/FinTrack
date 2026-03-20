@@ -77,7 +77,7 @@ public class TransactionService {
         
         // 未分類の銀行取引を取得（split_pattern_idがNULLかつasset_category_idがNULLかつ支出）
         List<BankTransaction> bankTransactions = bankTransactionRepository
-                .findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
+                .findByUserIdAndSplitPatternIdIsNullAndTransactionType(
                         userId, TransactionType.EXPENSE);
         
         for (BankTransaction bt : bankTransactions) {
@@ -111,7 +111,7 @@ public class TransactionService {
         
         // 未分類の銀行取引を取得（income_split_pattern_idがNULL）
         List<BankTransaction> bankTransactions = bankTransactionRepository
-                .findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
+                .findByUserIdAndSplitPatternIdIsNullAndTransactionType(
                         userId, TransactionType.INCOME);
         
         for (BankTransaction bt : bankTransactions) {

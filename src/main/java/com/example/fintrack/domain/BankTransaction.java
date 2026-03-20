@@ -27,4 +27,5 @@ public class BankTransaction {
     private Boolean isCardPayment; // カード引き落としフラグ
     private String transactionSource; // BANK
     private LocalDateTime createdAt;
+    private Long csvImportHistoryId;
 }

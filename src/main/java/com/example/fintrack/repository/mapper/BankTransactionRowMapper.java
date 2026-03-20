@@ -55,6 +55,14 @@ public class BankTransactionRowMapper implements RowMapper<BankTransaction> {
         }
 
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
+        long csvImportHistoryId = rs.getLong("csv_import_history_id");
+        if (rs.wasNull()) {
+            transaction.setCsvImportHistoryId(null);
+        } else {
+            transaction.setCsvImportHistoryId(csvImportHistoryId);
+        }
+        
         return transaction;
     }
 }
