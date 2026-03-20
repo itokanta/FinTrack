@@ -1,7 +1,7 @@
 package com.example.fintrack.repository;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,10 +106,10 @@ public class BankTransactionRepository {
             // INSERT
             String sql = "INSERT INTO bank_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, is_card_payment, created_at, csv_import_history_id) " +
+                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, is_card_payment, csv_import_history_id) " +
                         "VALUES (:description, :amount, :transactionType, :transactionDate, :fingerprint, :userId, :assetCategoryId, :expenseCategoryId, :splitPatternId, " +
-                        ":transactionSource, :isCardPayment, :createdAt, :csvImportHistoryId) RETURNING id";
-            LocalDateTime now = LocalDateTime.now();
+                        ":transactionSource, :isCardPayment, :csvImportHistoryId) RETURNING id, created_at";
+
             MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("description", transaction.getDescription())
                 .addValue("amount", transaction.getAmount())
@@ -122,12 +122,11 @@ public class BankTransactionRepository {
                 .addValue("splitPatternId", splitPatternId)
                 .addValue("transactionSource", transaction.getTransactionSource())
                 .addValue("isCardPayment", isCardPayment)
-                .addValue("createdAt", now)
                 .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId());
 
-            Long id = template.queryForObject(sql, params, Long.class);
-            transaction.setId(id);
-            transaction.setCreatedAt(now);
+            Map<String, Object> result = template.queryForMap(sql, params);
+            transaction.setId((Long)result.get("id"));
+            transaction.setCreatedAt(((Timestamp)result.get("created_at")).toLocalDateTime());
         } else {
             // UPDATE
             String sql = "UPDATE bank_transactions SET " +

@@ -19,7 +19,7 @@ public class CsvImportHistoryRepository {
   }
 
   public void save(CsvImportHistory csvImportHistory) {
-    String sql = "INSERT INTO csv_import_histories (user_id, import_type, csv_name, import_date, record_count) VALUES (:userId, :importType, :csvName, :importDate, :recordCount)";
+    String sql = "INSERT INTO csv_import_histories (user_id, import_type, csv_name, record_count) VALUES (:userId, :importType, :csvName, :recordCount)";
     BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(csvImportHistory);
     template.update(sql, params);
   }
