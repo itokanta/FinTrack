@@ -29,4 +29,5 @@ public class CardTransaction {
     private String paymentMonth; // YYYY-MM形式（例: "2025-01"）
     private Boolean isPaid; // 引き落とし済みフラグ（クレジットのみ、デビットはNULL）
     private LocalDateTime createdAt;
+    private Long csvImportHistoryId;
 }

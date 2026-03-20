@@ -1,11 +1,5 @@
 package com.example.fintrack.repository;
 
-import com.example.fintrack.domain.CardTransaction;
-import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.mapper.CardTransactionRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -13,38 +7,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.mapper.CardTransactionRowMapper;
+
 @Repository
 public class CardTransactionRepository {
     
-    private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate template;
     private final CardTransactionRowMapper rowMapper = new CardTransactionRowMapper();
     
-    public CardTransactionRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public CardTransactionRepository(NamedParameterJdbcTemplate template) {
+        this.template = template;
     }
     
     public Optional<CardTransaction> findById(Long id) {
-        String sql = "SELECT * FROM card_transactions WHERE id = ?";
-        List<CardTransaction> transactions = jdbcTemplate.query(sql, rowMapper, id);
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " + 
+                    "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
+                    "FROM card_transactions WHERE id = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+        List<CardTransaction> transactions = template.query(sql, params, rowMapper);
         if (transactions.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(transactions.get(0));
     }
     
-    public boolean existsByFingerprint(String fingerprint) {
-        String sql = "SELECT COUNT(*) FROM card_transactions WHERE fingerprint = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, fingerprint);
-        return count != null && count > 0;
-    }
-    
     public Map<String, Long> countByFingerprintGrouped(Long userId) {
-        String sql = "SELECT fingerprint, COUNT(*) as count " +
+        String sql = "SELECT fingerprint, COUNT(fingerprint) as count " +
                     "FROM card_transactions " +
-                    "WHERE user_id = ? " +
+                    "WHERE user_id = :userId " +
                     "GROUP BY fingerprint";
-        
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, userId);
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
+        List<Map<String, Object>> results = template.queryForList(sql, params);
         Map<String, Long> fingerprintCounts = new HashMap<>();
         
         for (Map<String, Object> row : results) {
@@ -60,68 +59,51 @@ public class CardTransactionRepository {
      * fingerprint全件を取得
      */
     public List<CardTransaction> findAllByUserId(Long userId) {
-        String sql = "SELECT * FROM card_transactions WHERE user_id = ? ORDER BY created_at ASC";
-        List<CardTransaction> transactions = jdbcTemplate.query(sql, rowMapper, userId);
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                    "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
+                    "FROM card_transactions WHERE user_id = :userId ORDER BY created_at ASC";
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
+        List<CardTransaction> transactions = template.query(sql, params, rowMapper);
         
         return transactions;
     }
     
-    public List<CardTransaction> findByUserIdAndAssetCategoryIdIsNullAndTransactionType(
+    public List<CardTransaction> findBySplitPatternNullAndType(
             Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND asset_category_id IS NULL AND transaction_type = ? " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                    "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
+                    "FROM card_transactions " +
+                    "WHERE user_id = :userId AND split_pattern_id IS NULL AND transaction_type = :transactionType " +
                     "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name());
+        return template.query(sql, params, rowMapper);
     }
-    
-    public List<CardTransaction> findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
-            Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
-                    "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
-    public List<CardTransaction> findByUserIdAndSplitPatternIdIsNullAndTransactionType(
-            Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND transaction_type = ? " +
-                    "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
-    public List<CardTransaction> findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
-            Long userId, TransactionType transactionType) {
-        String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND split_pattern_id IS NULL AND asset_category_id IS NULL AND transaction_type = ? " +
-                    "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name());
-    }
-    
-    public List<CardTransaction> findByUserIdAndTransactionDateBetween(
-            Long userId, LocalDate startDate, LocalDate endDate, int offset, int limit) {
-        String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND transaction_date BETWEEN ? AND ? " +
-                    "ORDER BY transaction_date DESC " +
-                    "LIMIT ? OFFSET ?";
-        return jdbcTemplate.query(sql, rowMapper, userId, startDate, endDate, limit, offset);
-    }
-    
+        
     public List<CardTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetween(
             Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate,
             int offset, int limit) {
-        String sql = "SELECT * FROM card_transactions " +
-                    "WHERE user_id = ? AND transaction_type = ? AND transaction_date BETWEEN ? AND ? " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                    "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
+                    "FROM card_transactions " +
+                    "WHERE user_id = :userId AND transaction_type = :transactionType AND transaction_date BETWEEN :startDate AND :endDate " +
                     "ORDER BY transaction_date DESC " +
-                    "LIMIT ? OFFSET ?";
-        return jdbcTemplate.query(sql, rowMapper, userId, transactionType.name(), startDate, endDate, limit, offset);
+                    "LIMIT :limit OFFSET :offset";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("userId", userId)
+            .addValue("transactionType", transactionType.name())
+            .addValue("startDate", startDate)
+            .addValue("endDate", endDate)
+            .addValue("limit", limit)
+            .addValue("offset", offset);
+        return template.query(sql, params, rowMapper);
     }
     
     public List<String> findDistinctDescriptionsByUserId(Long userId) {
         String sql = "SELECT DISTINCT description FROM card_transactions " +
-                    "WHERE user_id = ? AND description IS NOT NULL " +
+                    "WHERE user_id = :userId AND description IS NOT NULL " +
                     "ORDER BY description";
-        return jdbcTemplate.queryForList(sql, String.class, userId);
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
+        return template.queryForList(sql, params, String.class);
     }
     
     public CardTransaction save(CardTransaction transaction) {
@@ -136,52 +118,53 @@ public class CardTransactionRepository {
             // INSERT
             String sql = "INSERT INTO card_transactions " +
                         "(description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
-                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                        "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id) " +
+                        "VALUES (:description, :amount, :transactionType, :transactionDate, :fingerprint, :userId, " +
+                        ":assetCategoryId, :expenseCategoryId, :splitPatternId, :transactionSource, :cardType, :paymentMonth, :isPaid, :createdAt, :csvImportHistoryId) RETURNING id";
             LocalDateTime now = LocalDateTime.now();
-            // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
-
-            Long id = jdbcTemplate.queryForObject(sql, Long.class,
-                transaction.getDescription(),
-                transaction.getAmount(),
-                transaction.getTransactionType().name(),
-                transaction.getTransactionDate(),
-                transaction.getFingerprint(),
-                transaction.getUserId(),
-                transaction.getAssetCategoryId(),
-                transaction.getExpenseCategoryId(),
-                splitPatternId,
-                transaction.getTransactionSource(),
-                transaction.getCardType(),
-                transaction.getPaymentMonth(),
-                transaction.getIsPaid(),
-                now);
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("description", transaction.getDescription())
+                .addValue("amount", transaction.getAmount())
+                .addValue("transactionType", transaction.getTransactionType().name())
+                .addValue("transactionDate", transaction.getTransactionDate())
+                .addValue("fingerprint", transaction.getFingerprint())
+                .addValue("userId", transaction.getUserId())
+                .addValue("assetCategoryId", transaction.getAssetCategoryId())
+                .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
+                .addValue("splitPatternId", splitPatternId)
+                .addValue("transactionSource", transaction.getTransactionSource())
+                .addValue("cardType", transaction.getCardType())
+                .addValue("paymentMonth", transaction.getPaymentMonth())
+                .addValue("isPaid", transaction.getIsPaid())
+                .addValue("createdAt", now)
+                .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId());
+            Long id = template.queryForObject(sql, params, Long.class);
             transaction.setId(id);
             transaction.setCreatedAt(now);
         } else {
             // UPDATE
             String sql = "UPDATE card_transactions SET " +
-                        "description = ?, amount = ?, transaction_type = ?, " +
-                        "transaction_date = ?, fingerprint = ?, user_id = ?, " +
-                        "asset_category_id = ?, expense_category_id = ?, split_pattern_id = ?, " +
-                        "transaction_source = ?, card_type = ?, payment_month = ?, is_paid = ? " +
-                        "WHERE id = ?";
-            // 後方互換性: incomeSplitPatternIdが設定されている場合はそれを使用
-            jdbcTemplate.update(sql,
-                transaction.getDescription(),
-                transaction.getAmount(),
-                transaction.getTransactionType().name(),
-                transaction.getTransactionDate(),
-                transaction.getFingerprint(),
-                transaction.getUserId(),
-                transaction.getAssetCategoryId(),
-                transaction.getExpenseCategoryId(),
-                splitPatternId,
-                transaction.getTransactionSource(),
-                transaction.getCardType(),
-                transaction.getPaymentMonth(),
-                transaction.getIsPaid(),
-                transaction.getId());
+                        "description = :description, amount = :amount, transaction_type = :transactionType, " +
+                        "transaction_date = :transactionDate, fingerprint = :fingerprint, user_id = :userId, " +
+                        "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, split_pattern_id = :splitPatternId, " +
+                        "transaction_source = :transactionSource, card_type = :cardType, payment_month = :paymentMonth, is_paid = :isPaid " +
+                        "WHERE id = :id";
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("description", transaction.getDescription())
+                .addValue("amount", transaction.getAmount())
+                .addValue("transactionType", transaction.getTransactionType().name())
+                .addValue("transactionDate", transaction.getTransactionDate())
+                .addValue("fingerprint", transaction.getFingerprint())
+                .addValue("userId", transaction.getUserId())
+                .addValue("assetCategoryId", transaction.getAssetCategoryId())
+                .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
+                .addValue("splitPatternId", splitPatternId)
+                .addValue("transactionSource", transaction.getTransactionSource())
+                .addValue("cardType", transaction.getCardType())
+                .addValue("paymentMonth", transaction.getPaymentMonth())
+                .addValue("isPaid", transaction.getIsPaid())
+                .addValue("id", transaction.getId());
+            template.update(sql, params);
         }
         return transaction;
     }
@@ -190,10 +173,15 @@ public class CardTransactionRepository {
      * 指定した支払い月のカード取引を取得
      */
     public List<CardTransaction> findByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
-        String sql = "SELECT * FROM card_transactions " +
-                "WHERE user_id = ? AND payment_month = ? " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
+                "FROM card_transactions " +
+                "WHERE user_id = :userId AND payment_month = :paymentMonth " +
                 "ORDER BY transaction_date DESC";
-        return jdbcTemplate.query(sql, rowMapper, userId, paymentMonth);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("userId", userId)
+            .addValue("paymentMonth", paymentMonth);
+        return template.query(sql, params, rowMapper);
     }
 
     /**
@@ -201,27 +189,22 @@ public class CardTransactionRepository {
      */
     public Long sumAmountByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM card_transactions " +
-                "WHERE user_id = ? AND payment_month = ? AND transaction_type = 'EXPENSE'";
-        return jdbcTemplate.queryForObject(sql, Long.class, userId, paymentMonth);
+                "WHERE user_id = :userId AND payment_month = :paymentMonth AND transaction_type = 'EXPENSE'";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("userId", userId)
+            .addValue("paymentMonth", paymentMonth);
+        return template.queryForObject(sql, params, Long.class);
     }
-    
-    /**
-     * 未払いのクレジットカード取引合計を取得
-     */
-    public Long sumUnpaidCreditAmount(Long userId) {
-        String sql = "SELECT COALESCE(SUM(amount), 0) FROM card_transactions " +
-                    "WHERE user_id = ? AND card_type = 'CREDIT' " +
-                    "AND is_paid = FALSE " +
-                    "AND transaction_type = 'EXPENSE'";
-        return jdbcTemplate.queryForObject(sql, Long.class, userId);
-    }
-    
+
     /**
      * 指定した支払い月のカード取引を引き落とし済みに更新
      */
     public void markAsPaidByPaymentMonth(Long userId, String paymentMonth) {
         String sql = "UPDATE card_transactions SET is_paid = TRUE " +
-                    "WHERE user_id = ? AND payment_month = ? AND card_type = 'CREDIT'";
-        jdbcTemplate.update(sql, userId, paymentMonth);
+                    "WHERE user_id = :userId AND payment_month = :paymentMonth AND card_type = 'CREDIT'";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("userId", userId)
+            .addValue("paymentMonth", paymentMonth);
+        template.update(sql, params);
     }
 }

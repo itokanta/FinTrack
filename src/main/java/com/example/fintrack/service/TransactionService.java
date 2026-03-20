@@ -84,9 +84,9 @@ public class TransactionService {
             result.add(new TransactionWithAsset(bt, null));
         }
         
-        // 未分類のカード取引を取得（split_pattern_idがNULLかつasset_category_idがNULLかつ支出）
+        // 未分類のカード取引を取得（split_pattern_idがNULLかつ支出）
         List<CardTransaction> cardTransactions = cardTransactionRepository
-                .findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
+                .findBySplitPatternNullAndType(
                         userId, TransactionType.EXPENSE);
         
         for (CardTransaction ct : cardTransactions) {
@@ -120,7 +120,7 @@ public class TransactionService {
         
         // 未分類のカード取引を取得（income_split_pattern_idがNULL）
         List<CardTransaction> cardTransactions = cardTransactionRepository
-                .findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
+                .findBySplitPatternNullAndType(
                         userId, TransactionType.INCOME);
         
         for (CardTransaction ct : cardTransactions) {

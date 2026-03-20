@@ -19,7 +19,7 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
         transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
         transaction.setFingerprint(rs.getString("fingerprint"));
         transaction.setUserId(rs.getLong("user_id"));
-        
+
         // NULL許容のカラム
         long assetCategoryId = rs.getLong("asset_category_id");
         if (rs.wasNull()) {
@@ -58,7 +58,16 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
         }
         
         transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
+        long csvImportHistoryId = rs.getLong("csv_import_history_id");
+        if (rs.wasNull()) {
+            transaction.setCsvImportHistoryId(null);
+        } else {
+            transaction.setCsvImportHistoryId(csvImportHistoryId);
+        }
+        
         return transaction;
+
     }
 }
 
