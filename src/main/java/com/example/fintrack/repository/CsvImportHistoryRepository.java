@@ -18,10 +18,10 @@ public class CsvImportHistoryRepository {
     this.template = template;
   }
 
-  public void save(CsvImportHistory csvImportHistory) {
-    String sql = "INSERT INTO csv_import_histories (user_id, import_type, csv_name, record_count) VALUES (:userId, :importType, :csvName, :recordCount)";
+  public Long save(CsvImportHistory csvImportHistory) {
+    String sql = "INSERT INTO csv_import_histories (user_id, import_type, csv_name, record_count) VALUES (:userId, :importType, :csvName, :recordCount) RETURNING id";
     BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(csvImportHistory);
-    template.update(sql, params);
+    return template.queryForObject(sql, params, Long.class);
   }
 
   public List<CsvImportHistory> findAllByUserId(Long userId) {
@@ -30,15 +30,19 @@ public class CsvImportHistoryRepository {
     return template.query(sql, params, rowMapper);
   }
 
-  public CsvImportHistory findById(Long id) {
-    String sql = "SELECT id, user_id, import_type, csv_name, import_date, record_count FROM csv_import_histories WHERE id = :id";
-   MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+  public CsvImportHistory findById(Long id, Long userId) {
+    String sql = "SELECT id, user_id, import_type, csv_name, import_date, record_count FROM csv_import_histories WHERE id = :id AND user_id = :userId";
+   MapSqlParameterSource params = new MapSqlParameterSource()
+    .addValue("id", id)
+    .addValue("userId", userId);
     return template.queryForObject(sql, params, rowMapper);
   }
 
-  public void deleteById(Long id) {
-    String sql = "DELETE FROM csv_import_histories WHERE id = :id";
-    MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+  public void deleteById(Long id, Long userId) {
+    String sql = "DELETE FROM csv_import_histories WHERE id = :id AND user_id = :userId";
+    MapSqlParameterSource params = new MapSqlParameterSource()
+      .addValue("id", id)
+      .addValue("userId", userId);
     template.update(sql, params);
   }
 }

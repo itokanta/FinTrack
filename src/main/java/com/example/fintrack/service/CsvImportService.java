@@ -28,11 +28,16 @@ import com.example.fintrack.domain.AutoCategoryRule;
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
 import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.domain.CsvImportHistory;
+import com.example.fintrack.domain.CsvImportUpdateField;
+import com.example.fintrack.domain.CsvImportUpdateHistory;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AutoCategoryRuleRepository;
 import com.example.fintrack.repository.BankTransactionRepository;
 import com.example.fintrack.repository.CardPaymentDiscrepancyRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
+import com.example.fintrack.repository.CsvImportHistoryRepository;
+import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 import com.example.fintrack.repository.UserRepository;
 
 /**
@@ -51,7 +56,8 @@ public class CsvImportService {
     private final AssetService assetService;
     private final UserRepository userRepository;
     private final CardPaymentDiscrepancyRepository discrepancyRepository;
-
+    private final CsvImportHistoryRepository csvImportHistoryRepository;
+    private final CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository;
     public CsvImportService(CsvReader csvReader,
             CsvParserFactory csvParserFactory,
             TransactionNormalizer transactionNormalizer,
@@ -61,7 +67,10 @@ public class CsvImportService {
             AutoCategoryRuleRepository autoCategoryRuleRepository,
             AssetService assetService,
             UserRepository userRepository,
-            CardPaymentDiscrepancyRepository discrepancyRepository) {
+            CardPaymentDiscrepancyRepository discrepancyRepository,
+            CsvImportHistoryRepository csvImportHistoryRepository,
+            CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository
+        ) {
         this.csvReader = csvReader;
         this.csvParserFactory = csvParserFactory;
         this.transactionNormalizer = transactionNormalizer;
@@ -72,6 +81,8 @@ public class CsvImportService {
         this.assetService = assetService;
         this.userRepository = userRepository;
         this.discrepancyRepository = discrepancyRepository;
+        this.csvImportHistoryRepository = csvImportHistoryRepository;
+        this.csvImportUpdateHistoryRepository = csvImportUpdateHistoryRepository;
     }
 
     /**
@@ -125,6 +136,13 @@ public class CsvImportService {
         // 自動カテゴリルールを取得
         List<AutoCategoryRule> rules = autoCategoryRuleRepository.findByUserId(userId);
 
+        CsvImportHistory csvImportHistory = new CsvImportHistory();
+        csvImportHistory.setUserId(userId);
+        csvImportHistory.setImportType("BANK");
+        csvImportHistory.setCsvName(file.getOriginalFilename());
+        csvImportHistory.setRecordCount((long) toInsert.size());
+        Long csvImportHistoryId = csvImportHistoryRepository.save(csvImportHistory);
+
         // インサート
         int count = 0;
         for (TransactionDTO dto : toInsert) {
@@ -139,6 +157,7 @@ public class CsvImportService {
             transaction.setFingerprint(fingerprint);
             transaction.setUserId(userId);
             transaction.setTransactionSource("BANK");
+            transaction.setCsvImportHistoryId(csvImportHistoryId);
 
             if (dto.getDescription() != null
                     && (dto.getDescription().contains("ラクテンカ－ドサービス") || dto.getDescription().contains("ラクテンカ−ドサ−ビ")
@@ -172,6 +191,20 @@ public class CsvImportService {
 
                 // 金額の照合
                 if (expectedAmount.equals(actualAmount)) {
+                    List<CardTransaction> cardTransactionList = cardTransactionRepository.findByUserIdAndPaymentMonth(userId, paymentMonth);
+                    for (CardTransaction cardTransaction : cardTransactionList) {
+                        CsvImportUpdateHistory csvImportUpdateHistory = new CsvImportUpdateHistory();
+                        csvImportUpdateHistory.setUserId(userId);
+                        csvImportUpdateHistory.setCsvImportHistoryId(csvImportHistoryId);
+                        csvImportUpdateHistory.setCardTransactionId(cardTransaction.getId());
+                        csvImportUpdateHistory.setTargetField(CsvImportUpdateField.IS_PAID);
+                        if (cardTransaction.getIsPaid() != null){
+                            csvImportUpdateHistory.setValueBefore(cardTransaction.getIsPaid().toString());
+                        }
+                        csvImportUpdateHistory.setValueAfter("TRUE");
+
+                        csvImportUpdateHistoryRepository.save(csvImportUpdateHistory);
+                    } 
                     // 金額が一致する場合のみ is_paid を更新
                     cardTransactionRepository.markAsPaidByPaymentMonth(userId, paymentMonth);
                 } else {
@@ -272,6 +305,13 @@ public class CsvImportService {
         // 自動カテゴリルールを取得
         List<AutoCategoryRule> rules = autoCategoryRuleRepository.findByUserId(userId);
 
+        CsvImportHistory csvImportHistory = new CsvImportHistory();
+        csvImportHistory.setUserId(userId);
+        csvImportHistory.setImportType("CARD");
+        csvImportHistory.setCsvName(file.getOriginalFilename());
+        csvImportHistory.setRecordCount((long) toInsert.size() + (long) toUpdate.size());
+        Long csvImportHistoryId = csvImportHistoryRepository.save(csvImportHistory);
+
         // インサート
         int count = 0;
         for (TransactionDTO dto : toInsert) {
@@ -286,9 +326,11 @@ public class CsvImportService {
             transaction.setFingerprint(fingerprint);
             transaction.setUserId(userId);
             transaction.setTransactionSource("CARD");
+            transaction.setCsvImportHistoryId(csvImportHistoryId);
 
             // カード種別を設定
             if (bankType == BankType.RAKUTEN_DEBIT) {
+
                 transaction.setCardType("DEBIT");
                 transaction.setIsPaid(null); // デビットは管理対象外
             } else {
@@ -327,6 +369,20 @@ public class CsvImportService {
         // paymentMonthが変更されたトランザクションを更新
         // extractTransactionsToUpdateメソッドで既にpaymentMonthは更新済み
         for (CardTransaction transaction : toUpdate) {
+            CsvImportUpdateHistory csvImportUpdateHistory = new CsvImportUpdateHistory();
+            csvImportUpdateHistory.setUserId(userId);
+            csvImportUpdateHistory.setCsvImportHistoryId(csvImportHistoryId);
+            csvImportUpdateHistory.setCardTransactionId(transaction.getId());
+            csvImportUpdateHistory.setTargetField(CsvImportUpdateField.PAYMENT_MONTH);
+            for (CardTransaction existingTransaction : existingTransactions) {
+                if (Objects.equals(existingTransaction.getId(), transaction.getId())) {
+                    csvImportUpdateHistory.setValueBefore(existingTransaction.getPaymentMonth());
+                    break;
+                }
+            }
+            csvImportUpdateHistory.setValueAfter(transaction.getPaymentMonth());
+
+            csvImportUpdateHistoryRepository.save(csvImportUpdateHistory);
             cardTransactionRepository.save(transaction);
             count++;
         }

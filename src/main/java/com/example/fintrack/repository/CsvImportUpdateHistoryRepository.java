@@ -19,20 +19,27 @@ public class CsvImportUpdateHistoryRepository {
   }
 
   public void save(CsvImportUpdateHistory csvImportUpdateHistory) {
-    String sql = "INSERT INTO csv_import_update_histories (csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after) VALUES (:csvImportHistoryId, :bankTransactionId, :cardTransactionId, :targetField, :valueBefore, :valueAfter)";
+    String sql = "INSERT INTO csv_import_update_histories (csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, user_id) " +
+                "VALUES (:csvImportHistoryId, :bankTransactionId, :cardTransactionId, :targetField, :valueBefore, :valueAfter, :userId)";
     BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(csvImportUpdateHistory);
     template.update(sql, params);
   }
 
-  public List<CsvImportUpdateHistory> findAllByCsvImportHistoryId(Long csvImportHistoryId) {
-    String sql = "SELECT id, csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, created_at FROM csv_import_update_histories WHERE csv_import_history_id = :csvImportHistoryId";
-    MapSqlParameterSource params = new MapSqlParameterSource().addValue("csvImportHistoryId", csvImportHistoryId);
+  public List<CsvImportUpdateHistory> findAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {
+    String sql = "SELECT id, csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, created_at, user_id " +
+                "FROM csv_import_update_histories " +
+                "WHERE csv_import_history_id = :csvImportHistoryId AND user_id = :userId";
+    MapSqlParameterSource params = new MapSqlParameterSource()
+      .addValue("csvImportHistoryId", csvImportHistoryId)
+      .addValue("userId", userId);
     return template.query(sql, params, rowMapper);
   }
 
-  public void deleteAllByCsvImportHistoryId(Long csvImportHistoryId) {
-    String sql = "DELETE FROM csv_import_update_histories WHERE csv_import_history_id = :csvImportHistoryId";
-    MapSqlParameterSource params = new MapSqlParameterSource().addValue("csvImportHistoryId", csvImportHistoryId);
+  public void deleteAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {
+    String sql = "DELETE FROM csv_import_update_histories WHERE csv_import_history_id = :csvImportHistoryId AND user_id = :userId";
+    MapSqlParameterSource params = new MapSqlParameterSource()
+      .addValue("csvImportHistoryId", csvImportHistoryId)
+      .addValue("userId", userId);
     template.update(sql, params);
   }
 }
