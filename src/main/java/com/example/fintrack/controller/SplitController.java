@@ -2,7 +2,6 @@ package com.example.fintrack.controller;
 
 import com.example.fintrack.domain.*;
 import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.SplitService;
 import org.springframework.security.core.Authentication;
