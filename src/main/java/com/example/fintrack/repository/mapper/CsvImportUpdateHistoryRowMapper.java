@@ -12,12 +12,13 @@ public class CsvImportUpdateHistoryRowMapper implements RowMapper<CsvImportUpdat
     CsvImportUpdateHistory csvImportUpdateHistory = new CsvImportUpdateHistory();
     csvImportUpdateHistory.setId(rs.getLong("id"));
     csvImportUpdateHistory.setCsvImportHistoryId(rs.getLong("csv_import_history_id"));
-    csvImportUpdateHistory.setBankTransactionId(rs.getLong("bank_transaction_id"));
-    csvImportUpdateHistory.setCardTransactionId(rs.getLong("card_transaction_id"));
-    csvImportUpdateHistory.setTargetField(CsvImportUpdateField.fromDbValue(rs.getString("target_field")));
+    csvImportUpdateHistory.setBankTransactionId(rs.getObject("bank_transaction_id", Long.class));
+    csvImportUpdateHistory.setCardTransactionId(rs.getObject("card_transaction_id", Long.class));
+    csvImportUpdateHistory.setTargetField(CsvImportUpdateField.valueOf(rs.getString("target_field")));
     csvImportUpdateHistory.setValueBefore(rs.getString("value_before"));
     csvImportUpdateHistory.setValueAfter(rs.getString("value_after"));
     csvImportUpdateHistory.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
     return csvImportUpdateHistory;
   }
 }
