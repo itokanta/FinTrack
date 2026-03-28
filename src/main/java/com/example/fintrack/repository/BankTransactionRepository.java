@@ -26,8 +26,11 @@ public class BankTransactionRepository {
     public Optional<BankTransaction> findById(Long id) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
                     "user_id, asset_category_id, expense_category_id, split_pattern_id, transaction_source, " +
-                    "is_card_payment, created_at, csv_import_history_id FROM bank_transactions WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+                    "is_card_payment, created_at, csv_import_history_id " +
+                    "FROM bank_transactions " +
+                    "WHERE id = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id);
         List<BankTransaction> transactions = template.query(sql, params, rowMapper);
         if (transactions.isEmpty()) {
             return Optional.empty();
@@ -152,5 +155,28 @@ public class BankTransactionRepository {
             template.update(sql, params);
         }
         return transaction;
+    }
+
+    public List<BankTransaction> findByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
+                "user_id, asset_category_id, expense_category_id, split_pattern_id, transaction_source, " +
+                "is_card_payment, created_at, csv_import_history_id " +
+                "FROM bank_transactions " +
+                "WHERE user_id = :userId AND csv_import_history_id = :csvImportHistoryId " +
+                "ORDER BY transaction_date DESC";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+            .addValue("userId", userId)
+            .addValue("csvImportHistoryId", csvImportHistoryId);
+        
+        return template.query(sql, param, rowMapper);
+    }
+
+    public void deleteByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
+        String sql = "DELETE FROM bank_transactions WHERE user_id = :userId AND csv_import_history_id = :csvImportHistoryId";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+            .addValue("userId", userId)
+            .addValue("csvImportHistoryId", csvImportHistoryId);
+        
+        template.update(sql, param);
     }
 }

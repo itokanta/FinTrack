@@ -27,9 +27,12 @@ public class CardTransactionRepository {
     
     public Optional<CardTransaction> findById(Long id) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " + 
-                    "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
-                    "FROM card_transactions WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+                    "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, " +
+                    "payment_month, is_paid, created_at, csv_import_history_id " +
+                    "FROM card_transactions " +
+                    "WHERE id = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id);
         List<CardTransaction> transactions = template.query(sql, params, rowMapper);
         if (transactions.isEmpty()) {
             return Optional.empty();
@@ -61,7 +64,9 @@ public class CardTransactionRepository {
     public List<CardTransaction> findAllByUserId(Long userId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
                     "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id " +
-                    "FROM card_transactions WHERE user_id = :userId ORDER BY created_at ASC";
+                    "FROM card_transactions " +
+                    "WHERE user_id = :userId " +
+                    "ORDER BY created_at ASC";
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
         List<CardTransaction> transactions = template.query(sql, params, rowMapper);
         
@@ -204,5 +209,28 @@ public class CardTransactionRepository {
             .addValue("userId", userId)
             .addValue("paymentMonth", paymentMonth);
         template.update(sql, params);
+    }
+
+    public List<CardTransaction> findByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, " +
+                "payment_month, is_paid, created_at, csv_import_history_id " +
+                "FROM card_transactions " +
+                "WHERE user_id = :userId AND csv_import_history_id = :csvImportHistoryId " +
+                "ORDER BY transaction_date DESC";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("csvImportHistoryId", csvImportHistoryId);
+
+        return template.query(sql, param, rowMapper);
+    }
+
+    public void deleteByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
+        String sql = "DELETE FROM card_transactions WHERE user_id = :userId AND csv_import_history_id = :csvImportHistoryId";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("csvImportHistoryId", csvImportHistoryId);
+
+        template.update(sql, param);
     }
 }
