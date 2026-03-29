@@ -16,36 +16,12 @@ import java.util.Optional;
 public class AssetRepository {
     
     private final NamedParameterJdbcTemplate template;
-    private final AssetRowMapper rowMapper = new AssetRowMapper();
+    private static final AssetRowMapper ROW_MAPPER = new AssetRowMapper();
     private final AssetCategoryRepository assetCategoryRepository;
     
     public AssetRepository(NamedParameterJdbcTemplate template, AssetCategoryRepository assetCategoryRepository) {
         this.template = template;
         this.assetCategoryRepository = assetCategoryRepository;
-    }
-    
-    public Optional<Asset> findByUserIdAndAssetCategoryId(Long userId, Long assetCategoryId) {
-        String sql;
-        List<Asset> assets;
-        
-        if (assetCategoryId == null) {
-            sql = "SELECT id, user_id, asset_category_id, amount, created_at, updated_at " +
-                  "FROM assets WHERE user_id = :userId AND asset_category_id IS NULL";
-            MapSqlParameterSource param = new MapSqlParameterSource().addValue("userId", userId);
-            assets = template.query(sql, param, rowMapper);
-        } else {
-            sql = "SELECT id, user_id, asset_category_id, amount, created_at, updated_at " +
-                  "FROM assets WHERE user_id = :userId AND asset_category_id = :assetCategoryId";
-            MapSqlParameterSource param = new MapSqlParameterSource()
-                    .addValue("userId", userId)
-                    .addValue("assetCategoryId", assetCategoryId);
-            assets = template.query(sql, param, rowMapper);
-        }
-        
-        if (assets.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(assets.get(0));
     }
     
     /**
