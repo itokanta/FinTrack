@@ -13,16 +13,16 @@ import java.util.Optional;
 public class AssetCategoryRepository {
 
     private final NamedParameterJdbcTemplate template;
-    private final AssetCategoryRowMapper rowMapper = new AssetCategoryRowMapper();
+    private static final AssetCategoryRowMapper ROW_MAPPER = new AssetCategoryRowMapper();
 
     public AssetCategoryRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
     }
 
     public Optional<AssetCategory> findById(Long id) {
-        String sql = "SELECT * FROM asset_categories WHERE id = :id";
+        String sql = "SELECT id, user_id, category_name, created_at FROM asset_categories WHERE id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
-        List<AssetCategory> categories = template.query(sql, params, rowMapper);
+        List<AssetCategory> categories = template.query(sql, params, ROW_MAPPER);
         if (categories.isEmpty()) {
             return Optional.empty();
         }
@@ -30,9 +30,9 @@ public class AssetCategoryRepository {
     }
 
     public List<AssetCategory> findByUserId(Long userId) {
-        String sql = "SELECT * FROM asset_categories WHERE user_id = :userId ORDER BY id";
+        String sql = "SELECT id, user_id, category_name, created_at FROM asset_categories WHERE user_id = :userId ORDER BY id";
         MapSqlParameterSource params = new MapSqlParameterSource("userId", userId);
-        return template.query(sql, params, rowMapper);
+        return template.query(sql, params, ROW_MAPPER);
     }
 
     public Long insert(AssetCategory category) {
