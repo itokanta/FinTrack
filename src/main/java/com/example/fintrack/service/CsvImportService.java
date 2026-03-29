@@ -32,6 +32,7 @@ import com.example.fintrack.domain.CsvImportHistory;
 import com.example.fintrack.domain.CsvImportUpdateField;
 import com.example.fintrack.domain.CsvImportUpdateHistory;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.AssetRepository;
 import com.example.fintrack.repository.AutoCategoryRuleRepository;
 import com.example.fintrack.repository.BankTransactionRepository;
 import com.example.fintrack.repository.CardPaymentDiscrepancyRepository;
@@ -53,7 +54,7 @@ public class CsvImportService {
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
     private final AutoCategoryRuleRepository autoCategoryRuleRepository;
-    private final AssetService assetService;
+    private final AssetRepository assetRepository;
     private final UserRepository userRepository;
     private final CardPaymentDiscrepancyRepository discrepancyRepository;
     private final CsvImportHistoryRepository csvImportHistoryRepository;
@@ -65,7 +66,7 @@ public class CsvImportService {
             BankTransactionRepository bankTransactionRepository,
             CardTransactionRepository cardTransactionRepository,
             AutoCategoryRuleRepository autoCategoryRuleRepository,
-            AssetService assetService,
+            AssetRepository assetRepository,
             UserRepository userRepository,
             CardPaymentDiscrepancyRepository discrepancyRepository,
             CsvImportHistoryRepository csvImportHistoryRepository,
@@ -78,7 +79,7 @@ public class CsvImportService {
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
         this.autoCategoryRuleRepository = autoCategoryRuleRepository;
-        this.assetService = assetService;
+        this.assetRepository = assetRepository;
         this.userRepository = userRepository;
         this.discrepancyRepository = discrepancyRepository;
         this.csvImportHistoryRepository = csvImportHistoryRepository;
@@ -230,15 +231,15 @@ public class CsvImportService {
                 Long assetCategoryId = saved.getAssetCategoryId();
                 Long amountDelta;
 
-                if (dto.getTransactionType() == TransactionType.INCOME) {
+                if (saved.getTransactionType() == TransactionType.INCOME) {
                     // 収入の場合はプラス（分割前なので未分類に加算）
-                    amountDelta = dto.getAmount();
+                    amountDelta = saved.getAmount();
                 } else {
                     // 支出の場合はマイナス
-                    amountDelta = -dto.getAmount();
+                    amountDelta = -saved.getAmount();
                 }
 
-                assetService.updateBalance(userId, assetCategoryId, amountDelta);
+                assetRepository.updateAmountByCategoryId(userId, assetCategoryId, amountDelta);
             }
             count++;
         }
@@ -354,15 +355,15 @@ public class CsvImportService {
             Long assetCategoryId = saved.getAssetCategoryId();
             Long amountDelta;
 
-            if (dto.getTransactionType() == TransactionType.INCOME) {
+            if (saved.getTransactionType() == TransactionType.INCOME) {
                 // 収入の場合はプラス（分割前なので未分類に加算）
-                amountDelta = dto.getAmount();
+                amountDelta = saved.getAmount();
             } else {
                 // 支出の場合はマイナス
-                amountDelta = -dto.getAmount();
+                amountDelta = -saved.getAmount();
             }
 
-            assetService.updateBalance(userId, assetCategoryId, amountDelta);
+            assetRepository.updateAmountByCategoryId(userId, assetCategoryId, amountDelta);
             count++;
         }
 

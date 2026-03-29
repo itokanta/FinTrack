@@ -128,7 +128,7 @@ public class BankTransactionRepository {
                 .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId());
 
             Map<String, Object> result = template.queryForMap(sql, params);
-            transaction.setId((Long)result.get("id"));
+            transaction.setId(((Number) result.get("id")).longValue());
             transaction.setCreatedAt(((Timestamp)result.get("created_at")).toLocalDateTime());
         } else {
             // UPDATE

@@ -1,17 +1,22 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.domain.ExpenseCategory;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
+import java.util.List;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.ExpenseCategory;
+import com.example.fintrack.repository.ExpenseCategoryRepository;
+import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.AssetCategoryService;
 
 /**
  * カテゴリ管理コントローラー
@@ -20,14 +25,14 @@ import java.util.List;
 @RequestMapping("/categories")
 public class CategoryController {
     
-    private final AssetCategoryRepository assetCategoryRepository;
+    private final AssetCategoryService assetCategoryService;
     private final ExpenseCategoryRepository expenseCategoryRepository;
     private final UserRepository userRepository;
     
-    public CategoryController(AssetCategoryRepository assetCategoryRepository,
+    public CategoryController(AssetCategoryService assetCategoryService,
                              ExpenseCategoryRepository expenseCategoryRepository,
                              UserRepository userRepository) {
-        this.assetCategoryRepository = assetCategoryRepository;
+        this.assetCategoryService = assetCategoryService;
         this.expenseCategoryRepository = expenseCategoryRepository;
         this.userRepository = userRepository;
     }
@@ -39,7 +44,7 @@ public class CategoryController {
     public String categories(Authentication authentication, Model model) {
         Long userId = getUserId(authentication);
         
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserId(userId);
         
         model.addAttribute("assetCategories", assetCategories);
@@ -62,7 +67,7 @@ public class CategoryController {
             category.setUserId(userId);
             category.setCategoryName(categoryName.trim());
             
-            assetCategoryRepository.save(category);
+            assetCategoryService.insert(category);
             
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを追加しました");
         } catch (Exception e) {
@@ -103,7 +108,7 @@ public class CategoryController {
     public String deleteAssetCategory(@PathVariable Long id,
                                       RedirectAttributes redirectAttributes) {
         try {
-            assetCategoryRepository.deleteById(id);
+            assetCategoryService.deleteById(id);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました: " + e.getMessage());

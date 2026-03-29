@@ -21,7 +21,7 @@ public class SplitService {
     private final SplitTransactionRepository splitTransactionRepository;
     private final AssetCategoryRepository assetCategoryRepository;
     private final ExpenseCategoryRepository expenseCategoryRepository;
-    private final AssetService assetService;
+    private final AssetRepository assetRepository;
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
     
@@ -29,14 +29,14 @@ public class SplitService {
                        SplitTransactionRepository splitTransactionRepository,
                        AssetCategoryRepository assetCategoryRepository,
                        ExpenseCategoryRepository expenseCategoryRepository,
-                       AssetService assetService,
+                       AssetRepository assetRepository,
                        BankTransactionRepository bankTransactionRepository,
                        CardTransactionRepository cardTransactionRepository) {
         this.splitPatternRepository = splitPatternRepository;
         this.splitTransactionRepository = splitTransactionRepository;
         this.assetCategoryRepository = assetCategoryRepository;
         this.expenseCategoryRepository = expenseCategoryRepository;
-        this.assetService = assetService;
+        this.assetRepository = assetRepository;
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
     }
@@ -399,16 +399,16 @@ public class SplitService {
         
         // 単一カテゴリの場合、split_transactionsには登録しない
         // asset_category_idに直接設定するのみ
-        
+
         // 残高を更新
         if ("INCOME".equals(transactionType)) {
             // 収入の場合: 未分類から全額を引き、指定カテゴリに加算
-            assetService.updateBalance(userId, null, -totalAmount);
-            assetService.updateBalance(userId, categoryId, totalAmount);
+            assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
+            assetRepository.updateAmountByCategoryId(userId, categoryId, totalAmount);
         } else {
             // 支出の場合: 未分類から全額を戻し、指定カテゴリから減算
-            assetService.updateBalance(userId, null, totalAmount);
-            assetService.updateBalance(userId, categoryId, -totalAmount);
+            assetRepository.updateAmountByCategoryId(userId, null, totalAmount);
+            assetRepository.updateAmountByCategoryId(userId, categoryId, -totalAmount);
         }
     }
     
@@ -507,17 +507,17 @@ public class SplitService {
     private void updateBalances(Long userId, List<SplitTransaction> splits, String transactionType, Long totalAmount) {
         if ("INCOME".equals(transactionType)) {
             // 収入の場合: 未分類から全額を引き、各カテゴリに加算
-            assetService.updateBalance(userId, null, -totalAmount);
+            assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
             
             for (SplitTransaction split : splits) {
-                assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
+                assetRepository.updateAmountByCategoryId(userId, split.getAssetCategoryId(), split.getAmount());
             }
         } else {
             // 支出の場合: 未分類から全額を戻し、各カテゴリから減算
-            assetService.updateBalance(userId, null, totalAmount);
+            assetRepository.updateAmountByCategoryId(userId, null, totalAmount);
             
             for (SplitTransaction split : splits) {
-                assetService.updateBalance(userId, split.getAssetCategoryId(), -split.getAmount());
+                assetRepository.updateAmountByCategoryId(userId, split.getAssetCategoryId(), -split.getAmount());
             }
         }
     }

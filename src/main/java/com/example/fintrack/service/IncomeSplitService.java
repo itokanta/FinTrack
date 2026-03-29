@@ -20,7 +20,7 @@ public class IncomeSplitService {
     private final SplitPatternRepository splitPatternRepository;
     private final SplitTransactionRepository splitTransactionRepository;
     private final AssetCategoryRepository assetCategoryRepository;
-    private final AssetService assetService;
+    private final AssetRepository assetRepository;
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
     
@@ -30,13 +30,13 @@ public class IncomeSplitService {
     public IncomeSplitService(SplitPatternRepository splitPatternRepository,
                              SplitTransactionRepository splitTransactionRepository,
                              AssetCategoryRepository assetCategoryRepository,
-                             AssetService assetService,
+                             AssetRepository assetRepository,
                              BankTransactionRepository bankTransactionRepository,
                              CardTransactionRepository cardTransactionRepository) {
         this.splitPatternRepository = splitPatternRepository;
         this.splitTransactionRepository = splitTransactionRepository;
         this.assetCategoryRepository = assetCategoryRepository;
-        this.assetService = assetService;
+        this.assetRepository = assetRepository;
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
     }
@@ -209,11 +209,11 @@ public class IncomeSplitService {
         
         // 各資産カテゴリの残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
-        assetService.updateBalance(userId, null, -totalAmount);
+        assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
         
         // 各カテゴリに分割金額を加算
         for (SplitTransaction split : splits) {
-            assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
+            assetRepository.updateAmountByCategoryId(userId, split.getAssetCategoryId(), split.getAmount());
         }
     }
     
@@ -302,11 +302,11 @@ public class IncomeSplitService {
         
         // 資産残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
-        assetService.updateBalance(userId, null, -totalAmount);
+        assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
         
         // 各カテゴリに分割金額を加算
         for (SplitTransaction split : splits) {
-            assetService.updateBalance(userId, split.getAssetCategoryId(), split.getAmount());
+            assetRepository.updateAmountByCategoryId(userId, split.getAssetCategoryId(), split.getAmount());
         }
     }
     
@@ -361,11 +361,12 @@ public class IncomeSplitService {
         
         // 資産残高を更新
         // まず未分類から全額を引く（CSV取込時に未分類に入っているため）
-        assetService.updateBalance(userId, null, -totalAmount);
+        assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
         
         // 指定カテゴリに全額を加算
-        assetService.updateBalance(userId, categoryId, totalAmount);
+        assetRepository.updateAmountByCategoryId(userId, categoryId, totalAmount);
     }
+
     
     // DTOs for pattern summaries
     public static class PatternSummary {

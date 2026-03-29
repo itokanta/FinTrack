@@ -19,14 +19,14 @@ public class TransactionService {
     
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
-    private final AssetService assetService;
+    private final AssetRepository assetRepository;
     
     public TransactionService(BankTransactionRepository bankTransactionRepository,
                              CardTransactionRepository cardTransactionRepository,
-                             AssetService assetService) {
+                             AssetRepository assetRepository) {
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
-        this.assetService = assetService;
+        this.assetRepository = assetRepository;
     }
     
     /**
@@ -204,10 +204,10 @@ public class TransactionService {
             
             // 旧カテゴリに戻す（マイナスを取り消す）
             if (oldAssetCategoryId != null || newAssetCategoryId != null) {
-                assetService.updateBalance(userId, oldAssetCategoryId, amount);
+                assetRepository.updateAmountByCategoryId(userId, oldAssetCategoryId, amount);
                 
                 // 新カテゴリから引く
-                assetService.updateBalance(userId, newAssetCategoryId, -amount);
+                assetRepository.updateAmountByCategoryId(userId, newAssetCategoryId, -amount);
             }
             
             // 取引のカテゴリを更新
@@ -224,10 +224,10 @@ public class TransactionService {
             
             // 旧カテゴリに戻す（マイナスを取り消す）
             if (oldAssetCategoryId != null || newAssetCategoryId != null) {
-                assetService.updateBalance(userId, oldAssetCategoryId, amount);
+                assetRepository.updateAmountByCategoryId(userId, oldAssetCategoryId, amount);
                 
                 // 新カテゴリから引く
-                assetService.updateBalance(userId, newAssetCategoryId, -amount);
+                assetRepository.updateAmountByCategoryId(userId, newAssetCategoryId, -amount);
             }
             
             // 取引のカテゴリを更新

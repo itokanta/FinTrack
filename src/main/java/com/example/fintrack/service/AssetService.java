@@ -1,11 +1,9 @@
 package com.example.fintrack.service;
 
-import com.example.fintrack.domain.Asset;
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.AssetRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -55,61 +53,7 @@ public class AssetService {
     public Long getUncategorizedBalance(Long userId) {
         return assetRepository.getUncategorizedBalance(userId);
     }
-    
-    /**
-     * 資産カテゴリの残高を更新（差分を加算/減算）
-     * 
-     * @param userId ユーザーID
-     * @param assetCategoryId 資産カテゴリID（NULLの場合は未分類）
-     * @param amountDelta 増減額（プラスで増加、マイナスで減少）
-     */
-    @Transactional
-    public void updateBalance(Long userId, Long assetCategoryId, Long amountDelta) {
-        assetRepository.updateBalance(userId, assetCategoryId, amountDelta);
-    }
-    
-    /**
-     * 資産カテゴリの残高を設定（絶対値）
-     * 
-     * @param userId ユーザーID
-     * @param assetCategoryId 資産カテゴリID（NULLの場合は未分類）
-     * @param amount 設定する金額
-     */
-    @Transactional
-    public void setBalance(Long userId, Long assetCategoryId, Long amount) {
-        assetRepository.setBalance(userId, assetCategoryId, amount);
-    }
-    
-    /**
-     * 資産カテゴリ間で残高を移動
-     * 
-     * @param userId ユーザーID
-     * @param fromCategoryId 移動元カテゴリID
-     * @param toCategoryId 移動先カテゴリID
-     * @param amount 移動する金額
-     */
-    @Transactional
-    public void transferBalance(Long userId, Long fromCategoryId, Long toCategoryId, Long amount) {
-        // 移動元から減算
-        assetRepository.updateBalance(userId, fromCategoryId, -amount);
-        // 移動先に加算
-        assetRepository.updateBalance(userId, toCategoryId, amount);
-    }
-    
-    /**
-     * ユーザーの全資産情報を取得
-     */
-    public List<Asset> getUserAssets(Long userId) {
-        return assetRepository.findByUserId(userId);
-    }
-    
-    /**
-     * 全資産情報を取得（管理者用）
-     */
-    public List<Asset> getAllAssets() {
-        return assetRepository.findAll();
-    }
-    
+
     /**
      * 確定済み総資産を取得（当月のクレジットカード取引を除外）
      */

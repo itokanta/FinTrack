@@ -12,6 +12,7 @@ import com.example.fintrack.domain.DiscrepancyTransaction;
 import com.example.fintrack.domain.SplitPattern;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.AssetRepository;
 import com.example.fintrack.repository.CardPaymentDiscrepancyRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
 import com.example.fintrack.repository.DiscrepancyTransactionRepository;
@@ -24,7 +25,7 @@ public class DiscrepancyTransactionService {
   private final DiscrepancyTransactionRepository discrepancyTransactionRepository;
   private final CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository;
   private final CardTransactionRepository cardTransactionRepository;
-  private final AssetService assetService;
+  private final AssetRepository assetRepository;
   private final SplitPatternRepository splitPatternRepository;
   private final SplitTransactionRepository splitTransactionRepository;
 
@@ -32,13 +33,13 @@ public class DiscrepancyTransactionService {
       DiscrepancyTransactionRepository discrepancyTransactionRepository,
       CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository,
       CardTransactionRepository cardTransactionRepository,
-      AssetService assetService,
+      AssetRepository assetRepository,
       SplitPatternRepository splitPatternRepository,
       SplitTransactionRepository splitTransactionRepository) {
     this.discrepancyTransactionRepository = discrepancyTransactionRepository;
     this.cardPaymentDiscrepancyRepository = cardPaymentDiscrepancyRepository;
     this.cardTransactionRepository = cardTransactionRepository;
-    this.assetService = assetService;
+    this.assetRepository = assetRepository;
     this.splitPatternRepository = splitPatternRepository;
     this.splitTransactionRepository = splitTransactionRepository;
   }
@@ -66,7 +67,7 @@ public class DiscrepancyTransactionService {
 
     // 3. 資産残高を調整
     Long amountDelta = calculateAmountDelta(transactionType, absoluteAmount);
-    assetService.updateBalance(discrepancy.getUserId(), assetCategoryId, amountDelta);
+    assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), assetCategoryId, amountDelta);
 
     // 4. 後処理
     finalizeDiscrepancyResolution(discrepancy);
@@ -122,7 +123,7 @@ public class DiscrepancyTransactionService {
 
       // 資産残高を調整
       Long amountDelta = calculateAmountDelta(transactionType, amount);
-      assetService.updateBalance(discrepancy.getUserId(), assetCategoryId, amountDelta);
+      assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), assetCategoryId, amountDelta);
     }
 
     // 5. 後処理
@@ -180,8 +181,7 @@ public class DiscrepancyTransactionService {
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, amount);
-        assetService.updateBalance(discrepancy.getUserId(),
-            pattern.getAssetCategoryId(), amountDelta);
+        assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), pattern.getAssetCategoryId(), amountDelta);
       }
     } else if ("AMOUNT".equals(splitType)) {
       // 金額指定の場合
@@ -202,7 +202,7 @@ public class DiscrepancyTransactionService {
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, amount);
-        assetService.updateBalance(discrepancy.getUserId(),
+        assetRepository.updateAmountByCategoryId(discrepancy.getUserId(),
             pattern.getAssetCategoryId(), amountDelta);
       }
     } else {
