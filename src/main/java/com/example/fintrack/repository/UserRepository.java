@@ -1,65 +1,73 @@
 package com.example.fintrack.repository;
 
-import com.example.fintrack.domain.User;
-import com.example.fintrack.repository.mapper.UserRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.example.fintrack.domain.User;
+import com.example.fintrack.repository.mapper.UserRowMapper;
 
 @Repository
 public class UserRepository {
-    
-    private final JdbcTemplate jdbcTemplate;
-    private final UserRowMapper userRowMapper = new UserRowMapper();
-    
-    public UserRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+
+    private final NamedParameterJdbcTemplate template;
+    private static final UserRowMapper USER_ROW_MAPPER = new UserRowMapper();
+
+    public UserRepository(NamedParameterJdbcTemplate template) {
+        this.template = template;
     }
-    
+
     public Optional<User> findById(Long id) {
-        String sql = "SELECT * FROM users WHERE id = ?";
-        List<User> users = jdbcTemplate.query(sql, userRowMapper, id);
+        String sql = "SELECT id, username, password, created_at, updated_at FROM users WHERE id = :id";
+        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+        List<User> users = template.query(sql, params, USER_ROW_MAPPER);
         if (users.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(users.get(0));
     }
-    
+
     public Optional<User> findByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-        List<User> users = jdbcTemplate.query(sql, userRowMapper, username);
+        String sql = "SELECT id, username, password, created_at, updated_at FROM users WHERE username = :username";
+        MapSqlParameterSource params = new MapSqlParameterSource("username", username);
+        List<User> users = template.query(sql, params, USER_ROW_MAPPER);
         if (users.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(users.get(0));
     }
-    
+
     public boolean existsByUsername(String username) {
-        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, username);
+        String sql = "SELECT COUNT(*) FROM users WHERE username = :username";
+        MapSqlParameterSource params = new MapSqlParameterSource("username", username);
+        Integer count = template.queryForObject(sql, params, Integer.class);
         return count != null && count > 0;
     }
-    
+
     public User save(User user) {
         if (user.getId() == null) {
-            // INSERT
-            String sql = "INSERT INTO users (username, password, created_at, updated_at) " +
-                        "VALUES (?, ?, ?, ?) RETURNING id";
-            LocalDateTime now = LocalDateTime.now();
-            Long id = jdbcTemplate.queryForObject(sql, Long.class, 
-                user.getUsername(), user.getPassword(), now, now);
-            user.setId(id);
-            user.setCreatedAt(now);
-            user.setUpdatedAt(now);
+            String sql = "INSERT INTO users (username, password) " +
+                         "VALUES (:username, :password) RETURNING id, created_at, updated_at";
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("username", user.getUsername())
+                    .addValue("password", user.getPassword());
+            Map<String, Object> result = template.queryForMap(sql, params);
+            user.setId(((Number) result.get("id")).longValue());
+            user.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
+            user.setUpdatedAt(((Timestamp) result.get("updated_at")).toLocalDateTime());
         } else {
-            // UPDATE
-            String sql = "UPDATE users SET username = ?, password = ?, updated_at = ? WHERE id = ?";
-            LocalDateTime now = LocalDateTime.now();
-            jdbcTemplate.update(sql, user.getUsername(), user.getPassword(), now, user.getId());
-            user.setUpdatedAt(now);
+            String sql = "UPDATE users SET username = :username, password = :password WHERE id = :id RETURNING updated_at";
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("username", user.getUsername())
+                    .addValue("password", user.getPassword())
+                    .addValue("id", user.getId());
+            Map<String, Object> result = template.queryForMap(sql, params);
+            user.setUpdatedAt(((Timestamp) result.get("updated_at")).toLocalDateTime());
         }
         return user;
     }
