@@ -16,7 +16,7 @@ import com.example.fintrack.repository.mapper.ExpenseCategoryRowMapper;
 public class ExpenseCategoryRepository {
 
     private final NamedParameterJdbcTemplate template;
-    private static final ExpenseCategoryRowMapper ROWMAPPER = new ExpenseCategoryRowMapper();
+    private static final ExpenseCategoryRowMapper ROW_MAPPER = new ExpenseCategoryRowMapper();
 
     public ExpenseCategoryRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
@@ -25,7 +25,7 @@ public class ExpenseCategoryRepository {
     public Optional<ExpenseCategory> findById(Long id) {
         String sql = "SELECT id, user_id, category_name, created_at FROM expense_categories WHERE id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
-        List<ExpenseCategory> categories = template.query(sql, params, ROWMAPPER);
+        List<ExpenseCategory> categories = template.query(sql, params, ROW_MAPPER);
         if (categories.isEmpty()) {
             return Optional.empty();
         }
@@ -35,7 +35,7 @@ public class ExpenseCategoryRepository {
     public List<ExpenseCategory> findByUserId(Long userId) {
         String sql = "SELECT id, user_id, category_name, created_at FROM expense_categories WHERE user_id = :userId ORDER BY id";
         MapSqlParameterSource params = new MapSqlParameterSource("userId", userId);
-        return template.query(sql, params, ROWMAPPER);
+        return template.query(sql, params, ROW_MAPPER);
     }
 
     public ExpenseCategory save(ExpenseCategory category) {
