@@ -13,13 +13,16 @@ CREATE INDEX idx_csv_import_histories_user_id ON csv_import_histories(user_id);
 CREATE INDEX idx_csv_import_histories_import_date ON csv_import_histories(import_date);
 
 ALTER TABLE bank_transactions
-ADD COLUMN csv_import_history_id INTEGER REFERENCES csv_import_histories(id) ON DELETE SET NULL;
+ADD COLUMN csv_import_history_id INTEGER REFERENCES csv_import_histories(id) ON DELETE SET NULL,
+ADD COLUMN update_count INTEGER NOT NULL DEFAULT 0;
 
 CREATE INDEX idx_bank_transactions_csv_import_history ON bank_transactions(csv_import_history_id);
 
 -- card_transactions に登録履歴FKを追加
 ALTER TABLE card_transactions
-ADD COLUMN csv_import_history_id INTEGER REFERENCES csv_import_histories(id) ON DELETE SET NULL;
+ADD COLUMN csv_import_history_id INTEGER REFERENCES csv_import_histories(id) ON DELETE SET NULL,
+ADD COLUMN update_count INTEGER NOT NULL DEFAULT 0;
+
 
 CREATE INDEX idx_card_transactions_csv_import_history ON card_transactions(csv_import_history_id);
 
@@ -34,6 +37,7 @@ CREATE TABLE csv_import_update_histories (
     value_after TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER NOT NULL,
+    update_count INTEGER NOT NULL,
     FOREIGN KEY (csv_import_history_id) REFERENCES csv_import_histories(id) ON DELETE CASCADE,
     FOREIGN KEY (bank_transaction_id) REFERENCES bank_transactions(id) ON DELETE SET NULL,
     FOREIGN KEY (card_transaction_id) REFERENCES card_transactions(id) ON DELETE SET NULL,
