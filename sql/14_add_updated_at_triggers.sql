@@ -31,3 +31,8 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE OR REPLACE TRIGGER trg_bank_transactions_updated_at
 BEFORE UPDATE ON bank_transactions
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- csv_import_update_histories
+CREATE OR REPLACE TRIGGER trg_csv_import_update_histories_updated_at
+BEFORE UPDATE ON csv_import_update_histories
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();

@@ -38,6 +38,7 @@ CREATE TABLE csv_import_update_histories (
     value_before TEXT,
     value_after TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER NOT NULL,
     update_count INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (csv_import_history_id) REFERENCES csv_import_histories(id) ON DELETE CASCADE,
