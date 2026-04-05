@@ -175,7 +175,7 @@ public class CsvImportService {
                 transaction.setSplitPatternId(0L);
             }
 
-            BankTransaction saved = bankTransactionRepository.save(transaction);
+            BankTransaction saved = bankTransactionRepository.insert(transaction);
 
             // カード引き落としの場合、該当月のカード取引を引き落とし済みに更新
             if (saved.getIsCardPayment() != null && saved.getIsCardPayment()) {

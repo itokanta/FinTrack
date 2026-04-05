@@ -212,7 +212,7 @@ public class TransactionService {
             
             // 取引のカテゴリを更新
             transaction.setAssetCategoryId(newAssetCategoryId);
-            bankTransactionRepository.save(transaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
             
         } else if (cardTransactionId != null) {
             CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
@@ -245,7 +245,7 @@ public class TransactionService {
             BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             transaction.setExpenseCategoryId(expenseCategoryId);
-            bankTransactionRepository.save(transaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
             
         } else if (cardTransactionId != null) {
             CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
@@ -331,13 +331,6 @@ public class TransactionService {
                 return bankTransaction.getExpenseCategoryId();
             }
             return cardTransaction.getExpenseCategoryId();
-        }
-        
-        public Long getIncomeSplitPatternId() {
-            if (bankTransaction != null) {
-                return bankTransaction.getIncomeSplitPatternId();
-            }
-            return cardTransaction.getIncomeSplitPatternId();
         }
         
         public Long getSplitPatternId() {

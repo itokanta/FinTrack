@@ -154,8 +154,8 @@ public class IncomeSplitService {
             userId = bankTransaction.getUserId();
             
             // 取引に分割パターンIDを設定
-            bankTransaction.setIncomeSplitPatternId(patternId);
-            bankTransactionRepository.save(bankTransaction);
+            bankTransaction.setSplitPatternId(patternId);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
@@ -247,8 +247,8 @@ public class IncomeSplitService {
             userId = bankTransaction.getUserId();
             
             // 取引に分割パターンID=-1を設定（手動分割）
-            bankTransaction.setIncomeSplitPatternId(-1L);
-            bankTransactionRepository.save(bankTransaction);
+            bankTransaction.setSplitPatternId(-1L);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
@@ -328,8 +328,8 @@ public class IncomeSplitService {
             userId = bankTransaction.getUserId();
             
             // 取引に分割パターンID=0を設定（単一カテゴリ分配）
-            bankTransaction.setIncomeSplitPatternId(0L);
-            bankTransactionRepository.save(bankTransaction);
+            bankTransaction.setSplitPatternId(0L);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));

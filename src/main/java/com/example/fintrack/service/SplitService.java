@@ -230,7 +230,7 @@ public class SplitService {
             // 取引に分割パターンIDを設定、asset_category_idはNULLに
             bankTransaction.setSplitPatternId(patternId);
             bankTransaction.setAssetCategoryId(null);
-            bankTransactionRepository.save(bankTransaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
@@ -373,7 +373,7 @@ public class SplitService {
             bankTransaction.setSplitPatternId(0L);
             // asset_category_idを直接設定
             bankTransaction.setAssetCategoryId(categoryId);
-            bankTransactionRepository.save(bankTransaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
@@ -432,7 +432,7 @@ public class SplitService {
             // 取引に分割パターンID=-1を設定（手動分割）、asset_category_idはNULLに
             bankTransaction.setSplitPatternId(-1L);
             bankTransaction.setAssetCategoryId(null);
-            bankTransactionRepository.save(bankTransaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
             cardTransaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
