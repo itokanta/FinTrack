@@ -35,14 +35,12 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
             transaction.setExpenseCategoryId(expenseCategoryId);
         }
         
-        // split_pattern_idを読み取り、後方互換性のためincomeSplitPatternIdにも設定
+        // split_pattern_idを読み取り
         long splitPatternId = rs.getLong("split_pattern_id");
         if (rs.wasNull()) {
             transaction.setSplitPatternId(null);
-            transaction.setIncomeSplitPatternId(null);
         } else {
             transaction.setSplitPatternId(splitPatternId);
-            transaction.setIncomeSplitPatternId(splitPatternId);
         }
         
         transaction.setTransactionSource(rs.getString("transaction_source"));
@@ -65,6 +63,9 @@ public class CardTransactionRowMapper implements RowMapper<CardTransaction> {
         } else {
             transaction.setCsvImportHistoryId(csvImportHistoryId);
         }
+
+        transaction.setUpdateCount(rs.getLong("update_count"));
+        transaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
         
         return transaction;
 

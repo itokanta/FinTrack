@@ -240,7 +240,7 @@ public class SplitService {
             // 取引に分割パターンIDを設定、asset_category_idはNULLに
             cardTransaction.setSplitPatternId(patternId);
             cardTransaction.setAssetCategoryId(null);
-            cardTransactionRepository.save(cardTransaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }
@@ -384,7 +384,7 @@ public class SplitService {
             cardTransaction.setSplitPatternId(0L);
             // asset_category_idを直接設定
             cardTransaction.setAssetCategoryId(categoryId);
-            cardTransactionRepository.save(cardTransaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }
@@ -442,7 +442,7 @@ public class SplitService {
             // 取引に分割パターンID=-1を設定（手動分割）、asset_category_idはNULLに
             cardTransaction.setSplitPatternId(-1L);
             cardTransaction.setAssetCategoryId(null);
-            cardTransactionRepository.save(cardTransaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }

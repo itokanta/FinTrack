@@ -163,8 +163,8 @@ public class IncomeSplitService {
             userId = cardTransaction.getUserId();
             
             // 取引に分割パターンIDを設定
-            cardTransaction.setIncomeSplitPatternId(patternId);
-            cardTransactionRepository.save(cardTransaction);
+            cardTransaction.setSplitPatternId(patternId);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }
@@ -256,8 +256,8 @@ public class IncomeSplitService {
             userId = cardTransaction.getUserId();
             
             // 取引に分割パターンID=-1を設定（手動分割）
-            cardTransaction.setIncomeSplitPatternId(-1L);
-            cardTransactionRepository.save(cardTransaction);
+            cardTransaction.setSplitPatternId(-1L);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }
@@ -337,8 +337,8 @@ public class IncomeSplitService {
             userId = cardTransaction.getUserId();
             
             // 取引に分割パターンID=0を設定（単一カテゴリ分配）
-            cardTransaction.setIncomeSplitPatternId(0L);
-            cardTransactionRepository.save(cardTransaction);
+            cardTransaction.setSplitPatternId(0L);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }

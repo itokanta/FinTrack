@@ -109,7 +109,7 @@ public class TransactionService {
     public List<TransactionWithAsset> getUncategorizedIncomes(Long userId) {
         List<TransactionWithAsset> result = new ArrayList<>();
         
-        // 未分類の銀行取引を取得（income_split_pattern_idがNULL）
+        // 未分類の銀行取引を取得（split_pattern_idがNULL）
         List<BankTransaction> bankTransactions = bankTransactionRepository
                 .findByUserIdAndSplitPatternIdIsNullAndTransactionType(
                         userId, TransactionType.INCOME);
@@ -118,7 +118,7 @@ public class TransactionService {
             result.add(new TransactionWithAsset(bt, null));
         }
         
-        // 未分類のカード取引を取得（income_split_pattern_idがNULL）
+        // 未分類のカード取引を取得（split_pattern_idがNULL）
         List<CardTransaction> cardTransactions = cardTransactionRepository
                 .findBySplitPatternNullAndType(
                         userId, TransactionType.INCOME);
@@ -232,7 +232,7 @@ public class TransactionService {
             
             // 取引のカテゴリを更新
             transaction.setAssetCategoryId(newAssetCategoryId);
-            cardTransactionRepository.save(transaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
         }
     }
     
@@ -251,7 +251,7 @@ public class TransactionService {
             CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             transaction.setExpenseCategoryId(expenseCategoryId);
-            cardTransactionRepository.save(transaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
         }
     }
     

@@ -21,8 +21,6 @@ public class CardTransaction {
     private Long userId;
     private Long assetCategoryId;
     private Long expenseCategoryId;
-    private Long incomeSplitPatternId;  // 後方互換性のため残す（非推奨）
-    private Long expenseSplitPatternId; // 後方互換性のため残す（非推奨）
     private Long splitPatternId;        // 統合版（推奨）
     private String transactionSource; // CARD
     private String cardType; // DEBIT or CREDIT
@@ -30,4 +28,6 @@ public class CardTransaction {
     private Boolean isPaid; // 引き落とし済みフラグ（クレジットのみ、デビットはNULL）
     private LocalDateTime createdAt;
     private Long csvImportHistoryId;
+    private Long updateCount;
+    private LocalDateTime updatedAt;
 }

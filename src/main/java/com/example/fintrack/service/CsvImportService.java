@@ -349,7 +349,7 @@ public class CsvImportService {
                 transaction.setSplitPatternId(0L);
             }
 
-            CardTransaction saved = cardTransactionRepository.save(transaction);
+            CardTransaction saved = cardTransactionRepository.insert(transaction);
 
             // 資産残高を更新
             Long assetCategoryId = saved.getAssetCategoryId();
@@ -384,7 +384,7 @@ public class CsvImportService {
             csvImportUpdateHistory.setValueAfter(transaction.getPaymentMonth());
 
             csvImportUpdateHistoryRepository.save(csvImportUpdateHistory);
-            cardTransactionRepository.save(transaction);
+            cardTransactionRepository.updatePaymentMonth(transaction);
             count++;
         }
 
