@@ -18,4 +18,6 @@ public class CsvImportUpdateHistory {
   private String valueBefore;
   private String valueAfter;
   private LocalDateTime createdAt;
+  private Long updateCount;
+  private LocalDateTime updatedAt;
 }

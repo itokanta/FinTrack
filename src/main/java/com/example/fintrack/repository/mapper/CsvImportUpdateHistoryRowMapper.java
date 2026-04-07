@@ -19,6 +19,8 @@ public class CsvImportUpdateHistoryRowMapper implements RowMapper<CsvImportUpdat
     csvImportUpdateHistory.setValueAfter(rs.getString("value_after"));
     csvImportUpdateHistory.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
     csvImportUpdateHistory.setUserId(rs.getLong("user_id"));
+    csvImportUpdateHistory.setUpdateCount(rs.getLong("update_count"));
+    csvImportUpdateHistory.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
     return csvImportUpdateHistory;
   }

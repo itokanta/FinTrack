@@ -199,12 +199,13 @@ public class CsvImportService {
                         csvImportUpdateHistory.setCsvImportHistoryId(csvImportHistoryId);
                         csvImportUpdateHistory.setCardTransactionId(cardTransaction.getId());
                         csvImportUpdateHistory.setTargetField(CsvImportUpdateField.IS_PAID);
+                        csvImportUpdateHistory.setUpdateCount(cardTransaction.getUpdateCount() + 1);
                         if (cardTransaction.getIsPaid() != null){
                             csvImportUpdateHistory.setValueBefore(cardTransaction.getIsPaid().toString());
                         }
                         csvImportUpdateHistory.setValueAfter("TRUE");
 
-                        csvImportUpdateHistoryRepository.save(csvImportUpdateHistory);
+                        csvImportUpdateHistoryRepository.insert(csvImportUpdateHistory);
                     } 
                     // 金額が一致する場合のみ is_paid を更新
                     cardTransactionRepository.markAsPaidByPaymentMonth(userId, paymentMonth);
@@ -375,6 +376,7 @@ public class CsvImportService {
             csvImportUpdateHistory.setCsvImportHistoryId(csvImportHistoryId);
             csvImportUpdateHistory.setCardTransactionId(transaction.getId());
             csvImportUpdateHistory.setTargetField(CsvImportUpdateField.PAYMENT_MONTH);
+            csvImportUpdateHistory.setUpdateCount(transaction.getUpdateCount() + 1);
             for (CardTransaction existingTransaction : existingTransactions) {
                 if (Objects.equals(existingTransaction.getId(), transaction.getId())) {
                     csvImportUpdateHistory.setValueBefore(existingTransaction.getPaymentMonth());
@@ -383,7 +385,7 @@ public class CsvImportService {
             }
             csvImportUpdateHistory.setValueAfter(transaction.getPaymentMonth());
 
-            csvImportUpdateHistoryRepository.save(csvImportUpdateHistory);
+            csvImportUpdateHistoryRepository.insert(csvImportUpdateHistory);
             cardTransactionRepository.updatePaymentMonth(transaction);
             count++;
         }

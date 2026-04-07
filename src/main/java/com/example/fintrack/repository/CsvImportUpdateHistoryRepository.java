@@ -18,15 +18,15 @@ public class CsvImportUpdateHistoryRepository {
     this.template = template;
   }
 
-  public void save(CsvImportUpdateHistory csvImportUpdateHistory) {
-    String sql = "INSERT INTO csv_import_update_histories (csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, user_id) " +
-                "VALUES (:csvImportHistoryId, :bankTransactionId, :cardTransactionId, :targetField, :valueBefore, :valueAfter, :userId)";
+  public void insert(CsvImportUpdateHistory csvImportUpdateHistory) {
+    String sql = "INSERT INTO csv_import_update_histories (csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, user_id, update_count) " +
+                "VALUES (:csvImportHistoryId, :bankTransactionId, :cardTransactionId, :targetField, :valueBefore, :valueAfter, :userId, :updateCount)";
     BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(csvImportUpdateHistory);
     template.update(sql, params);
   }
 
   public List<CsvImportUpdateHistory> findAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {
-    String sql = "SELECT id, csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, created_at, user_id " +
+    String sql = "SELECT id, csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, created_at, user_id, update_count, updated_at " +
                 "FROM csv_import_update_histories " +
                 "WHERE csv_import_history_id = :csvImportHistoryId AND user_id = :userId";
     MapSqlParameterSource params = new MapSqlParameterSource()
