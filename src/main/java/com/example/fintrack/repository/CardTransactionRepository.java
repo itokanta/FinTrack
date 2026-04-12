@@ -1,6 +1,5 @@
 package com.example.fintrack.repository;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.Optional;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.CardTransaction;
@@ -111,36 +111,35 @@ public class CardTransactionRepository {
         return template.queryForList(sql, params, String.class);
     }
 
-    public CardTransaction insert(CardTransaction transaction) {
-        transaction.setUpdateCount(0L);
+    public void insert(List<CardTransaction> transactionList) {
         String sql = "INSERT INTO card_transactions " +
                 "(description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, " +
-                "expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, csv_import_history_id, update_count) "
-                +
+                "expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, csv_import_history_id, update_count) " +
                 "VALUES (:description, :amount, :transactionType, :transactionDate, :fingerprint, :userId, :assetCategoryId, " +
-                ":expenseCategoryId, :splitPatternId, :transactionSource, :cardType, :paymentMonth, :isPaid, :csvImportHistoryId, :updateCount) RETURNING id, created_at, updated_at";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("description", transaction.getDescription())
-                .addValue("amount", transaction.getAmount())
-                .addValue("transactionType", transaction.getTransactionType().name())
-                .addValue("transactionDate", transaction.getTransactionDate())
-                .addValue("fingerprint", transaction.getFingerprint())
-                .addValue("userId", transaction.getUserId())
-                .addValue("assetCategoryId", transaction.getAssetCategoryId())
-                .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
-                .addValue("splitPatternId", transaction.getSplitPatternId())
-                .addValue("transactionSource", transaction.getTransactionSource())
-                .addValue("cardType", transaction.getCardType())
-                .addValue("paymentMonth", transaction.getPaymentMonth())
-                .addValue("isPaid", transaction.getIsPaid())
-                .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId())
-                .addValue("updateCount", transaction.getUpdateCount());
-        Map<String, Object> result = template.queryForMap(sql, params);
-        transaction.setId(((Number) result.get("id")).longValue());
-        transaction.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
-        transaction.setUpdatedAt(((Timestamp) result.get("updated_at")).toLocalDateTime());
-       
-        return transaction;
+                ":expenseCategoryId, :splitPatternId, :transactionSource, :cardType, :paymentMonth, :isPaid, :csvImportHistoryId, :updateCount)";
+
+        SqlParameterSource[] params = new SqlParameterSource[transactionList.size()];
+        for (int i = 0; i < transactionList.size(); i++) {
+            CardTransaction transaction = transactionList.get(i);
+            params[i] = new MapSqlParameterSource()
+                    .addValue("description", transaction.getDescription())
+                    .addValue("amount", transaction.getAmount())
+                    .addValue("transactionType", transaction.getTransactionType().name())
+                    .addValue("transactionDate", transaction.getTransactionDate())
+                    .addValue("fingerprint", transaction.getFingerprint())
+                    .addValue("userId", transaction.getUserId())
+                    .addValue("assetCategoryId", transaction.getAssetCategoryId())
+                    .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
+                    .addValue("splitPatternId", transaction.getSplitPatternId())
+                    .addValue("transactionSource", transaction.getTransactionSource())
+                    .addValue("cardType", transaction.getCardType())
+                    .addValue("paymentMonth", transaction.getPaymentMonth())
+                    .addValue("isPaid", transaction.getIsPaid())
+                    .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId())
+                    .addValue("updateCount", 0L);
+        }
+
+        template.batchUpdate(sql, params);
     }
     
     public void updateAssetCategoryOrSplitPatternOrExpenseCategory(CardTransaction transaction) {
@@ -157,13 +156,13 @@ public class CardTransactionRepository {
     }
 
     /**
-     * 指定した支払い月のカード取引を取得
+     * 指定した支払い月のクレジットカード取引を取得（デビットは支払月・is_paid の扱いが異なるため除外）
      */
     public List<CardTransaction> findByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
                 "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, payment_month, is_paid, created_at, csv_import_history_id, update_count, updated_at " +
                 "FROM card_transactions " +
-                "WHERE user_id = :userId AND payment_month = :paymentMonth " +
+                "WHERE user_id = :userId AND payment_month = :paymentMonth AND card_type = 'CREDIT' " +
                 "ORDER BY transaction_date DESC";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("userId", userId)
@@ -176,7 +175,7 @@ public class CardTransactionRepository {
      */
     public Long sumAmountByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM card_transactions " +
-                "WHERE user_id = :userId AND payment_month = :paymentMonth AND transaction_type = 'EXPENSE'";
+                "WHERE user_id = :userId AND payment_month = :paymentMonth AND transaction_type = 'EXPENSE' AND card_type = 'CREDIT'";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("userId", userId)
             .addValue("paymentMonth", paymentMonth);
@@ -195,14 +194,18 @@ public class CardTransactionRepository {
         template.update(sql, params);
     }
 
-    public void updatePaymentMonth(CardTransaction cardTransaction) {
+    public void updatePaymentMonth(List<CardTransaction> cardTransactionList) {
         String sql = "UPDATE card_transactions SET payment_month = :paymentMonth, update_count = update_count + 1 " +
                 "WHERE id = :id AND user_id = :userId AND card_type = 'CREDIT'";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("paymentMonth", cardTransaction.getPaymentMonth())
-            .addValue("id", cardTransaction.getId())
-            .addValue("userId", cardTransaction.getUserId());
-        template.update(sql, params);
+        SqlParameterSource[] params = new SqlParameterSource[cardTransactionList.size()];
+        for (int i = 0; i < cardTransactionList.size(); i++) {
+            CardTransaction cardTransaction = cardTransactionList.get(i);
+            params[i] = new MapSqlParameterSource()
+                .addValue("paymentMonth", cardTransaction.getPaymentMonth())
+                .addValue("id", cardTransaction.getId())
+                .addValue("userId", cardTransaction.getUserId());
+        }
+        template.batchUpdate(sql, params);
     }
 
     public List<CardTransaction> findByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {

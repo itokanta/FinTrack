@@ -1,14 +1,16 @@
 package com.example.fintrack.repository;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.mapper.BankTransactionRowMapper;
@@ -89,14 +91,17 @@ public class BankTransactionRepository {
         return template.queryForList(sql, params, String.class);
     }
 
-    public BankTransaction insert(BankTransaction transaction) {
+    public void insert(List<BankTransaction> transactionList) {
         String sql = "INSERT INTO bank_transactions " +
                 "(description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, " +
                 "expense_category_id, split_pattern_id, transaction_source, is_card_payment, csv_import_history_id, update_count) " +
                 "VALUES (:description, :amount, :transactionType, :transactionDate, :fingerprint, :userId, :assetCategoryId, :expenseCategoryId, :splitPatternId, " +
-                ":transactionSource, :isCardPayment, :csvImportHistoryId, :updateCount) RETURNING id, created_at, updated_at";
+                ":transactionSource, :isCardPayment, :csvImportHistoryId, :updateCount)";
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        SqlParameterSource[] params = new SqlParameterSource[transactionList.size()];
+        for (int i = 0; i < transactionList.size(); i++){
+            BankTransaction transaction = transactionList.get(i);
+            params[i] = new MapSqlParameterSource()
                 .addValue("description", transaction.getDescription())
                 .addValue("amount", transaction.getAmount())
                 .addValue("transactionType", transaction.getTransactionType().name())
@@ -110,12 +115,9 @@ public class BankTransactionRepository {
                 .addValue("isCardPayment", transaction.getIsCardPayment())
                 .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId())
                 .addValue("updateCount", 0L);
+        }
 
-        Map<String, Object> result = template.queryForMap(sql, params);
-        transaction.setId(((Number) result.get("id")).longValue());
-        transaction.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
-        transaction.setUpdatedAt(((Timestamp) result.get("updated_at")).toLocalDateTime());
-        return transaction;
+        template.batchUpdate(sql, params);
     }
     
     public void updateAssetCategoryOrSplitPatternOrExpenseCategory(BankTransaction transaction) {

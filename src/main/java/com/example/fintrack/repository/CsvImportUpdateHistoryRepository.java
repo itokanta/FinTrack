@@ -1,10 +1,13 @@
 package com.example.fintrack.repository;
 
 import java.util.List;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
+
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.stereotype.Repository;
+
 import com.example.fintrack.domain.CsvImportUpdateHistory;
 import com.example.fintrack.repository.mapper.CsvImportUpdateHistoryRowMapper;
 
@@ -18,11 +21,11 @@ public class CsvImportUpdateHistoryRepository {
     this.template = template;
   }
 
-  public void insert(CsvImportUpdateHistory csvImportUpdateHistory) {
+  public void insert(List<CsvImportUpdateHistory> csvImportUpdateHistoryList) {
     String sql = "INSERT INTO csv_import_update_histories (csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, user_id, update_count) " +
                 "VALUES (:csvImportHistoryId, :bankTransactionId, :cardTransactionId, :targetField, :valueBefore, :valueAfter, :userId, :updateCount)";
-    BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(csvImportUpdateHistory);
-    template.update(sql, params);
+    SqlParameterSource[] params = SqlParameterSourceUtils.createBatch(csvImportUpdateHistoryList.toArray());
+    template.batchUpdate(sql, params);
   }
 
   public List<CsvImportUpdateHistory> findAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {

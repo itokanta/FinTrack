@@ -1,20 +1,29 @@
 package com.example.fintrack.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
+import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.domain.CsvImportUpdateField;
+import com.example.fintrack.domain.CsvImportUpdateHistory;
 import com.example.fintrack.domain.DiscrepancyTransaction;
 import com.example.fintrack.domain.SplitPattern;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetRepository;
+import com.example.fintrack.repository.BankTransactionRepository;
 import com.example.fintrack.repository.CardPaymentDiscrepancyRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
+import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 import com.example.fintrack.repository.SplitPatternRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
@@ -25,23 +34,29 @@ public class DiscrepancyTransactionService {
   private final DiscrepancyTransactionRepository discrepancyTransactionRepository;
   private final CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository;
   private final CardTransactionRepository cardTransactionRepository;
+  private final BankTransactionRepository bankTransactionRepository;
   private final AssetRepository assetRepository;
   private final SplitPatternRepository splitPatternRepository;
   private final SplitTransactionRepository splitTransactionRepository;
+  private final CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository;
 
   public DiscrepancyTransactionService(
       DiscrepancyTransactionRepository discrepancyTransactionRepository,
       CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository,
       CardTransactionRepository cardTransactionRepository,
+      BankTransactionRepository bankTransactionRepository,
       AssetRepository assetRepository,
       SplitPatternRepository splitPatternRepository,
-      SplitTransactionRepository splitTransactionRepository) {
+      SplitTransactionRepository splitTransactionRepository,
+      CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository) {
     this.discrepancyTransactionRepository = discrepancyTransactionRepository;
     this.cardPaymentDiscrepancyRepository = cardPaymentDiscrepancyRepository;
     this.cardTransactionRepository = cardTransactionRepository;
+    this.bankTransactionRepository = bankTransactionRepository;
     this.assetRepository = assetRepository;
     this.splitPatternRepository = splitPatternRepository;
     this.splitTransactionRepository = splitTransactionRepository;
+    this.csvImportUpdateHistoryRepository = csvImportUpdateHistoryRepository;
   }
 
   /**
@@ -263,11 +278,45 @@ public class DiscrepancyTransactionService {
   }
 
   private void finalizeDiscrepancyResolution(CardPaymentDiscrepancy discrepancy) {
-    // カード取引を引き落とし済みに更新
-    cardTransactionRepository.markAsPaidByPaymentMonth(
-        discrepancy.getUserId(),
-        discrepancy.getPaymentMonth());
+    Long userId = discrepancy.getUserId();
+    String paymentMonth = discrepancy.getPaymentMonth();
+    List<CardTransaction> beforeCardTransactionList = cardTransactionRepository.findByUserIdAndPaymentMonth(userId, paymentMonth);
+    Map<Long, CardTransaction> beforeByIdMap = new HashMap<>();
+    for (CardTransaction beforeCardTransaction : beforeCardTransactionList) {
+        beforeByIdMap.put(beforeCardTransaction.getId(), beforeCardTransaction);
+    }
 
+    // カード取引を引き落とし済みに更新
+    cardTransactionRepository.markAsPaidByPaymentMonth(userId, paymentMonth);
+
+    List<CardTransaction> afterCardTransactionList = cardTransactionRepository.findByUserIdAndPaymentMonth(discrepancy.getUserId(), discrepancy.getPaymentMonth());
+    List<CsvImportUpdateHistory> csvImportUpdateHistoryList = new ArrayList<>();
+    Optional<BankTransaction> cardPaymentTransaction = bankTransactionRepository.findById(discrepancy.getBankTransactionId());
+    Long csvImportHistoryId = cardPaymentTransaction
+        .orElseThrow(() -> new IllegalStateException(
+            "card payment bank transaction not found. id=" + discrepancy.getBankTransactionId())).getCsvImportHistoryId();
+    if (csvImportHistoryId != null){
+      for (CardTransaction afterCardTransaction : afterCardTransactionList) {
+        CardTransaction beforeTargetCardTransaction = beforeByIdMap.get(afterCardTransaction.getId());
+        if (beforeTargetCardTransaction == null) {
+          throw new IllegalStateException("before transaction not found. id=" + afterCardTransaction.getId());
+        }
+        CsvImportUpdateHistory csvImportUpdateHistory = new CsvImportUpdateHistory();
+        csvImportUpdateHistory.setUserId(userId);
+        csvImportUpdateHistory.setCsvImportHistoryId(csvImportHistoryId);
+        csvImportUpdateHistory.setCardTransactionId(afterCardTransaction.getId());
+        csvImportUpdateHistory.setTargetField(CsvImportUpdateField.IS_PAID);
+        csvImportUpdateHistory.setUpdateCount(afterCardTransaction.getUpdateCount());
+        if (beforeTargetCardTransaction.getIsPaid() != null){
+          csvImportUpdateHistory.setValueBefore(beforeTargetCardTransaction.getIsPaid().toString());
+        }
+        csvImportUpdateHistory.setValueAfter(afterCardTransaction.getIsPaid().toString());
+
+        csvImportUpdateHistoryList.add(csvImportUpdateHistory);
+      }
+      csvImportUpdateHistoryRepository.insert(csvImportUpdateHistoryList);
+    }
+    
     // 差異を解決済みにマーク
     cardPaymentDiscrepancyRepository.markAsResolved(discrepancy.getId());
   }
