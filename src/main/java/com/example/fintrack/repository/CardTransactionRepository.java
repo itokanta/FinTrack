@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.domain.dto.CardTransactionUpdateDetail;
+import com.example.fintrack.repository.extractor.CardTransactionUpdateDetailExtractor;
 import com.example.fintrack.repository.mapper.CardTransactionRowMapper;
 
 @Repository
@@ -229,5 +231,35 @@ public class CardTransactionRepository {
                 .addValue("csvImportHistoryId", csvImportHistoryId);
 
         template.update(sql, param);
+    }
+
+    public List<CardTransactionUpdateDetail> findUpdatedByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
+        String sql =
+            "SELECT " +
+            "  ct.id AS ct_id, ct.description AS ct_description, ct.amount AS ct_amount, " +
+            "  ct.transaction_type AS ct_transaction_type, ct.transaction_date AS ct_transaction_date, " +
+            "  ct.fingerprint AS ct_fingerprint, ct.user_id AS ct_user_id, " +
+            "  ct.asset_category_id AS ct_asset_category_id, ct.expense_category_id AS ct_expense_category_id, " +
+            "  ct.split_pattern_id AS ct_split_pattern_id, ct.transaction_source AS ct_transaction_source, " +
+            "  ct.card_type AS ct_card_type, ct.payment_month AS ct_payment_month, " +
+            "  ct.is_paid AS ct_is_paid, ct.created_at AS ct_created_at, " +
+            "  ct.csv_import_history_id AS ct_csv_import_history_id, " +
+            "  ct.update_count AS ct_update_count, ct.updated_at AS ct_updated_at, " +
+            "  cuh.id AS cuh_id, cuh.csv_import_history_id AS cuh_csv_import_history_id, " +
+            "  cuh.bank_transaction_id AS cuh_bank_transaction_id, " +
+            "  cuh.card_transaction_id AS cuh_card_transaction_id, " +
+            "  cuh.target_field AS cuh_target_field, cuh.value_before AS cuh_value_before, " +
+            "  cuh.value_after AS cuh_value_after, cuh.user_id AS cuh_user_id, " +
+            "  cuh.update_count AS cuh_update_count, cuh.created_at AS cuh_created_at, " +
+            "  cuh.updated_at AS cuh_updated_at " +
+            "FROM card_transactions ct " +
+            "INNER JOIN csv_import_update_histories cuh ON ct.id = cuh.card_transaction_id " +
+            "WHERE cuh.csv_import_history_id = :csvImportHistoryId " +
+            "  AND ct.user_id = :userId " +
+            "ORDER BY ct.transaction_date DESC, cuh.update_count";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("csvImportHistoryId", csvImportHistoryId)
+                .addValue("userId", userId);
+        return template.query(sql, params, new CardTransactionUpdateDetailExtractor());
     }
 }
