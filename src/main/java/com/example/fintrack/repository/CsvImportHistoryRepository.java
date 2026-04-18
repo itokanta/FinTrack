@@ -25,7 +25,7 @@ public class CsvImportHistoryRepository {
   }
 
   public List<CsvImportHistory> findAllByUserId(Long userId) {
-    String sql = "SELECT id, user_id, import_type, csv_name, import_date, record_count FROM csv_import_histories WHERE user_id = :userId";
+    String sql = "SELECT id, user_id, import_type, csv_name, import_date, record_count FROM csv_import_histories WHERE user_id = :userId ORDER BY import_date DESC";
     MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
     return template.query(sql, params, rowMapper);
   }
