@@ -42,7 +42,7 @@
 com.example.fintrack/
 ├── controller/   # HTTP リクエスト受付・レスポンス返却
 ├── service/      # ビジネスロジック
-├── repository/   # DB アクセス（SQL / RowMapper）
+├── repository/   # DB アクセス（SQL・RowMapper は各 Repository 内に手書き）
 ├── domain/       # ドメインモデル・Enum
 ├── csv/          # CSV パーサー・正規化・フィンガープリント
 └── config/       # Spring Security 設定
@@ -77,7 +77,7 @@ Controller → Service → Repository
 
 ## 実装上の注意点
 
-- **JPA は使用しない。** DB アクセスは必ず `NamedParameterJdbcTemplate` と手書き `RowMapper` で実装する。
+- **JPA は使用しない。** DB アクセスは必ず `NamedParameterJdbcTemplate` と**手書きの `RowMapper`**で実装する。エンティティ行のマッピングは、原則として各 `*Repository` 内の `private static final RowMapper<...> ROW_MAPPER = (rs, rowNum) -> { ... }`（または同等の手書き `RowMapper`）に置く。`repository/mapper` にクラスを切り出す構成は必須ではない（複雑な `ResultSetExtractor` などは `repository/extractor/` 等でよい）。
 - **フィンガープリント方式で重複排除。** CSV を再インポートしても既存レコードは重複しない。
 - **全データはユーザー単位で分離。** クエリには必ず `userId` でのスコープを含める。
 - `split_pattern_id` の意味：`NULL` = 未分類、`0` = 単一カテゴリ、`-1` = 手動分割、正の値 = パターン ID。

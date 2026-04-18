@@ -9,13 +9,32 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitTransaction;
-import com.example.fintrack.repository.mapper.SplitTransactionRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class SplitTransactionRepository {
 
+    private static final RowMapper<SplitTransaction> ROW_MAPPER = (rs, rowNum) -> {
+        SplitTransaction splitTransaction = new SplitTransaction();
+        splitTransaction.setId(rs.getLong("id"));
+        splitTransaction.setTransactionType(rs.getString("transaction_type"));
+        splitTransaction.setAssetCategoryId(rs.getLong("asset_category_id"));
+        long splitPatternId = rs.getLong("split_pattern_id");
+        splitTransaction.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
+        splitTransaction.setSplitMethod(rs.getString("split_method"));
+        splitTransaction.setAmount(rs.getLong("amount"));
+        long bankTransactionId = rs.getLong("bank_transaction_id");
+        splitTransaction.setBankTransactionId(rs.wasNull() ? null : bankTransactionId);
+        long cardTransactionId = rs.getLong("card_transaction_id");
+        splitTransaction.setCardTransactionId(rs.wasNull() ? null : cardTransactionId);
+        long discrepancyTransactionId = rs.getLong("discrepancy_transaction_id");
+        splitTransaction.setDiscrepancyTransactionId(rs.wasNull() ? null : discrepancyTransactionId);
+        splitTransaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        splitTransaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        return splitTransaction;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private static final SplitTransactionRowMapper ROW_MAPPER = new SplitTransactionRowMapper();
 
     public SplitTransactionRepository(NamedParameterJdbcTemplate template) {
         this.template = template;

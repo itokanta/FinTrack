@@ -2,7 +2,6 @@ package com.example.fintrack.repository;
 
 import com.example.fintrack.domain.Asset;
 import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.repository.mapper.AssetRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -10,13 +9,11 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Repository
 public class AssetRepository {
-    
+
     private final NamedParameterJdbcTemplate template;
-    private static final AssetRowMapper ROW_MAPPER = new AssetRowMapper();
     private final AssetCategoryRepository assetCategoryRepository;
     
     public AssetRepository(NamedParameterJdbcTemplate template, AssetCategoryRepository assetCategoryRepository) {

@@ -1,7 +1,7 @@
 package com.example.fintrack.repository;
 
 import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.repository.mapper.AssetCategoryRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -12,8 +12,16 @@ import java.util.Optional;
 @Repository
 public class AssetCategoryRepository {
 
+    private static final RowMapper<AssetCategory> ROW_MAPPER = (rs, rowNum) -> {
+        AssetCategory category = new AssetCategory();
+        category.setId(rs.getLong("id"));
+        category.setUserId(rs.getLong("user_id"));
+        category.setCategoryName(rs.getString("category_name"));
+        category.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        return category;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private static final AssetCategoryRowMapper ROW_MAPPER = new AssetCategoryRowMapper();
 
     public AssetCategoryRepository(NamedParameterJdbcTemplate template) {
         this.template = template;

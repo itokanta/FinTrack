@@ -8,13 +8,11 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.DiscrepancyTransaction;
-import com.example.fintrack.repository.mapper.DiscrepancyTransactionRowMapper;
 
 @Repository
 public class DiscrepancyTransactionRepository {
 
     private final NamedParameterJdbcTemplate template;
-    private static final DiscrepancyTransactionRowMapper ROW_MAPPER = new DiscrepancyTransactionRowMapper();
 
     public DiscrepancyTransactionRepository(NamedParameterJdbcTemplate template) {
         this.template = template;

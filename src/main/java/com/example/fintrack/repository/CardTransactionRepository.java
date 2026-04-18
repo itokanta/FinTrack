@@ -11,18 +11,55 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.jdbc.core.RowMapper;
+
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.CardTransactionUpdateDetail;
 import com.example.fintrack.repository.extractor.CardTransactionUpdateDetailExtractor;
-import com.example.fintrack.repository.mapper.CardTransactionRowMapper;
 
 @Repository
 public class CardTransactionRepository {
-    
+
+    private static final RowMapper<CardTransaction> ROW_MAPPER = (rs, rowNum) -> {
+        CardTransaction transaction = new CardTransaction();
+        transaction.setId(rs.getLong("id"));
+        transaction.setDescription(rs.getString("description"));
+        transaction.setAmount(rs.getLong("amount"));
+        transaction.setTransactionType(TransactionType.valueOf(rs.getString("transaction_type")));
+        transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+        transaction.setFingerprint(rs.getString("fingerprint"));
+        transaction.setUserId(rs.getLong("user_id"));
+
+        long assetCategoryId = rs.getLong("asset_category_id");
+        transaction.setAssetCategoryId(rs.wasNull() ? null : assetCategoryId);
+
+        long expenseCategoryId = rs.getLong("expense_category_id");
+        transaction.setExpenseCategoryId(rs.wasNull() ? null : expenseCategoryId);
+
+        long splitPatternId = rs.getLong("split_pattern_id");
+        transaction.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
+
+        transaction.setTransactionSource(rs.getString("transaction_source"));
+        transaction.setCardType(rs.getString("card_type"));
+        transaction.setPaymentMonth(rs.getString("payment_month"));
+
+        Boolean isPaid = rs.getBoolean("is_paid");
+        transaction.setIsPaid(rs.wasNull() ? null : isPaid);
+
+        transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
+        long csvImportHistoryId = rs.getLong("csv_import_history_id");
+        transaction.setCsvImportHistoryId(rs.wasNull() ? null : csvImportHistoryId);
+
+        transaction.setUpdateCount(rs.getLong("update_count"));
+        transaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+
+        return transaction;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private final CardTransactionRowMapper rowMapper = new CardTransactionRowMapper();
-    
+
     public CardTransactionRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
     }
@@ -35,7 +72,7 @@ public class CardTransactionRepository {
                     "WHERE id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("id", id);
-        List<CardTransaction> transactions = template.query(sql, params, rowMapper);
+        List<CardTransaction> transactions = template.query(sql, params, ROW_MAPPER);
         if (transactions.isEmpty()) {
             return Optional.empty();
         }
@@ -70,7 +107,7 @@ public class CardTransactionRepository {
                     "WHERE user_id = :userId " +
                     "ORDER BY created_at ASC";
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId);
-        List<CardTransaction> transactions = template.query(sql, params, rowMapper);
+        List<CardTransaction> transactions = template.query(sql, params, ROW_MAPPER);
         
         return transactions;
     }
@@ -83,7 +120,7 @@ public class CardTransactionRepository {
                     "WHERE user_id = :userId AND split_pattern_id IS NULL AND transaction_type = :transactionType " +
                     "ORDER BY transaction_date DESC";
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name());
-        return template.query(sql, params, rowMapper);
+        return template.query(sql, params, ROW_MAPPER);
     }
         
     public List<CardTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetween(
@@ -102,7 +139,7 @@ public class CardTransactionRepository {
             .addValue("endDate", endDate)
             .addValue("limit", limit)
             .addValue("offset", offset);
-        return template.query(sql, params, rowMapper);
+        return template.query(sql, params, ROW_MAPPER);
     }
     
     public List<String> findDistinctDescriptionsByUserId(Long userId) {
@@ -169,7 +206,7 @@ public class CardTransactionRepository {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("userId", userId)
             .addValue("paymentMonth", paymentMonth);
-        return template.query(sql, params, rowMapper);
+        return template.query(sql, params, ROW_MAPPER);
     }
 
     /**
@@ -221,7 +258,7 @@ public class CardTransactionRepository {
                 .addValue("userId", userId)
                 .addValue("csvImportHistoryId", csvImportHistoryId);
 
-        return template.query(sql, param, rowMapper);
+        return template.query(sql, param, ROW_MAPPER);
     }
 
     public void deleteByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {

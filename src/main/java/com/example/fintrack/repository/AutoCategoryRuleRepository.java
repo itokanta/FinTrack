@@ -10,13 +10,24 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.AutoCategoryRule;
-import com.example.fintrack.repository.mapper.AutoCategoryRuleRowMapper;
+import com.example.fintrack.domain.TransactionType;
+import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class AutoCategoryRuleRepository {
 
+    private static final RowMapper<AutoCategoryRule> ROW_MAPPER = (rs, rowNum) -> {
+        AutoCategoryRule rule = new AutoCategoryRule();
+        rule.setId(rs.getLong("id"));
+        rule.setUserId(rs.getLong("user_id"));
+        rule.setAssetCategoryId(rs.getLong("asset_category_id"));
+        rule.setDescriptionPattern(rs.getString("description_pattern"));
+        rule.setTransactionType(TransactionType.valueOf(rs.getString("transaction_type")));
+        rule.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        return rule;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private static final AutoCategoryRuleRowMapper ROW_MAPPER = new AutoCategoryRuleRowMapper();
 
     public AutoCategoryRuleRepository(NamedParameterJdbcTemplate template) {
         this.template = template;

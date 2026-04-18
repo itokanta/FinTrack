@@ -11,16 +11,51 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.jdbc.core.RowMapper;
+
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.mapper.BankTransactionRowMapper;
 
 @Repository
 public class BankTransactionRepository {
-    
+
+    private static final RowMapper<BankTransaction> ROW_MAPPER = (rs, rowNum) -> {
+        BankTransaction transaction = new BankTransaction();
+        transaction.setId(rs.getLong("id"));
+        transaction.setDescription(rs.getString("description"));
+        transaction.setAmount(rs.getLong("amount"));
+        transaction.setTransactionType(TransactionType.valueOf(rs.getString("transaction_type")));
+        transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+        transaction.setFingerprint(rs.getString("fingerprint"));
+        transaction.setUserId(rs.getLong("user_id"));
+
+        long assetCategoryId = rs.getLong("asset_category_id");
+        transaction.setAssetCategoryId(rs.wasNull() ? null : assetCategoryId);
+
+        long expenseCategoryId = rs.getLong("expense_category_id");
+        transaction.setExpenseCategoryId(rs.wasNull() ? null : expenseCategoryId);
+
+        long splitPatternId = rs.getLong("split_pattern_id");
+        transaction.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
+
+        transaction.setTransactionSource(rs.getString("transaction_source"));
+
+        Boolean isCardPayment = rs.getBoolean("is_card_payment");
+        transaction.setIsCardPayment(rs.wasNull() ? false : isCardPayment);
+
+        transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
+        long csvImportHistoryId = rs.getLong("csv_import_history_id");
+        transaction.setCsvImportHistoryId(rs.wasNull() ? null : csvImportHistoryId);
+
+        transaction.setUpdateCount(rs.getLong("update_count"));
+        transaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+
+        return transaction;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private final BankTransactionRowMapper rowMapper = new BankTransactionRowMapper();
-    
+
     public BankTransactionRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
     }
@@ -33,7 +68,7 @@ public class BankTransactionRepository {
                     "WHERE id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("id", id);
-        List<BankTransaction> transactions = template.query(sql, params, rowMapper);
+        List<BankTransaction> transactions = template.query(sql, params, ROW_MAPPER);
         if (transactions.isEmpty()) {
             return Optional.empty();
         }
@@ -66,7 +101,7 @@ public class BankTransactionRepository {
                     "WHERE user_id = :userId AND split_pattern_id IS NULL AND is_card_payment = FALSE AND transaction_type = :transactionType " +
                     "ORDER BY transaction_date DESC";
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name());
-        return template.query(sql, params, rowMapper);
+        return template.query(sql, params, ROW_MAPPER);
     }
     
     public List<BankTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetween(
@@ -80,7 +115,7 @@ public class BankTransactionRepository {
                     "LIMIT :limit OFFSET :offset";
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name())
                         .addValue("startDate", startDate).addValue("endDate", endDate).addValue("limit", limit).addValue("offset", offset);
-        return template.query(sql, params, rowMapper);
+        return template.query(sql, params, ROW_MAPPER);
     }
     
     public List<String> findDistinctDescriptionsByUserId(Long userId) {
@@ -145,7 +180,7 @@ public class BankTransactionRepository {
             .addValue("userId", userId)
             .addValue("csvImportHistoryId", csvImportHistoryId);
         
-        return template.query(sql, param, rowMapper);
+        return template.query(sql, param, ROW_MAPPER);
     }
 
     public void deleteByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {

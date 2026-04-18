@@ -11,14 +11,31 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.jdbc.core.RowMapper;
+
+import com.example.fintrack.domain.CsvImportUpdateField;
 import com.example.fintrack.domain.CsvImportUpdateHistory;
-import com.example.fintrack.repository.mapper.CsvImportUpdateHistoryRowMapper;
 
 @Repository
 public class CsvImportUpdateHistoryRepository {
 
+  private static final RowMapper<CsvImportUpdateHistory> ROW_MAPPER = (rs, rowNum) -> {
+    CsvImportUpdateHistory history = new CsvImportUpdateHistory();
+    history.setId(rs.getLong("id"));
+    history.setCsvImportHistoryId(rs.getLong("csv_import_history_id"));
+    history.setBankTransactionId(rs.getObject("bank_transaction_id", Long.class));
+    history.setCardTransactionId(rs.getObject("card_transaction_id", Long.class));
+    history.setTargetField(CsvImportUpdateField.valueOf(rs.getString("target_field")));
+    history.setValueBefore(rs.getString("value_before"));
+    history.setValueAfter(rs.getString("value_after"));
+    history.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+    history.setUserId(rs.getLong("user_id"));
+    history.setUpdateCount(rs.getLong("update_count"));
+    history.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+    return history;
+  };
+
   private final NamedParameterJdbcTemplate template;
-  private final CsvImportUpdateHistoryRowMapper rowMapper = new CsvImportUpdateHistoryRowMapper();
 
   public CsvImportUpdateHistoryRepository(NamedParameterJdbcTemplate template) {
     this.template = template;
@@ -38,7 +55,7 @@ public class CsvImportUpdateHistoryRepository {
     MapSqlParameterSource params = new MapSqlParameterSource()
       .addValue("csvImportHistoryId", csvImportHistoryId)
       .addValue("userId", userId);
-    return template.query(sql, params, rowMapper);
+    return template.query(sql, params, ROW_MAPPER);
   }
 
   public void deleteAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {
@@ -61,7 +78,7 @@ public class CsvImportUpdateHistoryRepository {
     MapSqlParameterSource params = new MapSqlParameterSource()
       .addValue("csvImportHistoryId", csvImportHistoryId)
       .addValue("userId", userId);
-    List<CsvImportUpdateHistory> csvImportUpdateHistoryList = template.query(sql, params, rowMapper);
+    List<CsvImportUpdateHistory> csvImportUpdateHistoryList = template.query(sql, params, ROW_MAPPER);
 
     Map<Long, List<CsvImportUpdateHistory>> result = new HashMap<>();
     for (CsvImportUpdateHistory csvImportUpdateHistory : csvImportUpdateHistoryList){

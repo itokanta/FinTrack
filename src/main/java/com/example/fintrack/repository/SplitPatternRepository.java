@@ -9,13 +9,30 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitPattern;
-import com.example.fintrack.repository.mapper.SplitPatternRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class SplitPatternRepository {
 
+    private static final RowMapper<SplitPattern> ROW_MAPPER = (rs, rowNum) -> {
+        SplitPattern pattern = new SplitPattern();
+        pattern.setId(rs.getLong("id"));
+        pattern.setPatternId(rs.getLong("pattern_id"));
+        pattern.setUserId(rs.getLong("user_id"));
+        pattern.setTransactionType(rs.getString("transaction_type"));
+        pattern.setSplitType(rs.getString("split_type"));
+        pattern.setAssetCategoryId(rs.getLong("asset_category_id"));
+        if (rs.getBigDecimal("split_ratio") != null) {
+            pattern.setSplitRatio(rs.getBigDecimal("split_ratio"));
+        }
+        long splitAmount = rs.getLong("split_amount");
+        pattern.setSplitAmount(rs.wasNull() ? null : splitAmount);
+        pattern.setPatternName(rs.getString("pattern_name"));
+        pattern.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        return pattern;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private static final SplitPatternRowMapper ROW_MAPPER = new SplitPatternRowMapper();
 
     public SplitPatternRepository(NamedParameterJdbcTemplate template) {
         this.template = template;

@@ -10,13 +10,22 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.User;
-import com.example.fintrack.repository.mapper.UserRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class UserRepository {
 
+    private static final RowMapper<User> ROW_MAPPER = (rs, rowNum) -> {
+        User user = new User();
+        user.setId(rs.getLong("id"));
+        user.setUsername(rs.getString("username"));
+        user.setPassword(rs.getString("password"));
+        user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        user.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        return user;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private static final UserRowMapper USER_ROW_MAPPER = new UserRowMapper();
 
     public UserRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
@@ -25,7 +34,7 @@ public class UserRepository {
     public Optional<User> findById(Long id) {
         String sql = "SELECT id, username, password, created_at, updated_at FROM users WHERE id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
-        List<User> users = template.query(sql, params, USER_ROW_MAPPER);
+        List<User> users = template.query(sql, params, ROW_MAPPER);
         if (users.isEmpty()) {
             return Optional.empty();
         }
@@ -35,7 +44,7 @@ public class UserRepository {
     public Optional<User> findByUsername(String username) {
         String sql = "SELECT id, username, password, created_at, updated_at FROM users WHERE username = :username";
         MapSqlParameterSource params = new MapSqlParameterSource("username", username);
-        List<User> users = template.query(sql, params, USER_ROW_MAPPER);
+        List<User> users = template.query(sql, params, ROW_MAPPER);
         if (users.isEmpty()) {
             return Optional.empty();
         }

@@ -10,13 +10,21 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.ExpenseCategory;
-import com.example.fintrack.repository.mapper.ExpenseCategoryRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class ExpenseCategoryRepository {
 
+    private static final RowMapper<ExpenseCategory> ROW_MAPPER = (rs, rowNum) -> {
+        ExpenseCategory category = new ExpenseCategory();
+        category.setId(rs.getLong("id"));
+        category.setUserId(rs.getLong("user_id"));
+        category.setCategoryName(rs.getString("category_name"));
+        category.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        return category;
+    };
+
     private final NamedParameterJdbcTemplate template;
-    private static final ExpenseCategoryRowMapper ROW_MAPPER = new ExpenseCategoryRowMapper();
 
     public ExpenseCategoryRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
