@@ -47,7 +47,6 @@ import com.example.fintrack.repository.UserRepository;
 @Service
 public class CsvImportService {
 
-    private final AssetCategoryService assetCategoryService;
     private final CsvReader csvReader;
     private final CsvParserFactory csvParserFactory;
     private final TransactionNormalizer transactionNormalizer;
@@ -71,7 +70,7 @@ public class CsvImportService {
             UserRepository userRepository,
             CardPaymentDiscrepancyRepository discrepancyRepository,
             CsvImportHistoryRepository csvImportHistoryRepository,
-            CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository, AssetCategoryService assetCategoryService
+            CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository
         ) {
         this.csvReader = csvReader;
         this.csvParserFactory = csvParserFactory;
@@ -85,7 +84,6 @@ public class CsvImportService {
         this.discrepancyRepository = discrepancyRepository;
         this.csvImportHistoryRepository = csvImportHistoryRepository;
         this.csvImportUpdateHistoryRepository = csvImportUpdateHistoryRepository;
-        this.assetCategoryService = assetCategoryService;
     }
 
     /**
