@@ -48,24 +48,6 @@ public class CsvImportUpdateHistoryRepository {
     template.batchUpdate(sql, params);
   }
 
-  public List<CsvImportUpdateHistory> findAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {
-    String sql = "SELECT id, csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, created_at, user_id, update_count, updated_at " +
-                "FROM csv_import_update_histories " +
-                "WHERE csv_import_history_id = :csvImportHistoryId AND user_id = :userId";
-    MapSqlParameterSource params = new MapSqlParameterSource()
-      .addValue("csvImportHistoryId", csvImportHistoryId)
-      .addValue("userId", userId);
-    return template.query(sql, params, ROW_MAPPER);
-  }
-
-  public void deleteAllByCsvImportHistoryId(Long csvImportHistoryId, Long userId) {
-    String sql = "DELETE FROM csv_import_update_histories WHERE csv_import_history_id = :csvImportHistoryId AND user_id = :userId";
-    MapSqlParameterSource params = new MapSqlParameterSource()
-      .addValue("csvImportHistoryId", csvImportHistoryId)
-      .addValue("userId", userId);
-    template.update(sql, params);
-  }
-
   public Map<Long, List<CsvImportUpdateHistory>> findByCardTransactionIdInTargetCsv(Long userId, Long csvImportHistoryId) {
     String sql = "SELECT id, csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, created_at, user_id, update_count, updated_at " +
                 "FROM csv_import_update_histories " +
@@ -91,12 +73,16 @@ public class CsvImportUpdateHistoryRepository {
     return result;
   }
 
-  public void updateValueBefore(CsvImportUpdateHistory history) {
+  public void batchUpdateValueBefore(List<CsvImportUpdateHistory> historyList) {
     String sql = "UPDATE csv_import_update_histories SET value_before = :valueBefore WHERE id = :id AND user_id = :userId";
-    MapSqlParameterSource params = new MapSqlParameterSource()
-      .addValue("valueBefore", history.getValueBefore())
-      .addValue("id", history.getId())
-      .addValue("userId", history.getUserId());
-    template.update(sql, params);
+    SqlParameterSource[] params = new SqlParameterSource[historyList.size()];
+    for (int i = 0; i < historyList.size(); i++) {
+      CsvImportUpdateHistory history = historyList.get(i);
+      params[i] = new MapSqlParameterSource()
+        .addValue("valueBefore", history.getValueBefore())
+        .addValue("id", history.getId())
+        .addValue("userId", history.getUserId());
+    }
+    template.batchUpdate(sql, params);
   }
 }

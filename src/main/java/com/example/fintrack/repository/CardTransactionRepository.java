@@ -183,7 +183,7 @@ public class CardTransactionRepository {
     
     public void updateAssetCategoryOrSplitPatternOrExpenseCategory(CardTransaction transaction) {
             String sql = "UPDATE card_transactions SET " +
-                        "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, split_pattern_id = :splitPatternId, " +
+                        "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, split_pattern_id = :splitPatternId " +
                         "WHERE id = :id AND user_id = :userId";
             MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("assetCategoryId", transaction.getAssetCategoryId())
@@ -259,6 +259,33 @@ public class CardTransactionRepository {
                 .addValue("csvImportHistoryId", csvImportHistoryId);
 
         return template.query(sql, param, ROW_MAPPER);
+    }
+
+    public List<CardTransaction> findByIds(List<Long> ids, Long userId) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                "asset_category_id, expense_category_id, split_pattern_id, transaction_source, card_type, " +
+                "payment_month, is_paid, created_at, csv_import_history_id, update_count, updated_at " +
+                "FROM card_transactions " +
+                "WHERE id IN (:ids) AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", ids)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+
+    public void rollbackIsPaidAndPaymentMonth(List<CardTransaction> cardTransactionList) {
+        String sql = "UPDATE card_transactions SET is_paid = :isPaid, payment_month = :paymentMonth, update_count = update_count + 1 " +
+                "WHERE id = :id AND user_id = :userId";
+        SqlParameterSource[] params = new SqlParameterSource[cardTransactionList.size()];
+        for (int i = 0; i < cardTransactionList.size(); i++) {
+            CardTransaction cardTransaction = cardTransactionList.get(i);
+            params[i] = new MapSqlParameterSource()
+                .addValue("isPaid", cardTransaction.getIsPaid())
+                .addValue("paymentMonth", cardTransaction.getPaymentMonth())
+                .addValue("id", cardTransaction.getId())
+                .addValue("userId", cardTransaction.getUserId());
+        }
+        template.batchUpdate(sql, params);
     }
 
     public void deleteByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
