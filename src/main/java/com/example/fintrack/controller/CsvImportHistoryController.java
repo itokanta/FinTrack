@@ -40,20 +40,20 @@ public class CsvImportHistoryController {
   }
 
   @GetMapping("/import/history/{id}")
-  public String getMethodName(@PathVariable Long csvImportId, Authentication authentication, Model model) {
+  public String getMethodName(@PathVariable Long id, Authentication authentication, Model model) {
     Long userId = getUserId(authentication);
 
-    CsvImportHistory history = csvImportHistoryService.findById(csvImportId, userId);
+    CsvImportHistory history = csvImportHistoryService.findById(id, userId);
     model.addAttribute("history", history);
 
     if(history.getImportType().equals("BANK")){
-      List<BankTransaction> bankTransactionList = csvImportHistoryService.getBankTransactionHistory(userId, csvImportId);
+      List<BankTransaction> bankTransactionList = csvImportHistoryService.getBankTransactionHistory(userId, id);
       model.addAttribute("bankTransactionList", bankTransactionList);
     } else if (history.getImportType().equals("CARD")){
-      List<CardTransaction> cardTransactionList = csvImportHistoryService.getCardTransactionHistory(userId, csvImportId);
+      List<CardTransaction> cardTransactionList = csvImportHistoryService.getCardTransactionHistory(userId, id);
       model.addAttribute("cardTransactionList", cardTransactionList);
 
-      List<CardTransactionUpdateDetail> cardTransactionUpdateDetailList = csvImportHistoryService.findUpdatedByCsvImportHistoryId(userId, csvImportId);
+      List<CardTransactionUpdateDetail> cardTransactionUpdateDetailList = csvImportHistoryService.findUpdatedByCsvImportHistoryId(userId, id);
       model.addAttribute("cardTransactionUpdateDetailList", cardTransactionUpdateDetailList);
     }
 
@@ -61,11 +61,11 @@ public class CsvImportHistoryController {
   }
 
   @PostMapping("/import/history/{id}/delete")
-  public String postMethodName(@PathVariable Long csvImportId, Authentication authentication, RedirectAttributes redirectAttributes) {
+  public String postMethodName(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
       Long userId = getUserId(authentication);
 
       try {
-        csvImportHistoryService.deleteCsvImport(userId, csvImportId);
+        csvImportHistoryService.deleteCsvImport(userId, id);
         redirectAttributes.addFlashAttribute("message", "CSV登録履歴を削除しました");
       } catch (Exception e) {
         redirectAttributes.addFlashAttribute("error", "削除に失敗しました：" + e.getMessage());

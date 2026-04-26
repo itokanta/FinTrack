@@ -40,10 +40,23 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/csv/import}">
-                                <i class="bi bi-file-earmark-arrow-up"></i> CSV取込
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="csvDropdown" role="button"
+                               data-bs-toggle="dropdown">
+                                <i class="bi bi-file-earmark-arrow-up"></i> CSV
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/csv/import}">
+                                        <i class="bi bi-upload"></i> CSV取込
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/csv/import/history}">
+                                        <i class="bi bi-clock-history"></i> CSV登録履歴
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="splitDropdown" role="button" 
