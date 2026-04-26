@@ -47,7 +47,7 @@
 
         <!-- 銀行CSV：取引一覧 -->
         <div th:if="${history.importType == 'BANK'}">
-            <h5 class="mb-3">登録された銀行取引</h5>
+            <h5 class="mb-3">新規登録された銀行取引</h5>
             <div th:if="${#lists.isEmpty(bankTransactionList)}" class="text-muted mb-4">
                 登録された取引はありません
             </div>
@@ -131,39 +131,59 @@
             <div th:if="${#lists.isEmpty(cardTransactionUpdateDetailList)}" class="text-muted mb-4">
                 更新された取引はありません
             </div>
-            <div th:unless="${#lists.isEmpty(cardTransactionUpdateDetailList)}" class="mb-4">
-                <div th:each="detail : ${cardTransactionUpdateDetailList}" class="card mb-3">
-                    <div class="card-header">
-                        <span th:text="${detail.cardTransaction.transactionDate}">2025-01-01</span>
-                        <span class="mx-2 text-muted">|</span>
-                        <span th:text="${detail.cardTransaction.description}">摘要</span>
-                        <span class="mx-2 text-muted">|</span>
-                        <span th:text="${#numbers.formatInteger(detail.cardTransaction.amount, 0, 'COMMA')} + '円'">0円</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>更新項目</th>
-                                    <th>更新前</th>
-                                    <th></th>
-                                    <th>更新後</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="u : ${detail.updates}">
-                                    <td>
-                                        <span th:if="${u.targetField.name() == 'PAYMENT_MONTH'}">支払月</span>
-                                        <span th:if="${u.targetField.name() == 'IS_PAID'}">引き落とし済み</span>
-                                    </td>
-                                    <td class="text-muted" th:text="${u.valueBefore != null ? u.valueBefore : '-'}">-</td>
-                                    <td><i class="bi bi-arrow-right text-primary"></i></td>
-                                    <td class="fw-bold" th:text="${u.valueAfter != null ? u.valueAfter : '-'}">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div th:unless="${#lists.isEmpty(cardTransactionUpdateDetailList)}" class="table-responsive mb-4">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>取引日</th>
+                            <th>摘要</th>
+                            <th class="text-end">金額</th>
+                            <th>更新項目</th>
+                            <th>更新前</th>
+                            <th></th>
+                            <th>更新後</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <th:block th:each="detail : ${cardTransactionUpdateDetailList}">
+                            <tr th:each="u : ${detail.updates}">
+                                <td th:text="${detail.cardTransaction.transactionDate}">2025-01-01</td>
+                                <td th:text="${detail.cardTransaction.description}">摘要</td>
+                                <td class="text-end"
+                                    th:text="${#numbers.formatInteger(detail.cardTransaction.amount, 0, 'COMMA')} + '円'">0円</td>
+                                <td>
+                                    <span th:if="${u.targetField.name() == 'PAYMENT_MONTH'}">支払月</span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID'}">引落フラグ</span>
+                                </td>
+                                <td>
+                                    <span th:if="${u.targetField.name() != 'IS_PAID'}" class="text-muted"
+                                          th:text="${u.valueBefore != null ? u.valueBefore : '-'}">-</span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID' and u.valueBefore == 'true'}" class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> 引き落とし済み
+                                    </span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID' and u.valueBefore == 'false'}" class="badge bg-danger">
+                                        <i class="bi bi-clock"></i> 未払い
+                                    </span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID' and u.valueBefore != 'true' and u.valueBefore != 'false'}"
+                                          class="text-muted">-</span>
+                                </td>
+                                <td><i class="bi bi-arrow-right text-primary"></i></td>
+                                <td>
+                                    <span th:if="${u.targetField.name() != 'IS_PAID'}" class="fw-bold"
+                                          th:text="${u.valueAfter != null ? u.valueAfter : '-'}">-</span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID' and u.valueAfter == 'true'}" class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> 引き落とし済み
+                                    </span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID' and u.valueAfter == 'false'}" class="badge bg-danger">
+                                        <i class="bi bi-clock"></i> 未払い
+                                    </span>
+                                    <span th:if="${u.targetField.name() == 'IS_PAID' and u.valueAfter != 'true' and u.valueAfter != 'false'}"
+                                          class="text-muted">-</span>
+                                </td>
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
             </div>
         </div>
 
