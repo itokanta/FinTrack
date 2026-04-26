@@ -45,7 +45,7 @@ public class CsvImportHistoryService {
     return cardTransactionRepository.findByCsvImportHistoryId(userId, csvImportHistoryId);
   }
 
-  public List<BankTransaction> geBankTransactionHistory(Long userId, Long csvImportHistoryId){
+  public List<BankTransaction> getBankTransactionHistory(Long userId, Long csvImportHistoryId){
     return bankTransactionRepository.findByCsvImportHistoryId(userId, csvImportHistoryId);
   }
 
