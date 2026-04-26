@@ -1,5 +1,7 @@
 package com.example.fintrack.service;
 
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,10 @@ public class UserService {
         asset.setAmount(0L);
         asset.setUserId(createdUser.getId());
         assetRepository.insert(asset);
+    }
+
+    public Optional<User> findByUsername(String username){
+        return userRepository.findByUsername(username);
     }
 }
 

@@ -22,14 +22,14 @@ import com.example.fintrack.repository.CsvImportHistoryRepository;
 import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 
 @Service
-public class CsvImportDeleteService {
+public class CsvImportHistoryService {
   private final CsvImportHistoryRepository csvImportHistoryRepository;
   private final CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository;
   private final CardTransactionRepository cardTransactionRepository;
   private final BankTransactionRepository bankTransactionRepository;
   private final AssetRepository assetRepository;
 
-  public CsvImportDeleteService(CsvImportHistoryRepository csvImportHistoryRepository,
+  public CsvImportHistoryService(CsvImportHistoryRepository csvImportHistoryRepository,
       CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository,
       CardTransactionRepository cardTransactionRepository,
       BankTransactionRepository bankTransactionRepository,
@@ -39,6 +39,18 @@ public class CsvImportDeleteService {
     this.cardTransactionRepository = cardTransactionRepository;
     this.bankTransactionRepository = bankTransactionRepository;
     this.assetRepository = assetRepository;
+  }
+
+  public List<CardTransaction> getCardTransactionHistory(Long userId, Long csvImportHistoryId){
+    return cardTransactionRepository.findByCsvImportHistoryId(userId, csvImportHistoryId);
+  }
+
+  public List<BankTransaction> geBankTransactionHistory(Long userId, Long csvImportHistoryId){
+    return bankTransactionRepository.findByCsvImportHistoryId(userId, csvImportHistoryId);
+  }
+
+  public CsvImportHistory findById(Long Id, Long userId){
+    return csvImportHistoryRepository.findById(Id, userId);
   }
 
   public List<CsvImportHistory> findAllByUserId(Long userId) {
