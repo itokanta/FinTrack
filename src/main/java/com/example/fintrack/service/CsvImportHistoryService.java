@@ -207,6 +207,6 @@ public class CsvImportHistoryService {
       bankTransactionRepository.deleteByCsvImportHistoryId(userId,csvImportHistoryId);
     }
 
-    csvImportHistoryRepository.deleteById(userId, csvImportHistoryId);
+    csvImportHistoryRepository.deleteById(csvImportHistoryId, userId);
   }
 }
