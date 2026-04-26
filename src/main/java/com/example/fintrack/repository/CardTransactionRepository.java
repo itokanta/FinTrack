@@ -274,7 +274,7 @@ public class CardTransactionRepository {
     }
 
     public void rollbackIsPaidAndPaymentMonth(List<CardTransaction> cardTransactionList) {
-        String sql = "UPDATE card_transactions SET is_paid = :isPaid, payment_month = :paymentMonth, update_count = update_count + 1 " +
+        String sql = "UPDATE card_transactions SET is_paid = :isPaid, payment_month = :paymentMonth " +
                 "WHERE id = :id AND user_id = :userId";
         SqlParameterSource[] params = new SqlParameterSource[cardTransactionList.size()];
         for (int i = 0; i < cardTransactionList.size(); i++) {
