@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.stereotype.Repository;
 
 import org.springframework.jdbc.core.RowMapper;
@@ -44,7 +43,19 @@ public class CsvImportUpdateHistoryRepository {
   public void insert(List<CsvImportUpdateHistory> csvImportUpdateHistoryList) {
     String sql = "INSERT INTO csv_import_update_histories (csv_import_history_id, bank_transaction_id, card_transaction_id, target_field, value_before, value_after, user_id, update_count) " +
                 "VALUES (:csvImportHistoryId, :bankTransactionId, :cardTransactionId, :targetField, :valueBefore, :valueAfter, :userId, :updateCount)";
-    SqlParameterSource[] params = SqlParameterSourceUtils.createBatch(csvImportUpdateHistoryList.toArray());
+    SqlParameterSource[] params = new SqlParameterSource[csvImportUpdateHistoryList.size()];
+    for (int i = 0; i < csvImportUpdateHistoryList.size(); i++) {
+      CsvImportUpdateHistory h = csvImportUpdateHistoryList.get(i);
+      params[i] = new MapSqlParameterSource()
+        .addValue("csvImportHistoryId", h.getCsvImportHistoryId())
+        .addValue("bankTransactionId", h.getBankTransactionId())
+        .addValue("cardTransactionId", h.getCardTransactionId())
+        .addValue("targetField", h.getTargetField().name())
+        .addValue("valueBefore", h.getValueBefore())
+        .addValue("valueAfter", h.getValueAfter())
+        .addValue("userId", h.getUserId())
+        .addValue("updateCount", h.getUpdateCount());
+    }
     template.batchUpdate(sql, params);
   }
 
