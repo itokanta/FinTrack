@@ -52,10 +52,10 @@ public class CsvImportHistoryController {
     } else if (history.getImportType().equals("CARD")){
       List<CardTransaction> cardTransactionList = csvImportHistoryService.getCardTransactionHistory(userId, id);
       model.addAttribute("cardTransactionList", cardTransactionList);
-
-      List<CardTransactionUpdateDetail> cardTransactionUpdateDetailList = csvImportHistoryService.findUpdatedByCsvImportHistoryId(userId, id);
-      model.addAttribute("cardTransactionUpdateDetailList", cardTransactionUpdateDetailList);
     }
+    
+    List<CardTransactionUpdateDetail> cardTransactionUpdateDetailList = csvImportHistoryService.findUpdatedByCsvImportHistoryId(userId, id);
+    model.addAttribute("cardTransactionUpdateDetailList", cardTransactionUpdateDetailList);
 
     return "csv/import-history-detail";
   }

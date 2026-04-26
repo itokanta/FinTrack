@@ -123,8 +123,10 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- カードCSV：アップデートされた取引 -->
+        <!-- BANK / CARD 共通：更新されたカード取引 -->
+        <div th:if="${cardTransactionUpdateDetailList != null}">
             <h5 class="mb-3">更新されたカード取引</h5>
             <div th:if="${#lists.isEmpty(cardTransactionUpdateDetailList)}" class="text-muted mb-4">
                 更新された取引はありません
