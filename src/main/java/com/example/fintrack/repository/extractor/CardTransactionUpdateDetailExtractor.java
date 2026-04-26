@@ -65,9 +65,14 @@ public class CardTransactionUpdateDetailExtractor
 
             CsvImportUpdateHistory history = new CsvImportUpdateHistory();
             history.setId(rs.getLong("cuh_id"));
+
             history.setCsvImportHistoryId(rs.getLong("cuh_csv_import_history_id"));
-            history.setCardTransactionId(rs.getObject("cuh_card_transaction_id", Long.class));
-            history.setBankTransactionId(rs.getObject("cuh_bank_transaction_id", Long.class));
+            long cuhCardTransactionId = rs.getLong("cuh_card_transaction_id");
+
+            history.setCardTransactionId(rs.wasNull() ? null : cuhCardTransactionId);
+            long cuhBankTransactionId = rs.getLong("cuh_bank_transaction_id");
+            
+            history.setBankTransactionId(rs.wasNull() ? null : cuhBankTransactionId);
             history.setTargetField(CsvImportUpdateField.valueOf(rs.getString("cuh_target_field")));
             history.setValueBefore(rs.getString("cuh_value_before"));
             history.setValueAfter(rs.getString("cuh_value_after"));
