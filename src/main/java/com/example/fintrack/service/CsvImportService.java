@@ -343,6 +343,12 @@ public class CsvImportService {
 
         // paymentMonthが変更されたトランザクションを抽出して更新
         List<CardTransaction> existingTransactions = cardTransactionRepository.findAllByUserId(userId);
+
+        Map<Long, String> paymentMonthBeforeMap = new HashMap<>();
+        for (CardTransaction cardTransaction : existingTransactions){
+            paymentMonthBeforeMap.put(cardTransaction.getId(),  cardTransaction.getPaymentMonth());
+        }
+
         List<CardTransaction> toUpdate = extractTransactionsToUpdate(newTransactions, existingTransactions);
 
         // 自動カテゴリルールを取得
@@ -444,12 +450,7 @@ public class CsvImportService {
             csvImportUpdateHistory.setCardTransactionId(transaction.getId());
             csvImportUpdateHistory.setTargetField(CsvImportUpdateField.PAYMENT_MONTH);
             csvImportUpdateHistory.setUpdateCount(transaction.getUpdateCount() + 1);
-            for (CardTransaction existingTransaction : existingTransactions) {
-                if (Objects.equals(existingTransaction.getId(), transaction.getId())) {
-                    csvImportUpdateHistory.setValueBefore(existingTransaction.getPaymentMonth());
-                    break;
-                }
-            }
+            csvImportUpdateHistory.setValueBefore(paymentMonthBeforeMap.get(transaction.getId()));
             csvImportUpdateHistory.setValueAfter(transaction.getPaymentMonth());
 
             csvImportUpdateHistoryList.add(csvImportUpdateHistory);
