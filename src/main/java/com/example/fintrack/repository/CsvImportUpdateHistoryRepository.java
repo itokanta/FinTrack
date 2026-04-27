@@ -21,9 +21,13 @@ public class CsvImportUpdateHistoryRepository {
   private static final RowMapper<CsvImportUpdateHistory> ROW_MAPPER = (rs, rowNum) -> {
     CsvImportUpdateHistory history = new CsvImportUpdateHistory();
     history.setId(rs.getLong("id"));
+
     history.setCsvImportHistoryId(rs.getLong("csv_import_history_id"));
-    history.setBankTransactionId(rs.getObject("bank_transaction_id", Long.class));
-    history.setCardTransactionId(rs.getObject("card_transaction_id", Long.class));
+    long bankTransactionId = rs.getLong("bank_transaction_id");
+    history.setBankTransactionId(rs.wasNull() ? null : bankTransactionId);
+    long cardTransactionId = rs.getLong("card_transaction_id");
+    
+    history.setCardTransactionId(rs.wasNull() ? null : cardTransactionId);
     history.setTargetField(CsvImportUpdateField.valueOf(rs.getString("target_field")));
     history.setValueBefore(rs.getString("value_before"));
     history.setValueAfter(rs.getString("value_after"));
