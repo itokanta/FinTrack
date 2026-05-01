@@ -313,7 +313,7 @@ public class SplitService {
         split.setTransactionType(transactionType);
         split.setAssetCategoryId(pattern.getAssetCategoryId());
         split.setSplitPatternId(patternId);
-        split.setSplitMethod("PATTERN");
+        split.setSplitMethod(SplitMethod.PATTERN);
         split.setAmount(splitAmount);
         split.setBankTransactionId(bankTransactionId);
         split.setCardTransactionId(cardTransactionId);
@@ -474,7 +474,7 @@ public class SplitService {
             split.setTransactionType(transactionType);
             split.setAssetCategoryId(categoryId);
             split.setSplitPatternId(null); // 手動分割の場合はNULL
-            split.setSplitMethod("MANUAL");
+            split.setSplitMethod(SplitMethod.MANUAL);
             split.setAmount(amount);
             split.setBankTransactionId(bankTransactionId);
             split.setCardTransactionId(cardTransactionId);

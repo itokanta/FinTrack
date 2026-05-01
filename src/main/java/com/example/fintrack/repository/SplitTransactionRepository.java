@@ -4,12 +4,13 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitTransaction;
-import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class SplitTransactionRepository {
@@ -21,7 +22,8 @@ public class SplitTransactionRepository {
         splitTransaction.setAssetCategoryId(rs.getLong("asset_category_id"));
         long splitPatternId = rs.getLong("split_pattern_id");
         splitTransaction.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
-        splitTransaction.setSplitMethod(rs.getString("split_method"));
+        String sm = rs.getString("split_method");
+        splitTransaction.setSplitMethod(sm == null ? null : SplitMethod.valueOf(sm));
         splitTransaction.setAmount(rs.getLong("amount"));
         long bankTransactionId = rs.getLong("bank_transaction_id");
         splitTransaction.setBankTransactionId(rs.wasNull() ? null : bankTransactionId);
@@ -69,7 +71,7 @@ public class SplitTransactionRepository {
                     .addValue("transactionType", splitTransaction.getTransactionType())
                     .addValue("assetCategoryId", splitTransaction.getAssetCategoryId())
                     .addValue("splitPatternId", splitTransaction.getSplitPatternId())
-                    .addValue("splitMethod", splitTransaction.getSplitMethod())
+                    .addValue("splitMethod", splitTransaction.getSplitMethod() == null ? null : splitTransaction.getSplitMethod().name())
                     .addValue("amount", splitTransaction.getAmount())
                     .addValue("bankTransactionId", splitTransaction.getBankTransactionId())
                     .addValue("cardTransactionId", splitTransaction.getCardTransactionId())
@@ -89,7 +91,7 @@ public class SplitTransactionRepository {
                     .addValue("transactionType", splitTransaction.getTransactionType())
                     .addValue("assetCategoryId", splitTransaction.getAssetCategoryId())
                     .addValue("splitPatternId", splitTransaction.getSplitPatternId())
-                    .addValue("splitMethod", splitTransaction.getSplitMethod())
+                    .addValue("splitMethod", splitTransaction.getSplitMethod() == null ? null : splitTransaction.getSplitMethod().name())
                     .addValue("amount", splitTransaction.getAmount())
                     .addValue("bankTransactionId", splitTransaction.getBankTransactionId())
                     .addValue("cardTransactionId", splitTransaction.getCardTransactionId())

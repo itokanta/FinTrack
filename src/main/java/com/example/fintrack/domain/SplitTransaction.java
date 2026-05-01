@@ -19,7 +19,7 @@ public class SplitTransaction {
     private String transactionType;     // 'INCOME' or 'EXPENSE'
     private Long assetCategoryId;       // 資産カテゴリID（収入・支出共通）
     private Long splitPatternId;        // パターン使用時のみ設定、それ以外はNULL
-    private String splitMethod;         // 'PATTERN', 'MANUAL', 'SINGLE'
+    private SplitMethod splitMethod;         // 'PATTERN', 'MANUAL', 'SINGLE'
     private Long amount;
     private Long bankTransactionId;
     private Long cardTransactionId;

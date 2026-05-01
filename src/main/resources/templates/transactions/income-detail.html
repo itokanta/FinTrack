@@ -42,9 +42,9 @@
                     <dd class="col-sm-9">
                         <span th:if="${isSplit}" class="badge bg-success">
                             分配済み
-                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == 'PATTERN'}" class="ms-1">(パターン)</span>
-                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == 'MANUAL'}" class="ms-1">(手動)</span>
-                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == 'SINGLE'}" class="ms-1">(単一)</span>
+                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == T(com.example.fintrack.domain.SplitMethod).PATTERN}" class="ms-1">(パターン)</span>
+                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == T(com.example.fintrack.domain.SplitMethod).MANUAL}" class="ms-1">(手動)</span>
+                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == T(com.example.fintrack.domain.SplitMethod).SINGLE}" class="ms-1">(単一)</span>
                         </span>
                         <span th:unless="${isSplit}" class="badge bg-warning">未分配</span>
                     </dd>

@@ -16,6 +16,7 @@ import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.CsvImportUpdateField;
 import com.example.fintrack.domain.CsvImportUpdateHistory;
 import com.example.fintrack.domain.DiscrepancyTransaction;
+import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitPattern;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
@@ -128,7 +129,7 @@ public class DiscrepancyTransactionService {
       splitTransaction.setTransactionType(transactionType.name());
       splitTransaction.setAssetCategoryId(assetCategoryId);
       splitTransaction.setSplitPatternId(null);
-      splitTransaction.setSplitMethod("MANUAL");
+      splitTransaction.setSplitMethod(SplitMethod.MANUAL);
       splitTransaction.setAmount(amount);
       splitTransaction.setBankTransactionId(null);
       splitTransaction.setCardTransactionId(null);
@@ -186,7 +187,7 @@ public class DiscrepancyTransactionService {
         splitTransaction.setTransactionType(transactionType.name());
         splitTransaction.setAssetCategoryId(pattern.getAssetCategoryId());
         splitTransaction.setSplitPatternId(patternId);
-        splitTransaction.setSplitMethod("PATTERN");
+        splitTransaction.setSplitMethod(SplitMethod.PATTERN);
         splitTransaction.setAmount(amount);
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
@@ -207,7 +208,7 @@ public class DiscrepancyTransactionService {
         splitTransaction.setTransactionType(transactionType.name());
         splitTransaction.setAssetCategoryId(pattern.getAssetCategoryId());
         splitTransaction.setSplitPatternId(patternId);
-        splitTransaction.setSplitMethod("PATTERN");
+        splitTransaction.setSplitMethod(SplitMethod.PATTERN);
         splitTransaction.setAmount(amount);
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
