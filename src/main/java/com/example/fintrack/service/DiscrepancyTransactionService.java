@@ -128,7 +128,7 @@ public class DiscrepancyTransactionService {
       Long amount = entry.getValue();
 
       SplitTransaction splitTransaction = new SplitTransaction();
-      splitTransaction.setTransactionType(transactionType.name());
+      splitTransaction.setTransactionType(transactionType);
       splitTransaction.setAssetCategoryId(assetCategoryId);
       splitTransaction.setSplitPatternId(null);
       splitTransaction.setSplitMethod(SplitMethod.MANUAL);
@@ -187,7 +187,7 @@ public class DiscrepancyTransactionService {
         Long amount = absoluteAmount * pattern.getSplitRatio().longValue() / 100;
 
         SplitTransaction splitTransaction = new SplitTransaction();
-        splitTransaction.setTransactionType(transactionType.name());
+        splitTransaction.setTransactionType(transactionType);
         splitTransaction.setAssetCategoryId(pattern.getAssetCategoryId());
         splitTransaction.setSplitPatternId(patternId);
         splitTransaction.setSplitMethod(SplitMethod.PATTERN);
@@ -208,7 +208,7 @@ public class DiscrepancyTransactionService {
         Long amount = pattern.getSplitAmount();
 
         SplitTransaction splitTransaction = new SplitTransaction();
-        splitTransaction.setTransactionType(transactionType.name());
+        splitTransaction.setTransactionType(transactionType);
         splitTransaction.setAssetCategoryId(pattern.getAssetCategoryId());
         splitTransaction.setSplitPatternId(patternId);
         splitTransaction.setSplitMethod(SplitMethod.PATTERN);
@@ -269,6 +269,7 @@ public class DiscrepancyTransactionService {
     transaction.setTransactionType(transactionType);
     transaction.setTransactionDate(LocalDate.now());
     transaction.setUserId(discrepancy.getUserId());
+    transaction.setBankTransactionId(discrepancy.getBankTransactionId());
     transaction.setAssetCategoryId(assetCategoryId);
     transaction.setExpenseCategoryId(expenseCategoryId);
     transaction.setSplitPatternId(null);

@@ -195,7 +195,7 @@ public class IncomeSplitService {
             totalSplit += splitAmount;
             
             SplitTransaction split = new SplitTransaction();
-            split.setTransactionType(TRANSACTION_TYPE_INCOME);
+            split.setTransactionType(TransactionType.INCOME);
             split.setAssetCategoryId(pattern.getAssetCategoryId());
             split.setSplitPatternId(patternId);
             split.setSplitMethod(SplitMethod.PATTERN);
@@ -290,7 +290,7 @@ public class IncomeSplitService {
             }
             
             SplitTransaction split = new SplitTransaction();
-            split.setTransactionType(TRANSACTION_TYPE_INCOME);
+            split.setTransactionType(TransactionType.INCOME);
             split.setAssetCategoryId(categoryId);
             split.setSplitPatternId(null); // 手動分割の場合はNULL
             split.setSplitMethod(SplitMethod.MANUAL);
@@ -355,7 +355,7 @@ public class IncomeSplitService {
         
         // 分割収入を作成（パターンIDはNULL）
         SplitTransaction split = new SplitTransaction();
-        split.setTransactionType(TRANSACTION_TYPE_INCOME);
+        split.setTransactionType(TransactionType.INCOME);
         split.setAssetCategoryId(categoryId);
         split.setSplitPatternId(null); // 単一カテゴリ分配の場合はNULL
         split.setSplitMethod(SplitMethod.SINGLE);

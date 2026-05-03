@@ -200,7 +200,7 @@ public class SplitService {
      */
     @Transactional
     public void splitIncome(Long bankTransactionId, Long cardTransactionId, Long patternId) {
-        splitTransaction(bankTransactionId, cardTransactionId, patternId, "INCOME");
+        splitTransaction(bankTransactionId, cardTransactionId, patternId, TransactionType.INCOME);
     }
     
     /**
@@ -208,13 +208,13 @@ public class SplitService {
      */
     @Transactional
     public void splitExpense(Long bankTransactionId, Long cardTransactionId, Long patternId) {
-        splitTransaction(bankTransactionId, cardTransactionId, patternId, "EXPENSE");
+        splitTransaction(bankTransactionId, cardTransactionId, patternId, TransactionType.EXPENSE);
     }
     
     /**
      * 収支をパターンで分割（共通処理）
      */
-    private void splitTransaction(Long bankTransactionId, Long cardTransactionId, Long patternId, String transactionType) {
+    private void splitTransaction(Long bankTransactionId, Long cardTransactionId, Long patternId, TransactionType transactionType) {
         // 取引を取得
         Long totalAmount;
         Long userId;
@@ -310,7 +310,7 @@ public class SplitService {
     
     private SplitTransaction createSplitTransaction(SplitPattern pattern, long splitAmount, 
                                                    Long bankTransactionId, Long cardTransactionId, 
-                                                   Long patternId, String transactionType) {
+                                                   Long patternId, TransactionType transactionType) {
         SplitTransaction split = new SplitTransaction();
         split.setTransactionType(transactionType);
         split.setAssetCategoryId(pattern.getAssetCategoryId());
@@ -328,7 +328,7 @@ public class SplitService {
      */
     @Transactional
     public void splitIncomeManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts) {
-        splitManual(bankTransactionId, cardTransactionId, categoryAmounts, "INCOME");
+        splitManual(bankTransactionId, cardTransactionId, categoryAmounts, TransactionType.INCOME);
     }
     
     /**
@@ -336,7 +336,7 @@ public class SplitService {
      */
     @Transactional
     public void splitExpenseManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts) {
-        splitManual(bankTransactionId, cardTransactionId, categoryAmounts, "EXPENSE");
+        splitManual(bankTransactionId, cardTransactionId, categoryAmounts, TransactionType.EXPENSE);
     }
     
     /**
@@ -344,7 +344,7 @@ public class SplitService {
      */
     @Transactional
     public void splitIncomeSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId) {
-        splitSingle(bankTransactionId, cardTransactionId, categoryId, "INCOME");
+        splitSingle(bankTransactionId, cardTransactionId, categoryId, TransactionType.INCOME);
     }
     
     /**
@@ -352,13 +352,13 @@ public class SplitService {
      */
     @Transactional
     public void splitExpenseSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId) {
-        splitSingle(bankTransactionId, cardTransactionId, categoryId, "EXPENSE");
+        splitSingle(bankTransactionId, cardTransactionId, categoryId, TransactionType.EXPENSE);
     }
     
     /**
      * 収支を単一カテゴリに分配（共通処理）
      */
-    private void splitSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, String transactionType) {
+    private void splitSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, TransactionType transactionType) {
         // 取引を取得
         Long totalAmount;
         Long userId;
@@ -403,7 +403,7 @@ public class SplitService {
         // asset_category_idに直接設定するのみ
 
         // 残高を更新
-        if ("INCOME".equals(transactionType)) {
+        if (transactionType == TransactionType.INCOME) {
             // 収入の場合: 未分類から全額を引き、指定カテゴリに加算
             assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
             assetRepository.updateAmountByCategoryId(userId, categoryId, totalAmount);
@@ -418,7 +418,7 @@ public class SplitService {
      * 収支を手動で金額指定して分割（共通処理）
      */
     private void splitManual(Long bankTransactionId, Long cardTransactionId, 
-                            Map<Long, Long> categoryAmounts, String transactionType) {
+                            Map<Long, Long> categoryAmounts, TransactionType transactionType) {
         // 取引を取得
         Long totalAmount;
         Long userId;
@@ -508,8 +508,8 @@ public class SplitService {
     /**
      * 残高を更新（収入・支出共通）
      */
-    private void updateBalances(Long userId, List<SplitTransaction> splits, String transactionType, Long totalAmount) {
-        if ("INCOME".equals(transactionType)) {
+    private void updateBalances(Long userId, List<SplitTransaction> splits, TransactionType transactionType, Long totalAmount) {
+        if (transactionType == TransactionType.INCOME) {
             // 収入の場合: 未分類から全額を引き、各カテゴリに加算
             assetRepository.updateAmountByCategoryId(userId, null, -totalAmount);
             

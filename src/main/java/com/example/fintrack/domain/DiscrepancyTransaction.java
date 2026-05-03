@@ -17,6 +17,7 @@ public class DiscrepancyTransaction {
     private TransactionType transactionType;
     private LocalDate transactionDate;
     private Long userId;
+    private Long bankTransactionId;
     private Long assetCategoryId;
     private Long expenseCategoryId;
     private Long splitPatternId;

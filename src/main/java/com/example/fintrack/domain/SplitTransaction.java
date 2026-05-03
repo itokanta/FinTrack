@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class SplitTransaction {
     
     private Long id;
-    private String transactionType;     // 'INCOME' or 'EXPENSE'
+    private TransactionType transactionType;     // 'INCOME' or 'EXPENSE'
     private Long assetCategoryId;       // 資産カテゴリID（収入・支出共通）
     private Long splitPatternId;        // パターン使用時のみ設定、それ以外はNULL
     private SplitMethod splitMethod;         // 'PATTERN', 'MANUAL', 'SINGLE'

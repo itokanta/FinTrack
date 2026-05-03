@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitTransaction;
+import com.example.fintrack.domain.TransactionType;
 
 @Repository
 public class SplitTransactionRepository {
@@ -18,8 +19,10 @@ public class SplitTransactionRepository {
     private static final RowMapper<SplitTransaction> ROW_MAPPER = (rs, rowNum) -> {
         SplitTransaction splitTransaction = new SplitTransaction();
         splitTransaction.setId(rs.getLong("id"));
-        splitTransaction.setTransactionType(rs.getString("transaction_type"));
-        splitTransaction.setAssetCategoryId(rs.getLong("asset_category_id"));
+        String transactionType = rs.getString("transaction_type");
+        splitTransaction.setTransactionType(transactionType == null ? null : TransactionType.valueOf(transactionType));
+        long assetCategoryId = rs.getLong("asset_category_id");
+        splitTransaction.setAssetCategoryId(rs.wasNull() ? null : assetCategoryId);
         long splitPatternId = rs.getLong("split_pattern_id");
         splitTransaction.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
         String sm = rs.getString("split_method");
@@ -42,30 +45,30 @@ public class SplitTransactionRepository {
         this.template = template;
     }
 
-    public List<SplitTransaction> findByBankTransactionIds(List<Long> bankTransactionIds, Long userId) {
+    public List<SplitTransaction> findByBankTransactionIds(List<Long> bankTransactionIds) {
         if (bankTransactionIds.isEmpty()) return List.of();
-        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
-                     "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at " +
-                     "FROM split_transactions st " +
-                     "JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
-                     "WHERE st.bank_transaction_id IN (:ids) AND bt.user_id = :userId";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ids", bankTransactionIds)
-                .addValue("userId", userId);
-        return template.query(sql, params, ROW_MAPPER);
+        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
+                     "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                     "FROM split_transactions WHERE bank_transaction_id IN (:ids)";
+        return template.query(sql, new MapSqlParameterSource("ids", bankTransactionIds), ROW_MAPPER);
     }
 
-    public List<SplitTransaction> findByCardTransactionIds(List<Long> cardTransactionIds, Long userId) {
+    public List<SplitTransaction> findByCardTransactionIds(List<Long> cardTransactionIds) {
         if (cardTransactionIds.isEmpty()) return List.of();
-        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
-                     "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at " +
-                     "FROM split_transactions st " +
-                     "JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
-                     "WHERE st.card_transaction_id IN (:ids) AND ct.user_id = :userId";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ids", cardTransactionIds)
-                .addValue("userId", userId);
-        return template.query(sql, params, ROW_MAPPER);
+        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
+                     "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                     "FROM split_transactions WHERE card_transaction_id IN (:ids)";
+        return template.query(sql, new MapSqlParameterSource("ids", cardTransactionIds), ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByDiscrepancyTransactionIds(List<Long> discrepancyTransactionIds) {
+        if (discrepancyTransactionIds.isEmpty()) {
+            return List.of();
+        }
+        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, "
+                + "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at "
+                + "FROM split_transactions WHERE discrepancy_transaction_id IN (:ids)";
+        return template.query(sql, new MapSqlParameterSource("ids", discrepancyTransactionIds), ROW_MAPPER);
     }
 
     public List<SplitTransaction> findByBankTransactionId(Long bankTransactionId) {
@@ -94,7 +97,8 @@ public class SplitTransactionRepository {
                          ":splitMethod, :amount, :bankTransactionId, :cardTransactionId, " +
                          ":discrepancyTransactionId) RETURNING id, created_at, updated_at";
             MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue("transactionType", splitTransaction.getTransactionType())
+                    .addValue("transactionType",
+                            splitTransaction.getTransactionType() == null ? null : splitTransaction.getTransactionType().name())
                     .addValue("assetCategoryId", splitTransaction.getAssetCategoryId())
                     .addValue("splitPatternId", splitTransaction.getSplitPatternId())
                     .addValue("splitMethod", splitTransaction.getSplitMethod() == null ? null : splitTransaction.getSplitMethod().name())
@@ -114,7 +118,8 @@ public class SplitTransactionRepository {
                          "discrepancy_transaction_id = :discrepancyTransactionId " +
                          "WHERE id = :id RETURNING updated_at";
             MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue("transactionType", splitTransaction.getTransactionType())
+                    .addValue("transactionType",
+                            splitTransaction.getTransactionType() == null ? null : splitTransaction.getTransactionType().name())
                     .addValue("assetCategoryId", splitTransaction.getAssetCategoryId())
                     .addValue("splitPatternId", splitTransaction.getSplitPatternId())
                     .addValue("splitMethod", splitTransaction.getSplitMethod() == null ? null : splitTransaction.getSplitMethod().name())
