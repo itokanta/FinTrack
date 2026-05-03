@@ -72,13 +72,14 @@ public class DiscrepancyTransactionService {
     // 1. 差異情報を取得
     CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
 
-    // 2. 差異取引データを作成（split_pattern_id = 0: 単一カテゴリ）
+    // 2. 差異取引データを作成（split_method = SINGLE: 単一カテゴリ）
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
     TransactionType transactionType = determineTransactionType(discrepancy.getDifferenceAmount());
 
     DiscrepancyTransaction transaction = createDiscrepancyTransaction(
         discrepancy, description, absoluteAmount, transactionType, assetCategoryId, null);
-    transaction.setSplitPatternId(0L); // 単一カテゴリを示す
+    transaction.setSplitPatternId(null);
+    transaction.setSplitMethod(SplitMethod.SINGLE);
     discrepancyTransactionRepository.save(transaction);
 
     // 3. 資産残高を調整
@@ -112,12 +113,13 @@ public class DiscrepancyTransactionService {
               "円, 合計: " + totalAmount + "円）");
     }
 
-    // 3. 差異取引データを1レコードのみ作成（split_pattern_id = -1, asset_category_id = NULL）
+    // 3. 差異取引データを1レコードのみ作成（split_method = MANUAL, asset_category_id = NULL）
     TransactionType transactionType = determineTransactionType(discrepancy.getDifferenceAmount());
     
     DiscrepancyTransaction transaction = createDiscrepancyTransaction(
         discrepancy, description, absoluteAmount, transactionType, null, null);
-    transaction.setSplitPatternId(-1L); // 手動分割を示す
+    transaction.setSplitPatternId(null);
+    transaction.setSplitMethod(SplitMethod.MANUAL);
     DiscrepancyTransaction savedTransaction = discrepancyTransactionRepository.save(transaction);
 
     // 4. 各カテゴリに split_transactions レコードを作成
@@ -168,10 +170,11 @@ public class DiscrepancyTransactionService {
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
     TransactionType transactionType = determineTransactionType(discrepancy.getDifferenceAmount());
 
-    // 4. 差異取引データを1レコードのみ作成（split_pattern_id = patternId, asset_category_id = NULL）
+    // 4. 差異取引データを1レコードのみ作成（split_method = PATTERN, split_pattern_id = patternId, asset_category_id = NULL）
     DiscrepancyTransaction transaction = createDiscrepancyTransaction(
         discrepancy, description, absoluteAmount, transactionType, null, null);
     transaction.setSplitPatternId(patternId);
+    transaction.setSplitMethod(SplitMethod.PATTERN);
     DiscrepancyTransaction savedTransaction = discrepancyTransactionRepository.save(transaction);
 
     // 5. パターンに従って split_transactions レコードを作成

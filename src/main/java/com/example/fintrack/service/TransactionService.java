@@ -339,5 +339,12 @@ public class TransactionService {
             }
             return cardTransaction.getSplitPatternId();
         }
+
+        public SplitMethod getSplitMethod() {
+            if (bankTransaction != null) {
+                return bankTransaction.getSplitMethod();
+            }
+            return cardTransaction.getSplitMethod();
+        }
     }
 }

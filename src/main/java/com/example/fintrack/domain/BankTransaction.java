@@ -21,11 +21,12 @@ public class BankTransaction {
     private Long userId;
     private Long assetCategoryId;
     private Long expenseCategoryId;
-    private Long splitPatternId;        // 統合版（推奨）
+    private Long splitPatternId;
     private Boolean isCardPayment; // カード引き落としフラグ
     private String transactionSource; // BANK
     private LocalDateTime createdAt;
     private Long csvImportHistoryId;
     private LocalDateTime updatedAt;
     private Long updateCount;
+    private SplitMethod splitMethod;
 }

@@ -31,6 +31,7 @@ import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.CsvImportHistory;
 import com.example.fintrack.domain.CsvImportUpdateField;
 import com.example.fintrack.domain.CsvImportUpdateHistory;
+import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetRepository;
 import com.example.fintrack.repository.AutoCategoryRuleRepository;
@@ -173,7 +174,8 @@ public class CsvImportService {
             Long matchedCategoryId = findMatchingCategoryId(dto.getDescription(), dto.getTransactionType(), rules);
             if (matchedCategoryId != null) {
                 transaction.setAssetCategoryId(matchedCategoryId);
-                transaction.setSplitPatternId(0L);
+                transaction.setSplitPatternId(null);
+                transaction.setSplitMethod(SplitMethod.SINGLE);
             }
 
             toInsertBankTransactionList.add(transaction);
@@ -394,7 +396,8 @@ public class CsvImportService {
             Long matchedCategoryId = findMatchingCategoryId(dto.getDescription(), dto.getTransactionType(), rules);
             if (matchedCategoryId != null) {
                 transaction.setAssetCategoryId(matchedCategoryId);
-                transaction.setSplitPatternId(0L);
+                transaction.setSplitPatternId(null);
+                transaction.setSplitMethod(SplitMethod.SINGLE);
             }
 
             toInsertCardTransactionList.add(transaction);

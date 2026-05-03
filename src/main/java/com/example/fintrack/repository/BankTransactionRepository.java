@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.jdbc.core.RowMapper;
 
 import com.example.fintrack.domain.BankTransaction;
+import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.TransactionType;
 
 @Repository
@@ -51,6 +52,9 @@ public class BankTransactionRepository {
         transaction.setUpdateCount(rs.getLong("update_count"));
         transaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
 
+        String splitType = rs.getString("split_method");
+        transaction.setSplitMethod(splitType != null ? SplitMethod.valueOf(splitType) : null);
+
         return transaction;
     };
 
@@ -62,7 +66,7 @@ public class BankTransactionRepository {
     
     public Optional<BankTransaction> findById(Long id) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
-                    "user_id, asset_category_id, expense_category_id, split_pattern_id, transaction_source, " +
+                    "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
                     "is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
                     "FROM bank_transactions " +
                     "WHERE id = :id";
@@ -95,10 +99,10 @@ public class BankTransactionRepository {
     
     public List<BankTransaction> findByUserIdAndSplitPatternIdIsNullAndTransactionType(
             Long userId, TransactionType transactionType) {
-        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, expense_category_id, split_pattern_id, " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, " +
                     "transaction_source, is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
                     "FROM bank_transactions " +
-                    "WHERE user_id = :userId AND split_pattern_id IS NULL AND is_card_payment = FALSE AND transaction_type = :transactionType " +
+                    "WHERE user_id = :userId AND split_pattern_id IS NULL AND split_method IS NULL AND is_card_payment = FALSE AND transaction_type = :transactionType " +
                     "ORDER BY transaction_date DESC";
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("userId", userId).addValue("transactionType", transactionType.name());
         return template.query(sql, params, ROW_MAPPER);
@@ -107,7 +111,7 @@ public class BankTransactionRepository {
     public List<BankTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetween(
             Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate, 
             int offset, int limit) {
-        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, expense_category_id, split_pattern_id, " +
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, " +
                     "transaction_source, is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
                     "FROM bank_transactions " +
                     "WHERE user_id = :userId AND transaction_type = :transactionType AND transaction_date BETWEEN :startDate AND :endDate " +
@@ -129,9 +133,9 @@ public class BankTransactionRepository {
     public void insert(List<BankTransaction> transactionList) {
         String sql = "INSERT INTO bank_transactions " +
                 "(description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, " +
-                "expense_category_id, split_pattern_id, transaction_source, is_card_payment, csv_import_history_id, update_count) " +
+                "expense_category_id, split_pattern_id, split_method, transaction_source, is_card_payment, csv_import_history_id, update_count) " +
                 "VALUES (:description, :amount, :transactionType, :transactionDate, :fingerprint, :userId, :assetCategoryId, :expenseCategoryId, :splitPatternId, " +
-                ":transactionSource, :isCardPayment, :csvImportHistoryId, :updateCount)";
+                ":splitMethod, :transactionSource, :isCardPayment, :csvImportHistoryId, :updateCount)";
 
         SqlParameterSource[] params = new SqlParameterSource[transactionList.size()];
         for (int i = 0; i < transactionList.size(); i++){
@@ -146,6 +150,7 @@ public class BankTransactionRepository {
                 .addValue("assetCategoryId", transaction.getAssetCategoryId())
                 .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
                 .addValue("splitPatternId", transaction.getSplitPatternId())
+                .addValue("splitMethod", transaction.getSplitMethod() != null ? transaction.getSplitMethod().name() : null)
                 .addValue("transactionSource", transaction.getTransactionSource())
                 .addValue("isCardPayment", transaction.getIsCardPayment())
                 .addValue("csvImportHistoryId", transaction.getCsvImportHistoryId())
@@ -157,12 +162,14 @@ public class BankTransactionRepository {
     
     public void updateAssetCategoryOrSplitPatternOrExpenseCategory(BankTransaction transaction) {
         String sql = "UPDATE bank_transactions SET " +
-                    "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, split_pattern_id = :splitPatternId " +
+                    "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, " +
+                    "split_pattern_id = :splitPatternId, split_method = :splitMethod " +
                     "WHERE id = :id AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("assetCategoryId", transaction.getAssetCategoryId())
             .addValue("expenseCategoryId", transaction.getExpenseCategoryId())
             .addValue("splitPatternId", transaction.getSplitPatternId())
+            .addValue("splitMethod", transaction.getSplitMethod() != null ? transaction.getSplitMethod().name() : null)
             .addValue("id", transaction.getId())
             .addValue("userId", transaction.getUserId());
 
@@ -171,7 +178,7 @@ public class BankTransactionRepository {
 
     public List<BankTransaction> findByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
-                "user_id, asset_category_id, expense_category_id, split_pattern_id, transaction_source, " +
+                "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
                 "is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
                 "FROM bank_transactions " +
                 "WHERE user_id = :userId AND csv_import_history_id = :csvImportHistoryId " +

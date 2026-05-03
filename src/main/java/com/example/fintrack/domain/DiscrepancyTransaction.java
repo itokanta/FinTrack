@@ -22,4 +22,5 @@ public class DiscrepancyTransaction {
     private Long splitPatternId;
     private Long cardPaymentDiscrepancyId;
     private LocalDateTime createdAt;
+    private SplitMethod splitMethod;
 }

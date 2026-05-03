@@ -229,6 +229,7 @@ public class SplitService {
             
             // 取引に分割パターンIDを設定、asset_category_idはNULLに
             bankTransaction.setSplitPatternId(patternId);
+            bankTransaction.setSplitMethod(SplitMethod.PATTERN);
             bankTransaction.setAssetCategoryId(null);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
@@ -239,6 +240,7 @@ public class SplitService {
             
             // 取引に分割パターンIDを設定、asset_category_idはNULLに
             cardTransaction.setSplitPatternId(patternId);
+            cardTransaction.setSplitMethod(SplitMethod.PATTERN);
             cardTransaction.setAssetCategoryId(null);
             cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
@@ -369,9 +371,9 @@ public class SplitService {
             totalAmount = bankTransaction.getAmount();
             userId = bankTransaction.getUserId();
             
-            // 取引に分割パターンID=0を設定（単一カテゴリ）
-            bankTransaction.setSplitPatternId(0L);
-            // asset_category_idを直接設定
+            // 取引に単一カテゴリを設定
+            bankTransaction.setSplitPatternId(null);
+            bankTransaction.setSplitMethod(SplitMethod.SINGLE);
             bankTransaction.setAssetCategoryId(categoryId);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
@@ -380,9 +382,9 @@ public class SplitService {
             totalAmount = cardTransaction.getAmount();
             userId = cardTransaction.getUserId();
             
-            // 取引に分割パターンID=0を設定（単一カテゴリ）
-            cardTransaction.setSplitPatternId(0L);
-            // asset_category_idを直接設定
+            // 取引に単一カテゴリを設定
+            cardTransaction.setSplitPatternId(null);
+            cardTransaction.setSplitMethod(SplitMethod.SINGLE);
             cardTransaction.setAssetCategoryId(categoryId);
             cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {
@@ -429,8 +431,9 @@ public class SplitService {
             totalAmount = bankTransaction.getAmount();
             userId = bankTransaction.getUserId();
             
-            // 取引に分割パターンID=-1を設定（手動分割）、asset_category_idはNULLに
-            bankTransaction.setSplitPatternId(-1L);
+            // 取引に手動分割を設定
+            bankTransaction.setSplitPatternId(null);
+            bankTransaction.setSplitMethod(SplitMethod.MANUAL);
             bankTransaction.setAssetCategoryId(null);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
@@ -439,8 +442,9 @@ public class SplitService {
             totalAmount = cardTransaction.getAmount();
             userId = cardTransaction.getUserId();
             
-            // 取引に分割パターンID=-1を設定（手動分割）、asset_category_idはNULLに
-            cardTransaction.setSplitPatternId(-1L);
+            // 取引に手動分割を設定
+            cardTransaction.setSplitPatternId(null);
+            cardTransaction.setSplitMethod(SplitMethod.MANUAL);
             cardTransaction.setAssetCategoryId(null);
             cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(cardTransaction);
         } else {

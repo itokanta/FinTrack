@@ -21,7 +21,7 @@ public class CardTransaction {
     private Long userId;
     private Long assetCategoryId;
     private Long expenseCategoryId;
-    private Long splitPatternId;        // 統合版（推奨）
+    private Long splitPatternId;
     private String transactionSource; // CARD
     private String cardType; // DEBIT or CREDIT
     private String paymentMonth; // YYYY-MM形式（例: "2025-01"）
@@ -30,4 +30,5 @@ public class CardTransaction {
     private Long csvImportHistoryId;
     private Long updateCount;
     private LocalDateTime updatedAt;
+    private SplitMethod splitMethod;
 }
