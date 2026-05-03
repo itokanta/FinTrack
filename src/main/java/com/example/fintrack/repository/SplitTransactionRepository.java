@@ -42,6 +42,32 @@ public class SplitTransactionRepository {
         this.template = template;
     }
 
+    public List<SplitTransaction> findByBankTransactionIds(List<Long> bankTransactionIds, Long userId) {
+        if (bankTransactionIds.isEmpty()) return List.of();
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
+                     "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at " +
+                     "FROM split_transactions st " +
+                     "JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
+                     "WHERE st.bank_transaction_id IN (:ids) AND bt.user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", bankTransactionIds)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByCardTransactionIds(List<Long> cardTransactionIds, Long userId) {
+        if (cardTransactionIds.isEmpty()) return List.of();
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
+                     "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at " +
+                     "FROM split_transactions st " +
+                     "JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
+                     "WHERE st.card_transaction_id IN (:ids) AND ct.user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", cardTransactionIds)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+
     public List<SplitTransaction> findByBankTransactionId(Long bankTransactionId) {
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
                      "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
