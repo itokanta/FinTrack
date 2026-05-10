@@ -40,20 +40,35 @@
                     
                     <dt class="col-sm-3">分配ステータス</dt>
                     <dd class="col-sm-9">
-                        <span th:if="${isSplit}" class="badge bg-success">
-                            分配済み
-                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == T(com.example.fintrack.domain.SplitMethod).PATTERN}" class="ms-1">(パターン)</span>
-                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == T(com.example.fintrack.domain.SplitMethod).MANUAL}" class="ms-1">(手動)</span>
-                            <span th:if="${!splitIncomes.isEmpty() && splitIncomes[0].splitMethod == T(com.example.fintrack.domain.SplitMethod).SINGLE}" class="ms-1">(単一)</span>
+                        <!-- SINGLE: 単一カテゴリ -->
+                        <span th:if="${transaction.splitMethod != null && transaction.splitMethod.name() == 'SINGLE'}" 
+                              class="badge bg-success">
+                            分配済み <span class="ms-1">(単一)</span>
                         </span>
-                        <span th:unless="${isSplit}" class="badge bg-warning">未分配</span>
+                        
+                        <!-- PATTERN: パターン分割 -->
+                        <span th:if="${transaction.splitMethod != null && transaction.splitMethod.name() == 'PATTERN'}" 
+                              class="badge bg-success">
+                            分配済み <span class="ms-1">(パターン)</span>
+                        </span>
+                        
+                        <!-- MANUAL: 手動分割 -->
+                        <span th:if="${transaction.splitMethod != null && transaction.splitMethod.name() == 'MANUAL'}" 
+                              class="badge bg-success">
+                            分配済み <span class="ms-1">(手動)</span>
+                        </span>
+                        
+                        <!-- null: 未分配 -->
+                        <span th:if="${transaction.splitMethod == null}" 
+                              class="badge bg-warning">未分配</span>
                     </dd>
                 </dl>
             </div>
         </div>
         
         <!-- 分配済みの場合は分配内容を表示 -->
-        <div th:if="${isSplit}" class="card mb-4">
+        <!-- SINGLE: 単一カテゴリの場合 -->
+        <div th:if="${transaction.splitMethod != null && transaction.splitMethod.name() == 'SINGLE'}" class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">分配内容</h5>
             </div>
@@ -66,7 +81,36 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="split : ${splitIncomes}">
+                        <tr>
+                            <td th:text="${assetCategoryMap.get(transaction.assetCategoryId)}">カテゴリ名</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>合計</th>
+                            <th class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        
+        <!-- PATTERN or MANUAL: 分割の場合 -->
+        <div th:if="${transaction.splitMethod != null && (transaction.splitMethod.name() == 'PATTERN' || transaction.splitMethod.name() == 'MANUAL')}" class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">分配内容</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>資産カテゴリ</th>
+                            <th class="text-end">金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="split : ${splitTransactions}">
                             <td th:text="${assetCategoryMap.get(split.assetCategoryId)}">カテゴリ名</td>
                             <td class="text-end" th:text="${#numbers.formatInteger(split.amount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
@@ -82,14 +126,14 @@
         </div>
         
         <!-- 未分配の場合は分配フォームを表示 -->
-        <div th:unless="${isSplit}">
+        <div th:if="${transaction.splitMethod == null}">
             <!-- 全額を1つのカテゴリに登録 -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">全額を1つのカテゴリに分配</h5>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/income-split/split-single}" method="post">
+                    <form th:action="@{/split/income/split-single}" method="post">
                         <input type="hidden" name="bankTransactionId" th:value="${type == 'bank' ? transaction.id : null}">
                         <input type="hidden" name="cardTransactionId" th:value="${type == 'card' ? transaction.id : null}">
                         
@@ -204,7 +248,7 @@
                     <h5 class="mb-0">分割パターンで分配</h5>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/income-split/split}" method="post">
+                    <form th:action="@{/split/income/split}" method="post">
                         <input type="hidden" name="bankTransactionId" th:value="${type == 'bank' ? transaction.id : null}">
                         <input type="hidden" name="cardTransactionId" th:value="${type == 'card' ? transaction.id : null}">
                         
@@ -214,7 +258,7 @@
                                 <option value="">選択してください</option>
                                 <option th:each="pattern : ${patternSummaries}" 
                                         th:value="${pattern.id}" 
-                                        th:text="${pattern.name}">
+                                        th:text="|${pattern.name} (${pattern.splitType == 'RATIO' ? '割合指定' : '金額指定'})|">
                                     パターン
                                 </option>
                             </select>
@@ -224,7 +268,7 @@
                     </form>
                     
                     <div class="mt-3">
-                        <a th:href="@{/income-split/patterns}" class="btn btn-sm btn-outline-secondary">分割パターン管理</a>
+                        <a th:href="@{/split/income/patterns}" class="btn btn-sm btn-outline-secondary">分割パターン管理</a>
                     </div>
                 </div>
             </div>

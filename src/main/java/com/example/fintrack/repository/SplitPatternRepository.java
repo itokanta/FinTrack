@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitPattern;
+import com.example.fintrack.domain.TransactionType;
 import org.springframework.jdbc.core.RowMapper;
 
 @Repository
@@ -19,7 +20,8 @@ public class SplitPatternRepository {
         pattern.setId(rs.getLong("id"));
         pattern.setPatternId(rs.getLong("pattern_id"));
         pattern.setUserId(rs.getLong("user_id"));
-        pattern.setTransactionType(rs.getString("transaction_type"));
+        String transactionType = rs.getString("transaction_type");
+        pattern.setTransactionType(transactionType == null ? null : TransactionType.valueOf(transactionType));
         pattern.setSplitType(rs.getString("split_type"));
         pattern.setAssetCategoryId(rs.getLong("asset_category_id"));
         if (rs.getBigDecimal("split_ratio") != null) {
@@ -51,12 +53,12 @@ public class SplitPatternRepository {
         return template.queryForObject(sql, new MapSqlParameterSource(), Long.class);
     }
 
-    public List<Long> findDistinctPatternIdsByUserIdAndTransactionType(Long userId, String transactionType) {
+    public List<Long> findDistinctPatternIdsByUserIdAndTransactionType(Long userId, TransactionType transactionType) {
         String sql = "SELECT DISTINCT pattern_id FROM split_patterns " +
                      "WHERE user_id = :userId AND transaction_type = :transactionType ORDER BY pattern_id";
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("userId", userId)
-                .addValue("transactionType", transactionType);
+                .addValue("transactionType", transactionType.name());
         return template.queryForList(sql, params, Long.class);
     }
 
@@ -70,7 +72,8 @@ public class SplitPatternRepository {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("patternId", pattern.getPatternId())
                 .addValue("userId", pattern.getUserId())
-                .addValue("transactionType", pattern.getTransactionType())
+                .addValue("transactionType",
+                        pattern.getTransactionType() == null ? null : pattern.getTransactionType().name())
                 .addValue("splitType", pattern.getSplitType())
                 .addValue("assetCategoryId", pattern.getAssetCategoryId())
                 .addValue("splitRatio", pattern.getSplitRatio())

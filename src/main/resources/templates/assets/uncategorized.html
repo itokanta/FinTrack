@@ -6,20 +6,21 @@
     <title>未分類の取引</title>
 </head>
 <body>
-    <div layout:fragment="content">
+    <div layout:fragment="content"
+         th:with="TxType=${T(com.example.fintrack.domain.TransactionType)}">
         <h2 class="mb-4">未分類の取引</h2>
         
         <!-- タブ切り替え -->
         <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
-                <a class="nav-link" th:classappend="${type == 'expense' ? 'active' : ''}" 
-                   th:href="@{/assets/uncategorized(type=expense)}">
+                <a class="nav-link" th:classappend="${transactionType == TxType.EXPENSE} ? 'active' : ''"
+                   th:href="@{/assets/uncategorized(type=${TxType.EXPENSE})}">
                     <i class="bi bi-arrow-down-circle text-danger"></i> 支出
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" th:classappend="${type == 'income' ? 'active' : ''}" 
-                   th:href="@{/assets/uncategorized(type=income)}">
+                <a class="nav-link" th:classappend="${transactionType == TxType.INCOME} ? 'active' : ''"
+                   th:href="@{/assets/uncategorized(type=${TxType.INCOME})}">
                     <i class="bi bi-arrow-up-circle text-success"></i> 収入
                 </a>
             </li>
@@ -27,12 +28,12 @@
         
         <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle"></i>
-            <span th:if="${type == 'expense'}">
+            <span th:if="${transactionType == TxType.EXPENSE}">
                 資産カテゴリへの分配が未設定の支出です。<br>
                 <strong>一括分配：</strong>チェックを入れて下記のフォームから一括設定できます。<br>
                 <strong>個別分配：</strong>右側の「詳細」ボタンから、金額を指定した手動分割も可能です。
             </span>
-            <span th:if="${type == 'income'}">
+            <span th:if="${transactionType == TxType.INCOME}">
                 資産カテゴリへの分配が未設定の収入です。<br>
                 <strong>一括分配：</strong>チェックを入れて下記のフォームから一括設定できます。<br>
                 <strong>個別分配：</strong>右側の「詳細」ボタンから、金額を指定した手動分割も可能です。
@@ -40,7 +41,7 @@
         </div>
         
         <!-- 支出用の分配オプション -->
-        <div th:if="${type == 'expense'}">
+        <div th:if="${transactionType == TxType.EXPENSE}">
             <!-- 単一カテゴリ分配フォーム -->
             <form id="singleCategoryFormExpense" th:action="@{/assets/uncategorized/bulk-split-expense-single}" method="post" class="mb-3">
                 <div class="card">
@@ -154,7 +155,7 @@
         </div>
         
         <!-- 収入用の分配オプション -->
-        <div th:if="${type == 'income'}">
+        <div th:if="${transactionType == TxType.INCOME}">
             <!-- 単一カテゴリ分配フォーム -->
             <form id="singleCategoryForm" th:action="@{/assets/uncategorized/bulk-split-single}" method="post" class="mb-3">
                 <div class="card">

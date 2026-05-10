@@ -44,7 +44,7 @@ public class SplitService {
     /**
      * ユーザーの分割パターンIDリストを取得
      */
-    public List<Long> getSplitPatternIds(Long userId, String transactionType) {
+    public List<Long> getSplitPatternIds(Long userId, TransactionType transactionType) {
         return splitPatternRepository.findDistinctPatternIdsByUserIdAndTransactionType(userId, transactionType);
     }
     
@@ -58,7 +58,7 @@ public class SplitService {
     /**
      * ユーザーの分割パターンサマリーを取得
      */
-    public List<PatternSummary> getPatternSummaries(Long userId, String transactionType) {
+    public List<PatternSummary> getPatternSummaries(Long userId, TransactionType transactionType) {
         List<Long> patternIds = splitPatternRepository.findDistinctPatternIdsByUserIdAndTransactionType(userId, transactionType);
         List<PatternSummary> summaries = new ArrayList<>();
 
@@ -95,7 +95,7 @@ public class SplitService {
      * 新しい分割パターンを作成（割合指定）
      */
     @Transactional
-    public Long createSplitPatternByRatio(Long userId, String transactionType, String patternName, 
+    public Long createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
                                          Map<Long, BigDecimal> categoryRatios) {
         // 新しいパターンIDを生成
         Long maxPatternId = splitPatternRepository.findMaxPatternId();
@@ -117,7 +117,7 @@ public class SplitService {
             Long categoryId = entry.getKey();
             
             // カテゴリの存在確認とユーザー所有確認
-            if ("INCOME".equals(transactionType)) {
+            if (transactionType == TransactionType.INCOME) {
                 AssetCategory category = assetCategoryRepository.findById(categoryId)
                         .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
                 
@@ -153,7 +153,7 @@ public class SplitService {
      * 新しい分割パターンを作成（金額指定）
      */
     @Transactional
-    public Long createSplitPatternByAmount(Long userId, String transactionType, String patternName, 
+    public Long createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
                                           Map<Long, Long> categoryAmounts) {
         // 新しいパターンIDを生成
         Long maxPatternId = splitPatternRepository.findMaxPatternId();

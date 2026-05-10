@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
+import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.CardPaymentService;
@@ -66,7 +67,8 @@ public class DiscrepancyTransactionController {
     model.addAttribute("absoluteDifference", Math.abs(discrepancy.getDifferenceAmount()));
 
     // 差異額に応じた分割パターンを取得（支出 or 収入）
-    String transactionType = discrepancy.getDifferenceAmount() > 0 ? "EXPENSE" : "INCOME";
+    TransactionType transactionType =
+        discrepancy.getDifferenceAmount() > 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
     model.addAttribute("patternSummaries",
         splitService.getPatternSummaries(userId, transactionType));
 

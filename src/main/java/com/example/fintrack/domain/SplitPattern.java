@@ -19,7 +19,7 @@ public class SplitPattern {
     private Long id;                    // プライマリキー（SERIAL）
     private Long patternId;             // パターンID（複数レコードで同じ値を持つ）
     private Long userId;
-    private String transactionType;     // 'INCOME' or 'EXPENSE'
+    private TransactionType transactionType;
     private String splitType;           // 'RATIO' or 'AMOUNT'
     private Long assetCategoryId;       // 資産カテゴリID（収入・支出共通）
     private BigDecimal splitRatio;      // 割合指定の場合に使用（例: 50.00 for 50%）
