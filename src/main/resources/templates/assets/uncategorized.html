@@ -81,9 +81,9 @@
                                 <label for="splitPatternIdExpense" class="form-label">分配パターン</label>
                                 <select class="form-select" id="splitPatternIdExpense" name="patternId" required>
                                     <option value="">選択してください</option>
-                                    <option th:each="pattern : ${patternSummaries}" 
-                                            th:value="${pattern.id}" 
-                                            th:text="${pattern.name}">パターン名</option>
+                                    <option th:each="pattern : ${splitPatternList}"
+                                            th:value="${pattern.patternId}"
+                                            th:text="${pattern.patternName}">パターン名</option>
                                 </select>
                             </div>
                             <div class="col-md-6 d-flex align-items-end">
@@ -195,9 +195,9 @@
                                 <label for="splitPatternId" class="form-label">分配パターン</label>
                                 <select class="form-select" id="splitPatternId" name="patternId" required>
                                     <option value="">選択してください</option>
-                                    <option th:each="pattern : ${patternSummaries}" 
-                                            th:value="${pattern.id}" 
-                                            th:text="${pattern.name}">パターン名</option>
+                                    <option th:each="pattern : ${splitPatternList}"
+                                            th:value="${pattern.patternId}"
+                                            th:text="${pattern.patternName}">パターン名</option>
                                 </select>
                             </div>
                             <div class="col-md-6 d-flex align-items-end">

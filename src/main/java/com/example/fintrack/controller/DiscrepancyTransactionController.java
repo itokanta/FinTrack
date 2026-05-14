@@ -70,7 +70,7 @@ public class DiscrepancyTransactionController {
     TransactionType transactionType =
         discrepancy.getDifferenceAmount() > 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
     model.addAttribute("patternSummaries",
-        splitService.getPatternSummaries(userId, transactionType));
+        splitService.getSplitPatternList(userId, transactionType));
 
     return "discrepancy-transactions/resolve-form";
   }

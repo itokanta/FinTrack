@@ -28,6 +28,6 @@ public class SplitPattern {
     private LocalDateTime createdAt;
     
     // JOIN時に使用
-    private AssetCategory assetCategory;
+    private String assetCategoryName;
 }
 

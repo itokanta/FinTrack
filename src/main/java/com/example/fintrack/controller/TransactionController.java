@@ -19,13 +19,13 @@ import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.ExpenseCategory;
+import com.example.fintrack.domain.SplitPattern;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.ExpenseCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.SplitService;
-import com.example.fintrack.service.SplitService.PatternSummary;
 import com.example.fintrack.service.TransactionService;
 import com.example.fintrack.service.TransactionService.TransactionWithAsset;
 
@@ -82,14 +82,8 @@ public class TransactionController {
         Map<Long, String> expenseCategoryMap = expenseCategories.stream()
                 .collect(Collectors.toMap(ExpenseCategory::getId, ExpenseCategory::getCategoryName));
         
-        // 分割パターン情報を取得してMapに変換
-        List<PatternSummary> patternSummaries = 
-            splitService.getPatternSummaries(userId, TransactionType.EXPENSE);
-        Map<Long, String> splitPatternMap = patternSummaries.stream()
-                .collect(Collectors.toMap(
-                    PatternSummary::getPatternId,
-                    PatternSummary::getPatternName
-                ));
+        // 分割パターン名をpatternIdのMapで取得
+        Map<Long, String> splitPatternMap = splitService.getPatternNameMap(userId, TransactionType.EXPENSE);
         
         model.addAttribute("expenses", expenses);
         model.addAttribute("assetCategoryMap", assetCategoryMap);
@@ -166,9 +160,9 @@ public class TransactionController {
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
         // 分割パターンサマリーを取得
-        List<PatternSummary> patternSummaries = 
-            splitService.getPatternSummaries(userId, TransactionType.EXPENSE);
-        model.addAttribute("patternSummaries", patternSummaries);
+        List<SplitPattern> splitPatternList = 
+            splitService.getSplitPatternList(userId, TransactionType.EXPENSE);
+        model.addAttribute("splitPatternList", splitPatternList);
         
         // 分割済みの情報を取得
         List<SplitTransaction> splitTransactions = splitService.getSplitTransactionsByTransaction(
@@ -212,8 +206,8 @@ public class TransactionController {
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
         // 分割パターンサマリーを取得
-        List<PatternSummary> patternSummaries = splitService.getPatternSummaries(userId, TransactionType.INCOME);
-        model.addAttribute("patternSummaries", patternSummaries);
+        List<SplitPattern> splitPatternList = splitService.getSplitPatternList(userId, TransactionType.INCOME);
+        model.addAttribute("splitPatternList", splitPatternList);
         
         // 分割済みの情報を取得
         List<SplitTransaction> splitIncomes = splitService.getSplitTransactionsByTransaction(

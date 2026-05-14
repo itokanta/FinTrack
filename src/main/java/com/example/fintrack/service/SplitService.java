@@ -1,15 +1,31 @@
 package com.example.fintrack.service;
 
-import com.example.fintrack.domain.*;
-import com.example.fintrack.repository.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.BankTransaction;
+import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.domain.SplitMethod;
+import com.example.fintrack.domain.SplitPattern;
+import com.example.fintrack.domain.SplitTransaction;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.domain.dto.PatternDetail;
+import com.example.fintrack.domain.dto.PatternSummary;
+import com.example.fintrack.repository.AssetCategoryRepository;
+import com.example.fintrack.repository.AssetRepository;
+import com.example.fintrack.repository.BankTransactionRepository;
+import com.example.fintrack.repository.CardTransactionRepository;
+import com.example.fintrack.repository.ExpenseCategoryRepository;
+import com.example.fintrack.repository.SplitPatternRepository;
+import com.example.fintrack.repository.SplitTransactionRepository;
 
 /**
  * 収支分割管理サービス（収入・支出統合版）
@@ -40,47 +56,62 @@ public class SplitService {
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
     }
-    
-    /**
-     * ユーザーの分割パターンIDリストを取得
-     */
-    public List<Long> getSplitPatternIds(Long userId, TransactionType transactionType) {
-        return splitPatternRepository.findDistinctPatternIdsByUserIdAndTransactionType(userId, transactionType);
-    }
-    
-    /**
-     * 特定の分割パターンを取得
-     */
-    public List<SplitPattern> getSplitPatternById(Long patternId) {
-        return splitPatternRepository.findById(patternId);
-    }
-    
+
     /**
      * ユーザーの分割パターンサマリーを取得
      */
-    public List<PatternSummary> getPatternSummaries(Long userId, TransactionType transactionType) {
-        List<Long> patternIds = splitPatternRepository.findDistinctPatternIdsByUserIdAndTransactionType(userId, transactionType);
-        List<PatternSummary> summaries = new ArrayList<>();
+    public List<SplitPattern> getSplitPatternList(Long userId, TransactionType transactionType) {
+        return splitPatternRepository.findWithCategoryByUserIdAndTransactionType(userId, transactionType);
+    }
 
-        for (Long patternId : patternIds) {
-            List<SplitPattern> patterns = splitPatternRepository.findById(patternId);
-            if (!patterns.isEmpty()) {
-                SplitPattern firstPattern = patterns.get(0);
-                String patternName = firstPattern.getPatternName();
-                String splitType = firstPattern.getSplitType();
-                
-                List<PatternDetail> details = patterns.stream()
-                        .map(p -> {
-                            String categoryName = assetCategoryRepository.findById(p.getAssetCategoryId())
-                                    .map(AssetCategory::getCategoryName)
-                                    .orElse("不明なカテゴリ");
-                            return new PatternDetail(categoryName, p.getSplitRatio(), p.getSplitAmount(), splitType);
-                        })
-                        .collect(Collectors.toList());
-                summaries.add(new PatternSummary(patternId, patternName, splitType, details));
+    public Map<Long, String> getPatternNameMap(Long userId, TransactionType transactionType) {
+        List<SplitPattern> splitPatternList = getSplitPatternList(userId, transactionType);
+        Map<Long, String> patternNameMap = new HashMap<>();
+        for (SplitPattern splitPattern : splitPatternList) {
+            if (!patternNameMap.containsKey(splitPattern.getPatternId())){
+                patternNameMap.put(splitPattern.getPatternId(), splitPattern.getPatternName());
             }
         }
-        return summaries;
+
+        return patternNameMap;
+    }
+
+    public List<PatternSummary> getPatternSummaryList(Long userId, TransactionType transactionType) {
+        List<SplitPattern> splitPatternList = getSplitPatternList(userId, transactionType);
+        Map<Long, PatternSummary> patternSummaryMap = new LinkedHashMap<>();
+        for (SplitPattern splitPattern : splitPatternList) {
+            if(patternSummaryMap.containsKey(splitPattern.getPatternId())){
+                PatternSummary patternSummary = patternSummaryMap.get(splitPattern.getPatternId());
+                
+                PatternDetail patternDetail = new PatternDetail();
+                patternDetail.setCategoryName(splitPattern.getAssetCategoryName());
+                patternDetail.setSplitRatio(splitPattern.getSplitRatio());
+                patternDetail.setSplitAmount(splitPattern.getSplitAmount());
+                patternDetail.setSplitType(splitPattern.getSplitType());
+
+                patternSummary.getDetails().add(patternDetail);
+            } else {
+                PatternSummary patternSummary = new PatternSummary();
+                patternSummary.setId(splitPattern.getPatternId());
+                patternSummary.setName(splitPattern.getPatternName());
+                patternSummary.setSplitType(splitPattern.getSplitType());
+
+                List<PatternDetail> patternDetailList = new ArrayList<>();
+
+                PatternDetail patternDetail = new PatternDetail();
+                patternDetail.setCategoryName(splitPattern.getAssetCategoryName());
+                patternDetail.setSplitRatio(splitPattern.getSplitRatio());
+                patternDetail.setSplitAmount(splitPattern.getSplitAmount());
+                patternDetail.setSplitType(splitPattern.getSplitType());
+
+                patternDetailList.add(patternDetail);
+                patternSummary.setDetails(patternDetailList);
+
+                patternSummaryMap.put(splitPattern.getPatternId(), patternSummary);
+            }
+        }
+
+        return new ArrayList<>(patternSummaryMap.values());
     }
     
     /**
@@ -125,7 +156,7 @@ public class SplitService {
                     throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
                 }
             } else {
-                ExpenseCategory category = expenseCategoryRepository.findById(categoryId)
+                AssetCategory category = assetCategoryRepository.findById(categoryId)
                         .orElseThrow(() -> new IllegalArgumentException("支出カテゴリが見つかりません"));
                 
                 if (!category.getUserId().equals(userId)) {
@@ -524,47 +555,6 @@ public class SplitService {
                 assetRepository.updateAmountByCategoryId(userId, split.getAssetCategoryId(), -split.getAmount());
             }
         }
-    }
-    
-    // DTOs for pattern summaries
-    public static class PatternSummary {
-        private Long id;
-        private String name;
-        private String splitType;  // 'RATIO' or 'AMOUNT'
-        private List<PatternDetail> details;
-
-        public PatternSummary(Long id, String name, String splitType, List<PatternDetail> details) {
-            this.id = id;
-            this.name = name;
-            this.splitType = splitType;
-            this.details = details;
-        }
-
-        public Long getId() { return id; }
-        public Long getPatternId() { return id; }  // テンプレート用のエイリアス
-        public String getName() { return name; }
-        public String getPatternName() { return name; }  // テンプレート用のエイリアス
-        public String getSplitType() { return splitType; }
-        public List<PatternDetail> getDetails() { return details; }
-    }
-
-    public static class PatternDetail {
-        private String categoryName;
-        private BigDecimal splitRatio;
-        private Long splitAmount;
-        private String splitType;
-
-        public PatternDetail(String categoryName, BigDecimal splitRatio, Long splitAmount, String splitType) {
-            this.categoryName = categoryName;
-            this.splitRatio = splitRatio;
-            this.splitAmount = splitAmount;
-            this.splitType = splitType;
-        }
-
-        public String getCategoryName() { return categoryName; }
-        public BigDecimal getSplitRatio() { return splitRatio; }
-        public Long getSplitAmount() { return splitAmount; }
-        public String getSplitType() { return splitType; }
     }
 }
 

@@ -42,11 +42,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="pattern : ${patternSummaries}">
+                            <tr th:each="pattern : ${patternSummaryList}">
                                 <td>
-                                    <strong th:text="${pattern.patternName}">パターン名</strong>
+                                    <strong th:text="${pattern.name}">パターン名</strong>
                                     <br>
-                                    <small class="text-muted">ID: <span th:text="${pattern.patternId}">1</span></small>
+                                    <small class="text-muted">ID: <span th:text="${pattern.id}">1</span></small>
                                 </td>
                                 <td>
                                     <span class="badge" 
@@ -65,7 +65,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <form th:action="@{/split/patterns/{id}/delete(id=${pattern.patternId})}" 
+                                    <form th:action="@{/split/patterns/{id}/delete(id=${pattern.id})}" 
                                           method="post" 
                                           class="d-inline"
                                           onsubmit="return confirm('このパターンを削除してもよろしいですか？');">
@@ -76,7 +76,7 @@
                                     </form>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(patternSummaries)}">
+                            <tr th:if="${#lists.isEmpty(patternSummaryList)}">
                                 <td colspan="4" class="text-center text-muted">
                                     登録済みのパターンはありません
                                 </td>

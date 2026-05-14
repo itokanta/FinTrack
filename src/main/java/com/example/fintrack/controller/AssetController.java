@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.SplitPattern;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.AssetService;
 import com.example.fintrack.service.SplitService;
-import com.example.fintrack.service.SplitService.PatternSummary;
 import com.example.fintrack.service.TransactionService;
 
 /**
@@ -119,9 +119,9 @@ public class AssetController {
             model.addAttribute("assetCategories", assetCategories);
             
             // 分割パターンサマリーを取得
-            List<PatternSummary> patternSummaries =
-                    splitService.getPatternSummaries(userId, TransactionType.INCOME);
-            model.addAttribute("patternSummaries", patternSummaries);
+            List<SplitPattern> splitPatternList =
+                    splitService.getSplitPatternList(userId, TransactionType.INCOME);
+            model.addAttribute("splitPatternList", splitPatternList);
         } else {
             // 未分類の支出取引を取得
             transactions = transactionService.getUncategorizedExpenses(userId);
@@ -131,9 +131,9 @@ public class AssetController {
             model.addAttribute("assetCategories", assetCategories);
             
             // 分割パターンサマリーを取得（支出用）
-            List<PatternSummary> patternSummaries = 
-                splitService.getPatternSummaries(userId, TransactionType.EXPENSE);
-            model.addAttribute("patternSummaries", patternSummaries);
+            List<SplitPattern> splitPatternList = 
+                splitService.getSplitPatternList(userId, TransactionType.EXPENSE);
+            model.addAttribute("splitPatternList", splitPatternList);
         }
         
         model.addAttribute("transactions", transactions);

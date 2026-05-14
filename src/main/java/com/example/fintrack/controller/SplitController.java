@@ -1,6 +1,7 @@
 package com.example.fintrack.controller;
 
 import com.example.fintrack.domain.*;
+import com.example.fintrack.domain.dto.PatternSummary;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.SplitService;
@@ -55,10 +56,9 @@ public class SplitController {
      */
     private String patterns(Authentication authentication, Model model, TransactionType transactionType) {
         Long userId = getUserId(authentication);
-        List<SplitService.PatternSummary> patternSummaries = 
-            splitService.getPatternSummaries(userId, transactionType);
+        List<PatternSummary> patternSummaryList = splitService.getPatternSummaryList(userId, transactionType);
         
-        model.addAttribute("patternSummaries", patternSummaries);
+        model.addAttribute("patternSummaryList", patternSummaryList);
         model.addAttribute("transactionType", transactionType);
         
         return "split/patterns";
