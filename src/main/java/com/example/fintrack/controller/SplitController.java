@@ -1,20 +1,26 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.*;
-import com.example.fintrack.domain.dto.PatternSummary;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.SplitService;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.SplitPatternGroup;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.AssetCategoryRepository;
+import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.SplitService;
 
 /**
  * 収支分割管理コントローラー
@@ -56,9 +62,9 @@ public class SplitController {
      */
     private String patterns(Authentication authentication, Model model, TransactionType transactionType) {
         Long userId = getUserId(authentication);
-        List<PatternSummary> patternSummaryList = splitService.getPatternSummaryList(userId, transactionType);
+        List<SplitPatternGroup> splitPatternGroupList = splitService.getPatternGroupWithSplitPatternList(userId, transactionType);
         
-        model.addAttribute("patternSummaryList", patternSummaryList);
+        model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         model.addAttribute("transactionType", transactionType);
         
         return "split/patterns";
@@ -184,9 +190,10 @@ public class SplitController {
     @PostMapping("/patterns/{id}/delete")
     public String deletePattern(@PathVariable Long id,
                                @RequestParam TransactionType transactionType,
-                               RedirectAttributes redirectAttributes) {
+                               Authentication authentication, RedirectAttributes redirectAttributes) {
+        Long userId = getUserId(authentication);
         try {
-            splitService.deletePattern(id);
+            splitService.deletePattern(id, userId);
             redirectAttributes.addFlashAttribute("message", "分割パターンを削除しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 

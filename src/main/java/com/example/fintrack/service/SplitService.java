@@ -15,15 +15,14 @@ import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitPattern;
+import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.domain.dto.PatternDetail;
-import com.example.fintrack.domain.dto.PatternSummary;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.AssetRepository;
 import com.example.fintrack.repository.BankTransactionRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
+import com.example.fintrack.repository.SplitPatternGroupRepository;
 import com.example.fintrack.repository.SplitPatternRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
@@ -33,93 +32,57 @@ import com.example.fintrack.repository.SplitTransactionRepository;
 @Service
 public class SplitService {
     
+    private final SplitPatternGroupRepository splitPatternGroupRepository;
     private final SplitPatternRepository splitPatternRepository;
     private final SplitTransactionRepository splitTransactionRepository;
     private final AssetCategoryRepository assetCategoryRepository;
-    private final ExpenseCategoryRepository expenseCategoryRepository;
     private final AssetRepository assetRepository;
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
-    
-    public SplitService(SplitPatternRepository splitPatternRepository,
-                       SplitTransactionRepository splitTransactionRepository,
-                       AssetCategoryRepository assetCategoryRepository,
-                       ExpenseCategoryRepository expenseCategoryRepository,
-                       AssetRepository assetRepository,
-                       BankTransactionRepository bankTransactionRepository,
-                       CardTransactionRepository cardTransactionRepository) {
-        this.splitPatternRepository = splitPatternRepository;
-        this.splitTransactionRepository = splitTransactionRepository;
-        this.assetCategoryRepository = assetCategoryRepository;
-        this.expenseCategoryRepository = expenseCategoryRepository;
-        this.assetRepository = assetRepository;
-        this.bankTransactionRepository = bankTransactionRepository;
-        this.cardTransactionRepository = cardTransactionRepository;
+
+    public SplitService(SplitPatternGroupRepository splitPatternGroupRepository,
+        SplitPatternRepository splitPatternRepository, SplitTransactionRepository splitTransactionRepository,
+        AssetCategoryRepository assetCategoryRepository, AssetRepository assetRepository,
+        BankTransactionRepository bankTransactionRepository, CardTransactionRepository cardTransactionRepository) {
+      this.splitPatternGroupRepository = splitPatternGroupRepository;
+      this.splitPatternRepository = splitPatternRepository;
+      this.splitTransactionRepository = splitTransactionRepository;
+      this.assetCategoryRepository = assetCategoryRepository;
+      this.assetRepository = assetRepository;
+      this.bankTransactionRepository = bankTransactionRepository;
+      this.cardTransactionRepository = cardTransactionRepository;
     }
 
     /**
-     * ユーザーの分割パターンサマリーを取得
+     * ユーザーの分割パターンを取得
      */
-    public List<SplitPattern> getSplitPatternList(Long userId, TransactionType transactionType) {
-        return splitPatternRepository.findWithCategoryByUserIdAndTransactionType(userId, transactionType);
+    public List<SplitPatternGroup> getSplitPatternGroupList(Long userId, TransactionType transactionType) {
+        return splitPatternGroupRepository.findByUserIdAndTransactionType(userId, transactionType);
     }
 
     public Map<Long, String> getPatternNameMap(Long userId, TransactionType transactionType) {
-        List<SplitPattern> splitPatternList = getSplitPatternList(userId, transactionType);
+        List<SplitPatternGroup> splitPatternList = splitPatternGroupRepository.findByUserIdAndTransactionTypeInDeleted(userId, transactionType);
         Map<Long, String> patternNameMap = new HashMap<>();
-        for (SplitPattern splitPattern : splitPatternList) {
-            if (!patternNameMap.containsKey(splitPattern.getPatternId())){
-                patternNameMap.put(splitPattern.getPatternId(), splitPattern.getPatternName());
-            }
+        for (SplitPatternGroup splitPattern : splitPatternList) {
+            patternNameMap.put(splitPattern.getId(), splitPattern.getPatternName());
         }
 
         return patternNameMap;
     }
 
-    public List<PatternSummary> getPatternSummaryList(Long userId, TransactionType transactionType) {
-        List<SplitPattern> splitPatternList = getSplitPatternList(userId, transactionType);
-        Map<Long, PatternSummary> patternSummaryMap = new LinkedHashMap<>();
-        for (SplitPattern splitPattern : splitPatternList) {
-            if(patternSummaryMap.containsKey(splitPattern.getPatternId())){
-                PatternSummary patternSummary = patternSummaryMap.get(splitPattern.getPatternId());
-                
-                PatternDetail patternDetail = new PatternDetail();
-                patternDetail.setCategoryName(splitPattern.getAssetCategoryName());
-                patternDetail.setSplitRatio(splitPattern.getSplitRatio());
-                patternDetail.setSplitAmount(splitPattern.getSplitAmount());
-                patternDetail.setSplitType(splitPattern.getSplitType());
-
-                patternSummary.getDetails().add(patternDetail);
-            } else {
-                PatternSummary patternSummary = new PatternSummary();
-                patternSummary.setId(splitPattern.getPatternId());
-                patternSummary.setName(splitPattern.getPatternName());
-                patternSummary.setSplitType(splitPattern.getSplitType());
-
-                List<PatternDetail> patternDetailList = new ArrayList<>();
-
-                PatternDetail patternDetail = new PatternDetail();
-                patternDetail.setCategoryName(splitPattern.getAssetCategoryName());
-                patternDetail.setSplitRatio(splitPattern.getSplitRatio());
-                patternDetail.setSplitAmount(splitPattern.getSplitAmount());
-                patternDetail.setSplitType(splitPattern.getSplitType());
-
-                patternDetailList.add(patternDetail);
-                patternSummary.setDetails(patternDetailList);
-
-                patternSummaryMap.put(splitPattern.getPatternId(), patternSummary);
-            }
-        }
-
-        return new ArrayList<>(patternSummaryMap.values());
+    public List<SplitPatternGroup> getPatternGroupWithSplitPatternList(Long userId, TransactionType transactionType) {
+        return splitPatternGroupRepository.findWithSplitPatternAndAssetCategoryByUserIdAndTransactionType(userId, transactionType);
     }
     
     /**
      * 分割パターンを削除
      */
     @Transactional
-    public void deletePattern(Long patternId) {
-        splitPatternRepository.deleteByPatternId(patternId);
+    public void deletePattern(Long patternId, Long userId) {
+        int updated = splitPatternGroupRepository.deleteById(patternId, userId);
+        if (updated == 0) {
+            throw new IllegalArgumentException("分割パターンが見つかりません");
+        }
     }
     
     /**
@@ -128,12 +91,6 @@ public class SplitService {
     @Transactional
     public Long createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
                                          Map<Long, BigDecimal> categoryRatios) {
-        // 新しいパターンIDを生成
-        Long maxPatternId = splitPatternRepository.findMaxPatternId();
-        if (maxPatternId == null) {
-            maxPatternId = 0L;
-        }
-        Long newPatternId = maxPatternId + 1;
         
         // 合計が100%になるか確認
         BigDecimal total = categoryRatios.values().stream()
@@ -142,42 +99,42 @@ public class SplitService {
         if (total.compareTo(BigDecimal.valueOf(100)) != 0) {
             throw new IllegalArgumentException("分割割合の合計は100%である必要があります");
         }
+
+        SplitPatternGroup splitPatternGroup = new SplitPatternGroup();
+        splitPatternGroup.setPatternName(patternName);
+        splitPatternGroup.setUserId(userId);
+        splitPatternGroup.setTransactionType(transactionType);
+        splitPatternGroup.setSplitType("RATIO");
+
+        Long patternId = splitPatternGroupRepository.insert(splitPatternGroup);
+
+        List<SplitPattern> splitPatternList = new ArrayList<>();
         
         // パターンを保存
         for (Map.Entry<Long, BigDecimal> entry : categoryRatios.entrySet()) {
             Long categoryId = entry.getKey();
             
             // カテゴリの存在確認とユーザー所有確認
-            if (transactionType == TransactionType.INCOME) {
-                AssetCategory category = assetCategoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
-                
-                if (!category.getUserId().equals(userId)) {
-                    throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
-                }
-            } else {
-                AssetCategory category = assetCategoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new IllegalArgumentException("支出カテゴリが見つかりません"));
-                
-                if (!category.getUserId().equals(userId)) {
-                    throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
-                }
+            AssetCategory category = assetCategoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
+            
+            if (!category.getUserId().equals(userId)) {
+                throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
             }
             
             SplitPattern pattern = new SplitPattern();
-            pattern.setPatternId(newPatternId);
+            pattern.setPatternId(patternId);
             pattern.setUserId(userId);
-            pattern.setTransactionType(transactionType);
-            pattern.setSplitType("RATIO");
             pattern.setAssetCategoryId(categoryId);
             pattern.setSplitRatio(entry.getValue());
             pattern.setSplitAmount(null);
-            pattern.setPatternName(patternName);
             
-            splitPatternRepository.save(pattern);
+            splitPatternList.add(pattern);
         }
+
+        splitPatternRepository.insert(splitPatternList);
         
-        return newPatternId;
+        return patternId;
     }
     
     /**
@@ -186,13 +143,17 @@ public class SplitService {
     @Transactional
     public Long createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
                                           Map<Long, Long> categoryAmounts) {
-        // 新しいパターンIDを生成
-        Long maxPatternId = splitPatternRepository.findMaxPatternId();
-        if (maxPatternId == null) {
-            maxPatternId = 0L;
-        }
-        Long newPatternId = maxPatternId + 1;
-        
+
+        SplitPatternGroup splitPatternGroup = new SplitPatternGroup();
+        splitPatternGroup.setPatternName(patternName);
+        splitPatternGroup.setUserId(userId);
+        splitPatternGroup.setTransactionType(transactionType);
+        splitPatternGroup.setSplitType("AMOUNT");
+
+        Long patternId = splitPatternGroupRepository.insert(splitPatternGroup);
+
+        List<SplitPattern> splitPatternList = new ArrayList<>();
+
         // パターンを保存
         for (Map.Entry<Long, Long> entry : categoryAmounts.entrySet()) {
             Long categoryId = entry.getKey();
@@ -211,19 +172,21 @@ public class SplitService {
             }
             
             SplitPattern pattern = new SplitPattern();
-            pattern.setPatternId(newPatternId);
+            pattern.setPatternId(patternId);
             pattern.setUserId(userId);
-            pattern.setTransactionType(transactionType);
-            pattern.setSplitType("AMOUNT");
             pattern.setAssetCategoryId(categoryId);
             pattern.setSplitRatio(null);
             pattern.setSplitAmount(amount);
-            pattern.setPatternName(patternName);
             
-            splitPatternRepository.save(pattern);
+            splitPatternList.add(pattern);
         }
-        
-        return newPatternId;
+
+        if (splitPatternList.isEmpty()){
+            throw new IllegalArgumentException("有効な分割金額が1件以上必要です");
+        }
+        splitPatternRepository.insert(splitPatternList);
+
+        return patternId;
     }
     
     /**
@@ -279,32 +242,28 @@ public class SplitService {
         }
         
         // 分割パターンを取得
-        List<SplitPattern> patterns = splitPatternRepository.findById(patternId);
-        if (patterns.isEmpty()) {
-            throw new IllegalArgumentException("分割パターンが見つかりません");
-        }
-        
-        SplitPattern firstPattern = patterns.get(0);
-        String splitType = firstPattern.getSplitType();
+        SplitPatternGroup splitPatternGroup = splitPatternGroupRepository.findWithSplitPatternAndAssetCategoryByUserIdAndId(userId, patternId);
         
         // 分割金額を計算
         List<SplitTransaction> splits = new ArrayList<>();
-        long totalSplit = 0;
+        long totalSplitAmount = 0;
+
+        List<SplitPattern> splitPatternList = splitPatternGroup.getSplitPatternList();
         
-        if ("RATIO".equals(splitType)) {
+        if ("RATIO".equals(splitPatternGroup.getSplitType())) {
             // 割合指定の場合
-            for (int i = 0; i < patterns.size(); i++) {
-                SplitPattern pattern = patterns.get(i);
+            for (int i = 0; i < splitPatternList.size(); i++) {
+                SplitPattern pattern = splitPatternList.get(i);
                 long splitAmount;
                 
-                if (i == patterns.size() - 1) {
+                if (i == splitPatternList.size() - 1) {
                     // 最後のカテゴリには差額を含める（端数調整）
-                    splitAmount = totalAmount - totalSplit;
+                    splitAmount = totalAmount - totalSplitAmount;
                 } else {
                     splitAmount = totalAmount * pattern.getSplitRatio().longValue() / 100;
                 }
                 
-                totalSplit += splitAmount;
+                totalSplitAmount += splitAmount;
                 
                 SplitTransaction split = createSplitTransaction(pattern, splitAmount, bankTransactionId, 
                                                                cardTransactionId, patternId, transactionType);
@@ -312,14 +271,14 @@ public class SplitService {
             }
         } else {
             // 金額指定の場合
-            for (SplitPattern pattern : patterns) {
+            for (SplitPattern pattern : splitPatternList) {
                 long splitAmount = pattern.getSplitAmount();
                 
-                if (splitAmount > totalAmount - totalSplit) {
+                if (splitAmount > totalAmount - totalSplitAmount) {
                     throw new IllegalArgumentException("分割パターンの金額が取引金額を超えています");
                 }
                 
-                totalSplit += splitAmount;
+                totalSplitAmount += splitAmount;
                 
                 SplitTransaction split = createSplitTransaction(pattern, splitAmount, bankTransactionId, 
                                                                cardTransactionId, patternId, transactionType);
@@ -327,7 +286,7 @@ public class SplitService {
             }
             
             // 金額指定の場合、合計が取引金額と一致するか確認
-            if (totalSplit != totalAmount) {
+            if (totalSplitAmount != totalAmount) {
                 throw new IllegalArgumentException("分割パターンの金額合計が取引金額と一致しません");
             }
         }

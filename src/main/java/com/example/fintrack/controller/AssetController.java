@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.domain.SplitPattern;
+import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
@@ -118,10 +118,10 @@ public class AssetController {
             List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
-            // 分割パターンサマリーを取得
-            List<SplitPattern> splitPatternList =
-                    splitService.getSplitPatternList(userId, TransactionType.INCOME);
-            model.addAttribute("splitPatternList", splitPatternList);
+            // 分割パターン一覧を取得
+            List<SplitPatternGroup> splitPatternGroupList =
+                    splitService.getSplitPatternGroupList(userId, TransactionType.INCOME);
+            model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         } else {
             // 未分類の支出取引を取得
             transactions = transactionService.getUncategorizedExpenses(userId);
@@ -130,10 +130,10 @@ public class AssetController {
             List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
-            // 分割パターンサマリーを取得（支出用）
-            List<SplitPattern> splitPatternList = 
-                splitService.getSplitPatternList(userId, TransactionType.EXPENSE);
-            model.addAttribute("splitPatternList", splitPatternList);
+            // 分割パターン一覧を取得（支出用）
+            List<SplitPatternGroup> splitPatternGroupList = 
+                splitService.getSplitPatternGroupList(userId, TransactionType.EXPENSE);
+            model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         }
         
         model.addAttribute("transactions", transactions);

@@ -42,9 +42,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="pattern : ${patternSummaryList}">
+                            <tr th:each="pattern : ${splitPatternGroupList}">
                                 <td>
-                                    <strong th:text="${pattern.name}">パターン名</strong>
+                                    <strong th:text="${pattern.patternName}">パターン名</strong>
                                     <br>
                                     <small class="text-muted">ID: <span th:text="${pattern.id}">1</span></small>
                                 </td>
@@ -56,11 +56,11 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div th:each="detail : ${pattern.details}" class="mb-1">
-                                        <span class="badge bg-info" th:text="${detail.categoryName}">カテゴリ</span>
-                                        <span th:if="${detail.splitType == 'RATIO'}" 
+                                    <div th:each="detail : ${pattern.splitPatternList}" class="mb-1">
+                                        <span class="badge bg-info" th:text="${detail.assetCategoryName}">カテゴリ</span>
+                                        <span th:if="${pattern.splitType == 'RATIO'}" 
                                               th:text="${detail.splitRatio} + '%'">50%</span>
-                                        <span th:if="${detail.splitType == 'AMOUNT'}" 
+                                        <span th:if="${pattern.splitType == 'AMOUNT'}" 
                                               th:text="${#numbers.formatInteger(detail.splitAmount, 0, 'COMMA')} + '円'">10,000円</span>
                                     </div>
                                 </td>
@@ -76,7 +76,7 @@
                                     </form>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(patternSummaryList)}">
+                            <tr th:if="${#lists.isEmpty(splitPatternGroupList)}">
                                 <td colspan="4" class="text-center text-muted">
                                     登録済みのパターンはありません
                                 </td>

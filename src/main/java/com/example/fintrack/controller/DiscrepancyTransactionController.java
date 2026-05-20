@@ -69,8 +69,8 @@ public class DiscrepancyTransactionController {
     // 差異額に応じた分割パターンを取得（支出 or 収入）
     TransactionType transactionType =
         discrepancy.getDifferenceAmount() > 0 ? TransactionType.EXPENSE : TransactionType.INCOME;
-    model.addAttribute("patternSummaries",
-        splitService.getSplitPatternList(userId, transactionType));
+    model.addAttribute("splitPatternGroupList",
+        splitService.getSplitPatternGroupList(userId, transactionType));
 
     return "discrepancy-transactions/resolve-form";
   }

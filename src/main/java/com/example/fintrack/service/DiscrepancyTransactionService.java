@@ -18,6 +18,7 @@ import com.example.fintrack.domain.CsvImportUpdateHistory;
 import com.example.fintrack.domain.DiscrepancyTransaction;
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitPattern;
+import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetRepository;
@@ -26,7 +27,7 @@ import com.example.fintrack.repository.CardPaymentDiscrepancyRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
 import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 import com.example.fintrack.repository.DiscrepancyTransactionRepository;
-import com.example.fintrack.repository.SplitPatternRepository;
+import com.example.fintrack.repository.SplitPatternGroupRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
 @Service
@@ -37,17 +38,14 @@ public class DiscrepancyTransactionService {
   private final CardTransactionRepository cardTransactionRepository;
   private final BankTransactionRepository bankTransactionRepository;
   private final AssetRepository assetRepository;
-  private final SplitPatternRepository splitPatternRepository;
+  private final SplitPatternGroupRepository splitPatternGroupRepository;
   private final SplitTransactionRepository splitTransactionRepository;
   private final CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository;
 
-  public DiscrepancyTransactionService(
-      DiscrepancyTransactionRepository discrepancyTransactionRepository,
+  public DiscrepancyTransactionService(DiscrepancyTransactionRepository discrepancyTransactionRepository,
       CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository,
-      CardTransactionRepository cardTransactionRepository,
-      BankTransactionRepository bankTransactionRepository,
-      AssetRepository assetRepository,
-      SplitPatternRepository splitPatternRepository,
+      CardTransactionRepository cardTransactionRepository, BankTransactionRepository bankTransactionRepository,
+      AssetRepository assetRepository, SplitPatternGroupRepository splitPatternGroupRepository,
       SplitTransactionRepository splitTransactionRepository,
       CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository) {
     this.discrepancyTransactionRepository = discrepancyTransactionRepository;
@@ -55,7 +53,7 @@ public class DiscrepancyTransactionService {
     this.cardTransactionRepository = cardTransactionRepository;
     this.bankTransactionRepository = bankTransactionRepository;
     this.assetRepository = assetRepository;
-    this.splitPatternRepository = splitPatternRepository;
+    this.splitPatternGroupRepository = splitPatternGroupRepository;
     this.splitTransactionRepository = splitTransactionRepository;
     this.csvImportUpdateHistoryRepository = csvImportUpdateHistoryRepository;
   }
@@ -160,11 +158,10 @@ public class DiscrepancyTransactionService {
     // 1. 差異情報を取得
     CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
 
+    Long userId = discrepancy.getUserId();
+
     // 2. 分割パターンを取得
-    List<SplitPattern> patterns = splitPatternRepository.findById(patternId);
-    if (patterns.isEmpty()) {
-      throw new IllegalArgumentException("分割パターンが見つかりません（ID: " + patternId + "）");
-    }
+    SplitPatternGroup splitPatternGroup = splitPatternGroupRepository.findWithSplitPatternAndAssetCategoryByUserIdAndId(userId, patternId);
 
     // 3. 差異額と収支区分を判定
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
@@ -178,20 +175,31 @@ public class DiscrepancyTransactionService {
     DiscrepancyTransaction savedTransaction = discrepancyTransactionRepository.save(transaction);
 
     // 5. パターンに従って split_transactions レコードを作成
-    SplitPattern firstPattern = patterns.get(0);
-    String splitType = firstPattern.getSplitType();
+    String splitType = splitPatternGroup.getSplitType();
+
+    List<SplitPattern> splitPatternList = splitPatternGroup.getSplitPatternList();
+    Long totalSplitAmount = 0L;
 
     if ("RATIO".equals(splitType)) {
       // 割合指定の場合
-      for (SplitPattern pattern : patterns) {
-        Long amount = absoluteAmount * pattern.getSplitRatio().longValue() / 100;
+      for (int i = 0; i < splitPatternList.size(); i++) {
+        SplitPattern pattern = splitPatternList.get(i);
+        Long splitAmount = 0L;
+
+        if (i == splitPatternList.size() - 1){
+          splitAmount = absoluteAmount - totalSplitAmount;
+        } else {
+          splitAmount = absoluteAmount * pattern.getSplitRatio().longValue() / 100;
+        }
+
+        totalSplitAmount += splitAmount;
 
         SplitTransaction splitTransaction = new SplitTransaction();
         splitTransaction.setTransactionType(transactionType);
         splitTransaction.setAssetCategoryId(pattern.getAssetCategoryId());
         splitTransaction.setSplitPatternId(patternId);
         splitTransaction.setSplitMethod(SplitMethod.PATTERN);
-        splitTransaction.setAmount(amount);
+        splitTransaction.setAmount(splitAmount);
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
@@ -199,20 +207,30 @@ public class DiscrepancyTransactionService {
         splitTransactionRepository.save(splitTransaction);
 
         // 資産残高を調整
-        Long amountDelta = calculateAmountDelta(transactionType, amount);
+        Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
         assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), pattern.getAssetCategoryId(), amountDelta);
       }
     } else if ("AMOUNT".equals(splitType)) {
+
+      Long patternAmountSum = 0L;
+      for (SplitPattern splitPattern : splitPatternList) {
+        patternAmountSum += splitPattern.getSplitAmount();
+      }
+
+      if (!absoluteAmount.equals(patternAmountSum)){
+        throw new IllegalArgumentException("分割パターンの金額合計が取引金額と一致しません");
+      }
+
       // 金額指定の場合
-      for (SplitPattern pattern : patterns) {
-        Long amount = pattern.getSplitAmount();
+      for (SplitPattern pattern : splitPatternList) {
+        Long splitAmount = pattern.getSplitAmount();
 
         SplitTransaction splitTransaction = new SplitTransaction();
         splitTransaction.setTransactionType(transactionType);
         splitTransaction.setAssetCategoryId(pattern.getAssetCategoryId());
         splitTransaction.setSplitPatternId(patternId);
         splitTransaction.setSplitMethod(SplitMethod.PATTERN);
-        splitTransaction.setAmount(amount);
+        splitTransaction.setAmount(splitAmount);
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
@@ -220,7 +238,7 @@ public class DiscrepancyTransactionService {
         splitTransactionRepository.save(splitTransaction);
 
         // 資産残高を調整
-        Long amountDelta = calculateAmountDelta(transactionType, amount);
+        Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
         assetRepository.updateAmountByCategoryId(discrepancy.getUserId(),
             pattern.getAssetCategoryId(), amountDelta);
       }

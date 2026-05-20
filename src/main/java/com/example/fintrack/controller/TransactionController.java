@@ -19,7 +19,7 @@ import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.ExpenseCategory;
-import com.example.fintrack.domain.SplitPattern;
+import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetCategoryRepository;
@@ -159,10 +159,10 @@ public class TransactionController {
                 .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
-        // 分割パターンサマリーを取得
-        List<SplitPattern> splitPatternList = 
-            splitService.getSplitPatternList(userId, TransactionType.EXPENSE);
-        model.addAttribute("splitPatternList", splitPatternList);
+        // 分割パターン一覧を取得
+        List<SplitPatternGroup> splitPatternGroupList = 
+            splitService.getSplitPatternGroupList(userId, TransactionType.EXPENSE);
+        model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         
         // 分割済みの情報を取得
         List<SplitTransaction> splitTransactions = splitService.getSplitTransactionsByTransaction(
@@ -205,9 +205,9 @@ public class TransactionController {
                 .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
-        // 分割パターンサマリーを取得
-        List<SplitPattern> splitPatternList = splitService.getSplitPatternList(userId, TransactionType.INCOME);
-        model.addAttribute("splitPatternList", splitPatternList);
+        // 分割パターン一覧を取得
+        List<SplitPatternGroup> splitPatternGroupList = splitService.getSplitPatternGroupList(userId, TransactionType.INCOME);
+        model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         
         // 分割済みの情報を取得
         List<SplitTransaction> splitIncomes = splitService.getSplitTransactionsByTransaction(

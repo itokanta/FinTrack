@@ -217,22 +217,13 @@
                 <h5 class="mb-0"><i class="bi bi-3-circle"></i> 分割パターンで分配</h5>
             </div>
             <div class="card-body">
-                <!-- デバッグ情報（開発時のみ表示） -->
-                <!--
-                <div class="alert alert-warning" th:if="${patternSummaries != null}">
-                    <small>パターン数: <span th:text="${#lists.size(patternSummaries)}">0</span></small>
-                </div>
-                <div class="alert alert-warning" th:if="${patternSummaries == null}">
-                    <small>patternSummaries is null</small>
-                </div>
-                -->
-                
-                <div th:if="${patternSummaries == null or #lists.isEmpty(patternSummaries)}" class="alert alert-secondary">
+                <div th:if="${splitPatternGroupList == null or #lists.isEmpty(splitPatternGroupList)}" class="alert alert-secondary">
                     <i class="bi bi-info-circle"></i> 利用可能な分割パターンがありません。
-                    <a th:href="@{/split/expense/patterns}" class="alert-link">分割パターン管理</a>から作成してください。
+                    <a th:href="@{/split/expense/patterns}" class="alert-link">支出分割パターン管理</a>
+                    <a th:href="@{/split/income/patterns}" class="alert-link">収入パターン管理</a>
                 </div>
                 
-                <form th:if="${patternSummaries != null and !#lists.isEmpty(patternSummaries)}" 
+                <form th:if="${splitPatternGroupList != null and !#lists.isEmpty(splitPatternGroupList)}" 
                       th:action="@{/discrepancy-transactions/{id}/resolve-pattern(id=${discrepancy.id})}" 
                       method="post">
                     <div class="mb-3">
@@ -245,8 +236,8 @@
                         <label for="patternId" class="form-label">分割パターン <span class="text-danger">*</span></label>
                         <select class="form-select" id="patternId" name="patternId" required>
                             <option value="">選択してください</option>
-                            <option th:each="pattern : ${patternSummaries}"
-                                    th:value="${pattern.patternId}"
+                            <option th:each="pattern : ${splitPatternGroupList}"
+                                    th:value="${pattern.id}"
                                     th:text="|${pattern.patternName} (${pattern.splitType == 'RATIO' ? '割合指定' : '金額指定'})|">
                                 パターン名 (種別)
                             </option>
@@ -260,7 +251,10 @@
                 
                 <div class="mt-3">
                     <a th:href="@{/split/expense/patterns}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-gear"></i> 分割パターン管理
+                        <i class="bi bi-gear"></i> 支出分割パターン管理
+                    </a>
+                    <a th:href="@{/split/income/patterns}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-gear"></i> 収入分割パターン管理
                     </a>
                 </div>
             </div>

@@ -256,8 +256,8 @@
                             <label for="patternId" class="form-label">分割パターン</label>
                             <select class="form-select" id="patternId" name="patternId" required>
                                 <option value="">選択してください</option>
-                                <option th:each="pattern : ${splitPatternList}" 
-                                        th:value="${pattern.patternId}" 
+                                <option th:each="pattern : ${splitPatternGroupList}" 
+                                        th:value="${pattern.id}" 
                                         th:text="|${pattern.patternName} (${pattern.splitType == 'RATIO' ? '割合指定' : '金額指定'})|">
                                     パターン
                                 </option>
