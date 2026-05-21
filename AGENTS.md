@@ -31,10 +31,12 @@
 | `CardTransaction` | クレジット / デビットカードの取引（CSV インポート） |
 | `Asset` | 資産カテゴリごとの残高 |
 | `AssetCategory` / `ExpenseCategory` | ユーザー定義カテゴリ |
-| `SplitPattern` / `SplitTransaction` | 収支の分割ルールと実績 |
+| `SplitPatternGroup` / `SplitPattern` | 分割パターンのグループと明細行 |
+| `SplitTransaction` | 手動・パターン分割の明細 |
 | `AutoCategoryRule` | インポート時の自動カテゴリ割当ルール |
 | `CardPaymentDiscrepancy` | カード明細と銀行引き落とし金額の差異 |
-| `CsvImportHistory` | CSV インポート履歴 |
+| `DiscrepancyTransaction` | 差異解消用の調整取引 |
+| `CsvImportHistory` / `CsvImportUpdateHistory` | CSV インポート・更新履歴 |
 
 ### パッケージ構成
 
@@ -43,7 +45,8 @@ com.example.fintrack/
 ├── controller/   # HTTP リクエスト受付・レスポンス返却
 ├── service/      # ビジネスロジック
 ├── repository/   # DB アクセス（SQL・RowMapper は各 Repository 内に手書き）
-├── domain/       # ドメインモデル・Enum
+│   └── extractor/  # 複雑な ResultSetExtractor（任意）
+├── domain/       # ドメインモデル・Enum（dto/ サブパッケージあり）
 ├── csv/          # CSV パーサー・正規化・フィンガープリント
 └── config/       # Spring Security 設定
 ```
@@ -80,4 +83,8 @@ Controller → Service → Repository
 - **JPA は使用しない。** DB アクセスは必ず `NamedParameterJdbcTemplate` と**手書きの `RowMapper`**で実装する。エンティティ行のマッピングは、原則として各 `*Repository` 内の `private static final RowMapper<...> ROW_MAPPER = (rs, rowNum) -> { ... }`（または同等の手書き `RowMapper`）に置く。`repository/mapper` にクラスを切り出す構成は必須ではない（複雑な `ResultSetExtractor` などは `repository/extractor/` 等でよい）。
 - **フィンガープリント方式で重複排除。** CSV を再インポートしても既存レコードは重複しない。
 - **全データはユーザー単位で分離。** クエリには必ず `userId` でのスコープを含める。
-- `split_pattern_id` の意味：`NULL` = 未分類、`0` = 単一カテゴリ、`-1` = 手動分割、正の値 = パターン ID。
+- **分割状態**（`sql/16` 以降。`split_pattern_id` の番兵値 `0` / `-1` は廃止）:
+  - `split_method` が `NULL` かつ `split_pattern_id` が `NULL` … 未分配
+  - `split_method = 'SINGLE'` … 単一カテゴリ（`asset_category_id` に全額。`split_transactions` 行は作らない）
+  - `split_method = 'MANUAL'` … 手動分割（明細は `split_transactions`）
+  - `split_method = 'PATTERN'` … パターン分割（`split_pattern_id` が `split_patterns.id` を参照）
