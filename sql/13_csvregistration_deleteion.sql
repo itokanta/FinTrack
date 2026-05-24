@@ -42,8 +42,8 @@ CREATE TABLE csv_import_update_histories (
     user_id INTEGER NOT NULL,
     update_count INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (csv_import_history_id) REFERENCES csv_import_histories(id) ON DELETE CASCADE,
-    FOREIGN KEY (bank_transaction_id) REFERENCES bank_transactions(id) ON DELETE SET NULL,
-    FOREIGN KEY (card_transaction_id) REFERENCES card_transactions(id) ON DELETE SET NULL,
+    FOREIGN KEY (bank_transaction_id) REFERENCES bank_transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (card_transaction_id) REFERENCES card_transactions(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CHECK (
         (bank_transaction_id IS NOT NULL AND card_transaction_id IS NULL) OR
