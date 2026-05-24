@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>収入一覧</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">収入一覧</h2>
+        
+        <!-- 月選択 -->
+        <div class="mb-3">
+            <a th:href="@{/transactions/incomes(month=${prevMonth})}" class="btn btn-outline-primary">
+                <i class="bi bi-chevron-left"></i> 前月
+            </a>
+            <span class="mx-3" th:text="${currentMonth}">2024-01</span>
+            <a th:href="@{/transactions/incomes(month=${nextMonth})}" class="btn btn-outline-primary">
+                次月 <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        
+        <!-- 収入一覧 -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>取引日</th>
+                        <th>摘要</th>
+                        <th class="text-end">金額</th>
+                        <th>取引区分</th>
+                        <th>分配ステータス</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="income : ${incomes}">
+                        <td th:text="${income.transactionDate}">2024-01-01</td>
+                        <td th:text="${income.description}">摘要</td>
+                        <td class="text-end" th:text="${#numbers.formatInteger(income.amount, 0, 'COMMA')} + '円'">0円</td>
+                        <td>
+                            <span th:if="${income.transactionSource == '銀行'}" class="badge bg-primary">
+                                <i class="bi bi-bank"></i> 銀行
+                            </span>
+                            <span th:if="${income.transactionSource == 'デビットカード'}" class="badge bg-success">
+                                <i class="bi bi-credit-card"></i> デビット
+                            </span>
+                            <span th:if="${income.transactionSource == 'クレジットカード'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> クレジット
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${income.splitMethod != null}">
+                                <span th:if="${income.splitMethod.name() == 'PATTERN'}" class="badge bg-success">
+                                    分配済み (パターン)
+                                </span>
+                                <span th:if="${income.splitMethod.name() == 'SINGLE'}" class="badge bg-success">
+                                    分配済み (単一)
+                                </span>
+                                <span th:if="${income.splitMethod.name() == 'MANUAL'}" class="badge bg-success">
+                                    分配済み (手動)
+                                </span>
+                            </span>
+                            <span th:unless="${income.splitMethod != null}" 
+                                  class="badge bg-warning">未分配</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/transactions/incomes/{id}(id=${income.transactionId}, type=${income.transactionSource == '銀行' ? 'bank' : 'card'})}" 
+                               class="btn btn-sm btn-outline-primary">詳細</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>支払い月別カード明細</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">支払い月別カード明細</h2>
+        
+        <!-- 支払い月選択 -->
+        <div class="mb-4">
+            <label for="paymentMonth" class="form-label">支払い月</label>
+            <input type="month" class="form-control" id="paymentMonth" 
+                   th:value="${paymentMonth}" 
+                   style="max-width: 200px;"
+                   onchange="location.href='/card-payments/by-month?paymentMonth=' + this.value">
+        </div>
+        
+        <!-- 合計金額 -->
+        <div class="alert alert-info mb-4">
+            <h5 class="mb-0">
+                <i class="bi bi-credit-card"></i> 
+                支払い月合計: <strong th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '円'">0円</strong>
+            </h5>
+        </div>
+        
+        <!-- カード取引一覧 -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>利用日</th>
+                        <th>摘要</th>
+                        <th class="text-end">金額</th>
+                        <th>カード種別</th>
+                        <th>引き落とし状態</th>
+                        <th>支出カテゴリ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="transaction : ${cardTransactions}">
+                        <td th:text="${transaction.transactionDate}">2024-01-01</td>
+                        <td th:text="${transaction.description}">摘要</td>
+                        <td class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</td>
+                        <td>
+                            <span th:if="${transaction.cardType == 'DEBIT'}" class="badge bg-success">
+                                <i class="bi bi-credit-card"></i> デビット
+                            </span>
+                            <span th:if="${transaction.cardType == 'CREDIT'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> クレジット
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${transaction.cardType == 'DEBIT'}" class="text-muted">
+                                <i class="bi bi-dash"></i> 即時引き落とし
+                            </span>
+                            <span th:if="${transaction.cardType == 'CREDIT' and transaction.isPaid == true}" class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> 引き落とし済み
+                            </span>
+                            <span th:if="${transaction.cardType == 'CREDIT' and transaction.isPaid == false}" class="badge bg-danger">
+                                <i class="bi bi-clock"></i> 未払い
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${transaction.expenseCategoryId != null}">カテゴリ名</span>
+                            <span th:unless="${transaction.expenseCategoryId != null}" class="text-muted">未設定</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(cardTransactions)}">
+                        <td colspan="6" class="text-center text-muted">
+                            この支払い月のカード取引はありません
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot th:if="${!#lists.isEmpty(cardTransactions)}">
+                    <tr>
+                        <th colspan="2" class="text-end">合計</th>
+                        <th class="text-end" th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '円'">0円</th>
+                        <th colspan="3"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

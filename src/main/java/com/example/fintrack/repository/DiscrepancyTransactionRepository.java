@@ -1,0 +1,89 @@
+package com.example.fintrack.repository;
+
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.example.fintrack.domain.DiscrepancyTransaction;
+import com.example.fintrack.domain.SplitMethod;
+import com.example.fintrack.domain.TransactionType;
+
+@Repository
+public class DiscrepancyTransactionRepository {
+
+    private static final RowMapper<DiscrepancyTransaction> ROW_MAPPER = (rs, rowNum) -> {
+        DiscrepancyTransaction dt = new DiscrepancyTransaction();
+        dt.setId(rs.getLong("id"));
+        dt.setDescription(rs.getString("description"));
+        dt.setAmount(rs.getLong("amount"));
+        String transactionType = rs.getString("transaction_type");
+        dt.setTransactionType(transactionType == null ? null : TransactionType.valueOf(transactionType));
+        dt.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+        dt.setUserId(rs.getLong("user_id"));
+        long bankTransactionId = rs.getLong("bank_transaction_id");
+        dt.setBankTransactionId(rs.wasNull() ? null : bankTransactionId);
+        long assetCategoryId = rs.getLong("asset_category_id");
+        dt.setAssetCategoryId(rs.wasNull() ? null : assetCategoryId);
+        long expenseCategoryId = rs.getLong("expense_category_id");
+        dt.setExpenseCategoryId(rs.wasNull() ? null : expenseCategoryId);
+        long splitPatternId = rs.getLong("split_pattern_id");
+        dt.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
+        dt.setCardPaymentDiscrepancyId(rs.getLong("card_payment_discrepancy_id"));
+        dt.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        String splitMethod = rs.getString("split_method");
+        dt.setSplitMethod(splitMethod == null ? null : SplitMethod.valueOf(splitMethod));
+        return dt;
+    };
+
+    private final NamedParameterJdbcTemplate template;
+
+    public DiscrepancyTransactionRepository(NamedParameterJdbcTemplate template) {
+        this.template = template;
+    }
+
+    public DiscrepancyTransaction save(DiscrepancyTransaction discrepancyTransaction) {
+        String sql = "INSERT INTO discrepancy_transactions " +
+                     "(description, amount, transaction_type, transaction_date, user_id, bank_transaction_id, " +
+                     "asset_category_id, expense_category_id, split_pattern_id, split_method, card_payment_discrepancy_id) " +
+                     "VALUES (:description, :amount, :transactionType, :transactionDate, :userId, :bankTransactionId, " +
+                     ":assetCategoryId, :expenseCategoryId, :splitPatternId, :splitMethod, :cardPaymentDiscrepancyId) " +
+                     "RETURNING id, created_at";
+        SplitMethod splitMethod = discrepancyTransaction.getSplitMethod();
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("description", discrepancyTransaction.getDescription())
+                .addValue("amount", discrepancyTransaction.getAmount())
+                .addValue("transactionType", discrepancyTransaction.getTransactionType().name())
+                .addValue("transactionDate", discrepancyTransaction.getTransactionDate())
+                .addValue("userId", discrepancyTransaction.getUserId())
+                .addValue("bankTransactionId", discrepancyTransaction.getBankTransactionId())
+                .addValue("assetCategoryId", discrepancyTransaction.getAssetCategoryId())
+                .addValue("expenseCategoryId", discrepancyTransaction.getExpenseCategoryId())
+                .addValue("splitPatternId", discrepancyTransaction.getSplitPatternId())
+                .addValue("splitMethod", splitMethod != null ? splitMethod.name() : null)
+                .addValue("cardPaymentDiscrepancyId", discrepancyTransaction.getCardPaymentDiscrepancyId());
+        Map<String, Object> result = template.queryForMap(sql, params);
+        discrepancyTransaction.setId(((Number) result.get("id")).longValue());
+        discrepancyTransaction.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
+        return discrepancyTransaction;
+    }
+
+    public List<DiscrepancyTransaction> findByBankTransactionIds(List<Long> bankTransactionIdList, Long userId) {
+        if (bankTransactionIdList.isEmpty()) {
+            return List.of();
+        }
+        String sql = "SELECT dt.id, dt.description, dt.amount, dt.transaction_type, dt.transaction_date, dt.user_id, "
+                     + "dt.bank_transaction_id, dt.asset_category_id, dt.expense_category_id, dt.split_pattern_id, "
+                     + "dt.card_payment_discrepancy_id, dt.created_at, dt.split_method "
+                     + "FROM discrepancy_transactions dt "
+                     + "WHERE dt.user_id = :userId AND dt.bank_transaction_id IN (:ids)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", bankTransactionIdList)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+}

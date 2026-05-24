@@ -1,0 +1,116 @@
+/* FinTrack カスタムスタイル */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.content {
+    flex: 1;
+    padding: 30px 20px;
+    background-color: #f8f9fa;
+}
+
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ナビゲーションのアクティブ状態 */
+.navbar-nav .nav-link.active {
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+}
+
+/* ドロップダウンメニュー */
+.dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+}
+
+.dropdown-item {
+    padding: 10px 20px;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* カード */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+}
+
+/* テーブル */
+.table {
+    background-color: white;
+}
+
+.table thead {
+    background-color: #f8f9fa;
+}
+
+/* ボタン */
+.btn {
+    border-radius: 5px;
+}
+
+/* アラート */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+/* バッジ */
+.badge {
+    padding: 5px 10px;
+    font-weight: 500;
+}
+
+/* フォーム */
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+    .content {
+        padding: 15px 10px;
+    }
+    
+    .main-container {
+        padding: 0;
+    }
+}
+

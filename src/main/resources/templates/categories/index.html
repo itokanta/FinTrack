@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>カテゴリ管理</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <h2 class="mb-4">カテゴリ管理</h2>
+        
+        <div class="row">
+            <!-- 資産カテゴリ -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-wallet2"></i> 資産カテゴリ</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 追加フォーム -->
+                        <form th:action="@{/categories/asset}" method="post" class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="categoryName" 
+                                       placeholder="新しいカテゴリ名" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> 追加
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- カテゴリ一覧 -->
+                        <div class="list-group">
+                            <div th:each="category : ${assetCategories}" 
+                                 class="list-group-item d-flex justify-content-between align-items-center">
+                                <span th:text="${category.categoryName}">カテゴリ名</span>
+                                <form th:action="@{/categories/asset/{id}/delete(id=${category.id})}" 
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('このカテゴリを削除してもよろしいですか？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <div th:if="${#lists.isEmpty(assetCategories)}" class="list-group-item text-muted">
+                                カテゴリがありません
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 支出カテゴリ -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-tag"></i> 支出カテゴリ</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 追加フォーム -->
+                        <form th:action="@{/categories/expense}" method="post" class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="categoryName" 
+                                       placeholder="新しいカテゴリ名" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> 追加
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- カテゴリ一覧 -->
+                        <div class="list-group">
+                            <div th:each="category : ${expenseCategories}" 
+                                 class="list-group-item d-flex justify-content-between align-items-center">
+                                <span th:text="${category.categoryName}">カテゴリ名</span>
+                                <form th:action="@{/categories/expense/{id}/delete(id=${category.id})}" 
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('このカテゴリを削除してもよろしいですか？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <div th:if="${#lists.isEmpty(expenseCategories)}" class="list-group-item text-muted">
+                                カテゴリがありません
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 使用上の注意 -->
+        <div class="alert alert-info">
+            <h6 class="alert-heading"><i class="bi bi-info-circle"></i> カテゴリについて</h6>
+            <ul class="mb-0">
+                <li><strong>資産カテゴリ</strong>: 現金、銀行口座、クレジットカードなど、お金の置き場所を管理します</li>
+                <li><strong>支出カテゴリ</strong>: 食費、交通費、娯楽費など、支出の用途を管理します</li>
+                <li>カテゴリを削除すると、そのカテゴリに紐づく取引の情報も削除される場合があります</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+
