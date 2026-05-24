@@ -1,19 +1,25 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.AssetService;
-import com.example.fintrack.service.IncomeSplitService;
-import com.example.fintrack.service.TransactionService;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Map;
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.SplitPatternGroup;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.AssetCategoryRepository;
+import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.AssetService;
+import com.example.fintrack.service.SplitService;
+import com.example.fintrack.service.TransactionService;
 
 /**
  * 資産管理コントローラー
@@ -26,23 +32,18 @@ public class AssetController {
     private final UserRepository userRepository;
     private final TransactionService transactionService;
     private final AssetCategoryRepository assetCategoryRepository;
-    private final IncomeSplitService incomeSplitService;
     private final com.example.fintrack.service.SplitService splitService;
-    
-    public AssetController(AssetService assetService,
-                          UserRepository userRepository,
-                          TransactionService transactionService,
-                          AssetCategoryRepository assetCategoryRepository,
-                          IncomeSplitService incomeSplitService,
-                          com.example.fintrack.service.SplitService splitService) {
-        this.assetService = assetService;
-        this.userRepository = userRepository;
-        this.transactionService = transactionService;
-        this.assetCategoryRepository = assetCategoryRepository;
-        this.incomeSplitService = incomeSplitService;
-        this.splitService = splitService;
+
+    public AssetController(AssetService assetService, UserRepository userRepository,
+        TransactionService transactionService, AssetCategoryRepository assetCategoryRepository,
+        SplitService splitService) {
+      this.assetService = assetService;
+      this.userRepository = userRepository;
+      this.transactionService = transactionService;
+      this.assetCategoryRepository = assetCategoryRepository;
+      this.splitService = splitService;
     }
-    
+
     /**
      * 資産一覧画面
      */
@@ -101,14 +102,15 @@ public class AssetController {
      * 未分類の取引一覧画面
      */
     @GetMapping("/uncategorized")
-    public String uncategorized(@RequestParam(defaultValue = "expense") String type,
-                               Authentication authentication, 
-                               Model model) {
+    public String uncategorized(
+            @RequestParam(value = "type", defaultValue = "EXPENSE") TransactionType transactionType,
+            Authentication authentication,
+            Model model) {
         Long userId = getUserId(authentication);
         
         List<TransactionService.TransactionWithAsset> transactions;
         
-        if ("income".equals(type)) {
+        if (transactionType == TransactionType.INCOME) {
             // 未分類の収入取引を取得
             transactions = transactionService.getUncategorizedIncomes(userId);
             
@@ -116,9 +118,10 @@ public class AssetController {
             List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
-            // 分割パターンサマリーを取得
-            List<IncomeSplitService.PatternSummary> patternSummaries = incomeSplitService.getPatternSummaries(userId);
-            model.addAttribute("patternSummaries", patternSummaries);
+            // 分割パターン一覧を取得
+            List<SplitPatternGroup> splitPatternGroupList =
+                    splitService.getSplitPatternGroupList(userId, TransactionType.INCOME);
+            model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         } else {
             // 未分類の支出取引を取得
             transactions = transactionService.getUncategorizedExpenses(userId);
@@ -127,52 +130,16 @@ public class AssetController {
             List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
-            // 分割パターンサマリーを取得（支出用）
-            List<com.example.fintrack.service.SplitService.PatternSummary> patternSummaries = 
-                splitService.getPatternSummaries(userId, "EXPENSE");
-            model.addAttribute("patternSummaries", patternSummaries);
+            // 分割パターン一覧を取得（支出用）
+            List<SplitPatternGroup> splitPatternGroupList = 
+                splitService.getSplitPatternGroupList(userId, TransactionType.EXPENSE);
+            model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         }
         
         model.addAttribute("transactions", transactions);
-        model.addAttribute("type", type);
+        model.addAttribute("transactionType", transactionType);
         
         return "assets/uncategorized";
-    }
-    
-    /**
-     * 未分類の支出を一括でカテゴリ設定
-     */
-    @PostMapping("/uncategorized/bulk-update-expense")
-    public String bulkUpdateExpense(@RequestParam Long assetCategoryId,
-                                   @RequestParam(required = false) List<String> transactionIds,
-                                   RedirectAttributes redirectAttributes) {
-        if (transactionIds == null || transactionIds.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "取引を選択してください");
-            return "redirect:/assets/uncategorized?type=expense";
-        }
-        
-        try {
-            int count = 0;
-            for (String transactionId : transactionIds) {
-                if (transactionId.startsWith("bank_")) {
-                    Long bankId = Long.parseLong(transactionId.substring(5));
-                    transactionService.updateExpenseAssetCategory(bankId, null, assetCategoryId);
-                    count++;
-                } else if (transactionId.startsWith("card_")) {
-                    Long cardId = Long.parseLong(transactionId.substring(5));
-                    transactionService.updateExpenseAssetCategory(null, cardId, assetCategoryId);
-                    count++;
-                }
-            }
-            
-            redirectAttributes.addFlashAttribute("message", 
-                    count + "件の支出のカテゴリを設定しました");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "カテゴリの設定に失敗しました: " + e.getMessage());
-        }
-        
-        return "redirect:/assets/uncategorized?type=expense";
     }
     
     /**
@@ -184,7 +151,7 @@ public class AssetController {
                                   RedirectAttributes redirectAttributes) {
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
-            return "redirect:/assets/uncategorized?type=income";
+            return redirectUncategorized(TransactionType.INCOME);
         }
         
         try {
@@ -192,11 +159,11 @@ public class AssetController {
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    incomeSplitService.splitIncomeSingle(bankId, null, categoryId);
+                    splitService.splitIncomeSingle(bankId, null, categoryId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    incomeSplitService.splitIncomeSingle(null, cardId, categoryId);
+                    splitService.splitIncomeSingle(null, cardId, categoryId);
                     count++;
                 }
             }
@@ -208,7 +175,7 @@ public class AssetController {
                     "収入の分配に失敗しました: " + e.getMessage());
         }
         
-        return "redirect:/assets/uncategorized?type=income";
+        return redirectUncategorized(TransactionType.INCOME);
     }
     
     /**
@@ -220,7 +187,7 @@ public class AssetController {
                                   RedirectAttributes redirectAttributes) {
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
-            return "redirect:/assets/uncategorized?type=income";
+            return redirectUncategorized(TransactionType.INCOME);
         }
         
         try {
@@ -228,11 +195,11 @@ public class AssetController {
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    incomeSplitService.splitIncome(bankId, null, patternId);
+                    splitService.splitIncome(bankId, null, patternId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    incomeSplitService.splitIncome(null, cardId, patternId);
+                    splitService.splitIncome(null, cardId, patternId);
                     count++;
                 }
             }
@@ -244,7 +211,7 @@ public class AssetController {
                     "収入の分配に失敗しました: " + e.getMessage());
         }
         
-        return "redirect:/assets/uncategorized?type=income";
+        return redirectUncategorized(TransactionType.INCOME);
     }
     
     /**
@@ -256,7 +223,7 @@ public class AssetController {
                                          RedirectAttributes redirectAttributes) {
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
-            return "redirect:/assets/uncategorized?type=expense";
+            return redirectUncategorized(TransactionType.EXPENSE);
         }
         
         try {
@@ -280,7 +247,7 @@ public class AssetController {
                     "支出の分配に失敗しました: " + e.getMessage());
         }
         
-        return "redirect:/assets/uncategorized?type=expense";
+        return redirectUncategorized(TransactionType.EXPENSE);
     }
     
     /**
@@ -292,7 +259,7 @@ public class AssetController {
                                    RedirectAttributes redirectAttributes) {
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
-            return "redirect:/assets/uncategorized?type=expense";
+            return redirectUncategorized(TransactionType.EXPENSE);
         }
         
         try {
@@ -316,7 +283,11 @@ public class AssetController {
                     "支出の分配に失敗しました: " + e.getMessage());
         }
         
-        return "redirect:/assets/uncategorized?type=expense";
+        return redirectUncategorized(TransactionType.EXPENSE);
+    }
+    
+    private static String redirectUncategorized(TransactionType transactionType) {
+        return "redirect:/assets/uncategorized?type=" + transactionType.name();
     }
     
     /**

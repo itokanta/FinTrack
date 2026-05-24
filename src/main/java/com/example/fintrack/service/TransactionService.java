@@ -19,14 +19,14 @@ public class TransactionService {
     
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
-    private final AssetService assetService;
+    private final AssetRepository assetRepository;
     
     public TransactionService(BankTransactionRepository bankTransactionRepository,
                              CardTransactionRepository cardTransactionRepository,
-                             AssetService assetService) {
+                             AssetRepository assetRepository) {
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
-        this.assetService = assetService;
+        this.assetRepository = assetRepository;
     }
     
     /**
@@ -77,16 +77,16 @@ public class TransactionService {
         
         // 未分類の銀行取引を取得（split_pattern_idがNULLかつasset_category_idがNULLかつ支出）
         List<BankTransaction> bankTransactions = bankTransactionRepository
-                .findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
+                .findByUserIdAndSplitPatternIdIsNullAndTransactionType(
                         userId, TransactionType.EXPENSE);
         
         for (BankTransaction bt : bankTransactions) {
             result.add(new TransactionWithAsset(bt, null));
         }
         
-        // 未分類のカード取引を取得（split_pattern_idがNULLかつasset_category_idがNULLかつ支出）
+        // 未分類のカード取引を取得（split_pattern_idがNULLかつ支出）
         List<CardTransaction> cardTransactions = cardTransactionRepository
-                .findByUserIdAndSplitPatternIdIsNullAndAssetCategoryIdIsNullAndTransactionType(
+                .findBySplitPatternNullAndType(
                         userId, TransactionType.EXPENSE);
         
         for (CardTransaction ct : cardTransactions) {
@@ -109,18 +109,18 @@ public class TransactionService {
     public List<TransactionWithAsset> getUncategorizedIncomes(Long userId) {
         List<TransactionWithAsset> result = new ArrayList<>();
         
-        // 未分類の銀行取引を取得（income_split_pattern_idがNULL）
+        // 未分類の銀行取引を取得（split_pattern_idがNULL）
         List<BankTransaction> bankTransactions = bankTransactionRepository
-                .findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
+                .findByUserIdAndSplitPatternIdIsNullAndTransactionType(
                         userId, TransactionType.INCOME);
         
         for (BankTransaction bt : bankTransactions) {
             result.add(new TransactionWithAsset(bt, null));
         }
         
-        // 未分類のカード取引を取得（income_split_pattern_idがNULL）
+        // 未分類のカード取引を取得（split_pattern_idがNULL）
         List<CardTransaction> cardTransactions = cardTransactionRepository
-                .findByUserIdAndIncomeSplitPatternIdIsNullAndTransactionType(
+                .findBySplitPatternNullAndType(
                         userId, TransactionType.INCOME);
         
         for (CardTransaction ct : cardTransactions) {
@@ -204,15 +204,15 @@ public class TransactionService {
             
             // 旧カテゴリに戻す（マイナスを取り消す）
             if (oldAssetCategoryId != null || newAssetCategoryId != null) {
-                assetService.updateBalance(userId, oldAssetCategoryId, amount);
+                assetRepository.updateAmountByCategoryId(userId, oldAssetCategoryId, amount);
                 
                 // 新カテゴリから引く
-                assetService.updateBalance(userId, newAssetCategoryId, -amount);
+                assetRepository.updateAmountByCategoryId(userId, newAssetCategoryId, -amount);
             }
             
             // 取引のカテゴリを更新
             transaction.setAssetCategoryId(newAssetCategoryId);
-            bankTransactionRepository.save(transaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
             
         } else if (cardTransactionId != null) {
             CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
@@ -224,15 +224,15 @@ public class TransactionService {
             
             // 旧カテゴリに戻す（マイナスを取り消す）
             if (oldAssetCategoryId != null || newAssetCategoryId != null) {
-                assetService.updateBalance(userId, oldAssetCategoryId, amount);
+                assetRepository.updateAmountByCategoryId(userId, oldAssetCategoryId, amount);
                 
                 // 新カテゴリから引く
-                assetService.updateBalance(userId, newAssetCategoryId, -amount);
+                assetRepository.updateAmountByCategoryId(userId, newAssetCategoryId, -amount);
             }
             
             // 取引のカテゴリを更新
             transaction.setAssetCategoryId(newAssetCategoryId);
-            cardTransactionRepository.save(transaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
         }
     }
     
@@ -245,13 +245,13 @@ public class TransactionService {
             BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             transaction.setExpenseCategoryId(expenseCategoryId);
-            bankTransactionRepository.save(transaction);
+            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
             
         } else if (cardTransactionId != null) {
             CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             transaction.setExpenseCategoryId(expenseCategoryId);
-            cardTransactionRepository.save(transaction);
+            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
         }
     }
     
@@ -333,18 +333,18 @@ public class TransactionService {
             return cardTransaction.getExpenseCategoryId();
         }
         
-        public Long getIncomeSplitPatternId() {
-            if (bankTransaction != null) {
-                return bankTransaction.getIncomeSplitPatternId();
-            }
-            return cardTransaction.getIncomeSplitPatternId();
-        }
-        
         public Long getSplitPatternId() {
             if (bankTransaction != null) {
                 return bankTransaction.getSplitPatternId();
             }
             return cardTransaction.getSplitPatternId();
+        }
+
+        public SplitMethod getSplitMethod() {
+            if (bankTransaction != null) {
+                return bankTransaction.getSplitMethod();
+            }
+            return cardTransaction.getSplitMethod();
         }
     }
 }

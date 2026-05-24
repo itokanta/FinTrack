@@ -1,16 +1,21 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.csv.BankType;
-import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.CsvImportService;
+import java.io.IOException;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
+import com.example.fintrack.csv.BankType;
+import com.example.fintrack.service.CsvImportService;
+import com.example.fintrack.service.UserService;
+
 
 /**
  * CSV取込コントローラー
@@ -20,14 +25,13 @@ import java.io.IOException;
 public class CsvImportController {
     
     private final CsvImportService csvImportService;
-    private final UserRepository userRepository;
-    
-    public CsvImportController(CsvImportService csvImportService,
-                              UserRepository userRepository) {
-        this.csvImportService = csvImportService;
-        this.userRepository = userRepository;
+    private final UserService userService;
+
+    public CsvImportController(CsvImportService csvImportService, UserService userService) {
+      this.csvImportService = csvImportService;
+      this.userService = userService;
     }
-    
+
     /**
      * CSV取込画面
      */
@@ -92,7 +96,7 @@ public class CsvImportController {
      */
     private Long getUserId(Authentication authentication) {
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
+        return userService.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
                 .getId();
     }

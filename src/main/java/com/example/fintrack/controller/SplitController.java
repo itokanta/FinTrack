@@ -1,20 +1,26 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.*;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.SplitService;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.SplitPatternGroup;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.AssetCategoryRepository;
+import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.SplitService;
 
 /**
  * 収支分割管理コントローラー
@@ -40,7 +46,7 @@ public class SplitController {
      */
     @GetMapping("/income/patterns")
     public String incomePatterns(Authentication authentication, Model model) {
-        return patterns(authentication, model, "INCOME");
+        return patterns(authentication, model, TransactionType.INCOME);
     }
     
     /**
@@ -48,18 +54,17 @@ public class SplitController {
      */
     @GetMapping("/expense/patterns")
     public String expensePatterns(Authentication authentication, Model model) {
-        return patterns(authentication, model, "EXPENSE");
+        return patterns(authentication, model, TransactionType.EXPENSE);
     }
     
     /**
      * 分割パターン一覧画面（共通処理）
      */
-    private String patterns(Authentication authentication, Model model, String transactionType) {
+    private String patterns(Authentication authentication, Model model, TransactionType transactionType) {
         Long userId = getUserId(authentication);
-        List<SplitService.PatternSummary> patternSummaries = 
-            splitService.getPatternSummaries(userId, transactionType);
+        List<SplitPatternGroup> splitPatternGroupList = splitService.getPatternGroupWithSplitPatternList(userId, transactionType);
         
-        model.addAttribute("patternSummaries", patternSummaries);
+        model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         model.addAttribute("transactionType", transactionType);
         
         return "split/patterns";
@@ -74,7 +79,7 @@ public class SplitController {
         List<AssetCategory> categories = assetCategoryRepository.findByUserId(userId);
         
         model.addAttribute("categories", categories);
-        model.addAttribute("transactionType", "INCOME");
+        model.addAttribute("transactionType", TransactionType.INCOME);
         
         return "split/pattern-form";
     }
@@ -88,7 +93,7 @@ public class SplitController {
         List<AssetCategory> categories = assetCategoryRepository.findByUserId(userId);
         
         model.addAttribute("categories", categories);
-        model.addAttribute("transactionType", "EXPENSE");
+        model.addAttribute("transactionType", TransactionType.EXPENSE);
         
         return "split/pattern-form";
     }
@@ -98,7 +103,7 @@ public class SplitController {
      */
     @PostMapping("/patterns/ratio")
     public String createPatternByRatio(Authentication authentication,
-                                      @RequestParam String transactionType,
+                                      @RequestParam TransactionType transactionType,
                                       @RequestParam String patternName,
                                       @RequestParam Map<String, String> params,
                                       RedirectAttributes redirectAttributes) {
@@ -131,10 +136,9 @@ public class SplitController {
                     "分割パターンの登録に失敗しました: " + e.getMessage());
         }
         
-        String redirectUrl = "INCOME".equals(transactionType) 
-            ? "redirect:/split/income/patterns" 
+        return transactionType == TransactionType.INCOME
+            ? "redirect:/split/income/patterns"
             : "redirect:/split/expense/patterns";
-        return redirectUrl;
     }
     
     /**
@@ -142,7 +146,7 @@ public class SplitController {
      */
     @PostMapping("/patterns/amount")
     public String createPatternByAmount(Authentication authentication,
-                                       @RequestParam String transactionType,
+                                       @RequestParam TransactionType transactionType,
                                        @RequestParam String patternName,
                                        @RequestParam Map<String, String> params,
                                        RedirectAttributes redirectAttributes) {
@@ -175,10 +179,9 @@ public class SplitController {
                     "分割パターンの登録に失敗しました: " + e.getMessage());
         }
         
-        String redirectUrl = "INCOME".equals(transactionType) 
-            ? "redirect:/split/income/patterns" 
+        return transactionType == TransactionType.INCOME
+            ? "redirect:/split/income/patterns"
             : "redirect:/split/expense/patterns";
-        return redirectUrl;
     }
     
     /**
@@ -186,20 +189,20 @@ public class SplitController {
      */
     @PostMapping("/patterns/{id}/delete")
     public String deletePattern(@PathVariable Long id,
-                               @RequestParam String transactionType,
-                               RedirectAttributes redirectAttributes) {
+                               @RequestParam TransactionType transactionType,
+                               Authentication authentication, RedirectAttributes redirectAttributes) {
+        Long userId = getUserId(authentication);
         try {
-            splitService.deletePattern(id);
+            splitService.deletePattern(id, userId);
             redirectAttributes.addFlashAttribute("message", "分割パターンを削除しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
                     "分割パターンの削除に失敗しました: " + e.getMessage());
         }
         
-        String redirectUrl = "INCOME".equals(transactionType) 
-            ? "redirect:/split/income/patterns" 
+        return transactionType == TransactionType.INCOME
+            ? "redirect:/split/income/patterns"
             : "redirect:/split/expense/patterns";
-        return redirectUrl;
     }
     
     /**
@@ -242,6 +245,27 @@ public class SplitController {
         String type = bankTransactionId != null ? "bank" : "card";
         Long id = bankTransactionId != null ? bankTransactionId : cardTransactionId;
         return "redirect:/transactions/expenses/" + id + "?type=" + type;
+    }
+
+    /**
+     * 収入を単一カテゴリに分配
+     */
+    @PostMapping("/income/split-single")
+    public String splitIncomeSingle(@RequestParam(required = false) Long bankTransactionId,
+            @RequestParam(required = false) Long cardTransactionId,
+            @RequestParam Long categoryId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            splitService.splitIncomeSingle(bankTransactionId, cardTransactionId, categoryId);
+            redirectAttributes.addFlashAttribute("message", "収入を分配しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "収入の分配に失敗しました: " + e.getMessage());
+        }
+
+        String type = bankTransactionId != null ? "bank" : "card";
+        Long id = bankTransactionId != null ? bankTransactionId : cardTransactionId;
+        return "redirect:/transactions/incomes/" + id + "?type=" + type;
     }
     
     /**

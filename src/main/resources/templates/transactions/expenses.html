@@ -51,24 +51,24 @@
                             </span>
                         </td>
                         <td>
-                            <!-- split_pattern_id = 0: 単一カテゴリ -->
-                            <span th:if="${expense.splitPatternId != null and expense.splitPatternId == 0 and expense.assetCategoryId != null}" 
+                            <!-- SINGLE: 単一カテゴリ -->
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'SINGLE' and expense.assetCategoryId != null}" 
                                   th:text="${assetCategoryMap.get(expense.assetCategoryId)}">カテゴリ名</span>
                             
-                            <!-- split_pattern_id >= 1: パターン分割 -->
-                            <span th:if="${expense.splitPatternId != null and expense.splitPatternId > 0}" 
+                            <!-- PATTERN: パターン分割 -->
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'PATTERN'}" 
                                   class="badge bg-info">
                                 <i class="bi bi-pie-chart"></i> <span th:text="${splitPatternMap.get(expense.splitPatternId)}">分割パターン名</span>
                             </span>
                             
-                            <!-- split_pattern_id = -1: 手動分割 -->
-                            <span th:if="${expense.splitPatternId != null and expense.splitPatternId == -1}" 
+                            <!-- MANUAL: 手動分割 -->
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'MANUAL'}" 
                                   class="badge bg-secondary">
                                 <i class="bi bi-pencil"></i> 手動分割
                             </span>
                             
-                            <!-- split_pattern_id = null: 未設定 -->
-                            <span th:if="${expense.splitPatternId == null}" 
+                            <!-- null: 未設定 -->
+                            <span th:if="${expense.splitMethod == null}" 
                                   class="text-muted">未設定</span>
                         </td>
                         <td>

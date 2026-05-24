@@ -22,7 +22,7 @@
         <!-- 確定済み総資産 -->
         <div class="card mb-4">
             <div class="card-body">
-                <h5 class="card-title">確定済み総資産</h5>
+                <h5 class="card-title">引き落とし前資産</h5>
                 <h2 class="text-success" th:text="${#numbers.formatInteger(confirmedTotalBalance, 0, 'COMMA')} + '円'">0円</h2>
                 <p class="text-muted mb-0">
                     通常の総資産: <span th:text="${#numbers.formatInteger(totalBalance, 0, 'COMMA')} + '円'">0円</span>
@@ -36,14 +36,14 @@
         <!-- カテゴリ別確定済み残高 -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">カテゴリ別確定済み残高</h5>
+                <h5 class="mb-0">カテゴリ別確定済み資産</h5>
             </div>
             <div class="card-body">
                 <table class="table">
                     <thead>
                         <tr>
                             <th>カテゴリ</th>
-                            <th class="text-end">確定済み残高</th>
+                            <th class="text-end">引き落とし前資産</th>
                             <th class="text-end">通常残高</th>
                             <th class="text-end">差額</th>
                         </tr>

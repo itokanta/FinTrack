@@ -3,11 +3,11 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title th:text="${transactionType == 'INCOME' ? '収入分割パターン登録' : '支出分割パターン登録'}">分割パターン登録</title>
+    <title th:text="${transactionType.name() == 'INCOME' ? '収入分割パターン登録' : '支出分割パターン登録'}">分割パターン登録</title>
 </head>
 <body>
     <div layout:fragment="content">
-        <h2 class="mb-4" th:text="${transactionType == 'INCOME' ? '収入分割パターン登録' : '支出分割パターン登録'}">分割パターン登録</h2>
+        <h2 class="mb-4" th:text="${transactionType.name() == 'INCOME' ? '収入分割パターン登録' : '支出分割パターン登録'}">分割パターン登録</h2>
         
         <div class="card">
             <div class="card-body">
@@ -25,7 +25,7 @@
                 
                 <!-- 割合指定フォーム -->
                 <form id="ratioForm" th:action="@{/split/patterns/ratio}" method="post">
-                    <input type="hidden" name="transactionType" th:value="${transactionType}">
+                    <input type="hidden" name="transactionType" th:value="${transactionType.name()}">
                     
                     <div class="mb-3">
                         <label for="patternNameRatio" class="form-label">パターン名</label>
@@ -55,13 +55,13 @@
                     </div>
                     
                     <button type="submit" id="ratioSubmit" class="btn btn-primary" disabled>登録</button>
-                    <a th:href="${transactionType == 'INCOME' ? '/split/income/patterns' : '/split/expense/patterns'}" 
+                    <a th:href="${transactionType.name() == 'INCOME' ? '/split/income/patterns' : '/split/expense/patterns'}" 
                        class="btn btn-secondary">キャンセル</a>
                 </form>
                 
                 <!-- 金額指定フォーム -->
                 <form id="amountForm" th:action="@{/split/patterns/amount}" method="post" style="display:none;">
-                    <input type="hidden" name="transactionType" th:value="${transactionType}">
+                    <input type="hidden" name="transactionType" th:value="${transactionType.name()}">
                     
                     <div class="mb-3">
                         <label for="patternNameAmount" class="form-label">パターン名</label>
@@ -91,7 +91,7 @@
                     </div>
                     
                     <button type="submit" class="btn btn-primary">登録</button>
-                    <a th:href="${transactionType == 'INCOME' ? '/split/income/patterns' : '/split/expense/patterns'}" 
+                    <a th:href="${transactionType.name() == 'INCOME' ? '/split/income/patterns' : '/split/expense/patterns'}" 
                        class="btn btn-secondary">キャンセル</a>
                 </form>
             </div>

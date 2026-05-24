@@ -19,13 +19,13 @@ import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.ExpenseCategory;
+import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.SplitTransaction;
+import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.repository.AssetCategoryRepository;
 import com.example.fintrack.repository.ExpenseCategoryRepository;
 import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.IncomeSplitService;
 import com.example.fintrack.service.SplitService;
-import com.example.fintrack.service.SplitService.PatternSummary;
 import com.example.fintrack.service.TransactionService;
 import com.example.fintrack.service.TransactionService.TransactionWithAsset;
 
@@ -37,26 +37,21 @@ import com.example.fintrack.service.TransactionService.TransactionWithAsset;
 public class TransactionController {
     
     private final TransactionService transactionService;
-    private final IncomeSplitService incomeSplitService;
     private final SplitService splitService;
     private final UserRepository userRepository;
     private final AssetCategoryRepository assetCategoryRepository;
     private final ExpenseCategoryRepository expenseCategoryRepository;
-    
-    public TransactionController(TransactionService transactionService,
-                                IncomeSplitService incomeSplitService,
-                                SplitService splitService,
-                                UserRepository userRepository,
-                                AssetCategoryRepository assetCategoryRepository,
-                                ExpenseCategoryRepository expenseCategoryRepository) {
-        this.transactionService = transactionService;
-        this.incomeSplitService = incomeSplitService;
-        this.splitService = splitService;
-        this.userRepository = userRepository;
-        this.assetCategoryRepository = assetCategoryRepository;
-        this.expenseCategoryRepository = expenseCategoryRepository;
+   
+    public TransactionController(TransactionService transactionService, SplitService splitService,
+        UserRepository userRepository, AssetCategoryRepository assetCategoryRepository,
+        ExpenseCategoryRepository expenseCategoryRepository) {
+      this.transactionService = transactionService;
+      this.splitService = splitService;
+      this.userRepository = userRepository;
+      this.assetCategoryRepository = assetCategoryRepository;
+      this.expenseCategoryRepository = expenseCategoryRepository;
     }
-    
+
     /**
      * 支出一覧
      */
@@ -87,14 +82,8 @@ public class TransactionController {
         Map<Long, String> expenseCategoryMap = expenseCategories.stream()
                 .collect(Collectors.toMap(ExpenseCategory::getId, ExpenseCategory::getCategoryName));
         
-        // 分割パターン情報を取得してMapに変換
-        List<PatternSummary> patternSummaries = 
-            splitService.getPatternSummaries(userId, "EXPENSE");
-        Map<Long, String> splitPatternMap = patternSummaries.stream()
-                .collect(Collectors.toMap(
-                    PatternSummary::getPatternId,
-                    PatternSummary::getPatternName
-                ));
+        // 分割パターン名をpatternIdのMapで取得
+        Map<Long, String> splitPatternMap = splitService.getPatternNameMap(userId, TransactionType.EXPENSE);
         
         model.addAttribute("expenses", expenses);
         model.addAttribute("assetCategoryMap", assetCategoryMap);
@@ -170,10 +159,10 @@ public class TransactionController {
                 .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
-        // 分割パターンサマリーを取得
-        List<PatternSummary> patternSummaries = 
-            splitService.getPatternSummaries(userId, "EXPENSE");
-        model.addAttribute("patternSummaries", patternSummaries);
+        // 分割パターン一覧を取得
+        List<SplitPatternGroup> splitPatternGroupList = 
+            splitService.getSplitPatternGroupList(userId, TransactionType.EXPENSE);
+        model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         
         // 分割済みの情報を取得
         List<SplitTransaction> splitTransactions = splitService.getSplitTransactionsByTransaction(
@@ -181,7 +170,6 @@ public class TransactionController {
             "card".equals(type) ? id : null
         );
         model.addAttribute("splitTransactions", splitTransactions);
-        model.addAttribute("isSplit", !splitTransactions.isEmpty());
         
         return "transactions/expense-detail";
     }
@@ -217,17 +205,16 @@ public class TransactionController {
                 .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
         model.addAttribute("assetCategoryMap", assetCategoryMap);
         
-        // 分割パターンサマリーを取得
-        List<IncomeSplitService.PatternSummary> patternSummaries = incomeSplitService.getPatternSummaries(userId);
-        model.addAttribute("patternSummaries", patternSummaries);
+        // 分割パターン一覧を取得
+        List<SplitPatternGroup> splitPatternGroupList = splitService.getSplitPatternGroupList(userId, TransactionType.INCOME);
+        model.addAttribute("splitPatternGroupList", splitPatternGroupList);
         
         // 分割済みの情報を取得
-        List<SplitTransaction> splitIncomes = incomeSplitService.getSplitIncomesByTransaction(
+        List<SplitTransaction> splitIncomes = splitService.getSplitTransactionsByTransaction(
             "bank".equals(type) ? id : null,
             "card".equals(type) ? id : null
         );
-        model.addAttribute("splitIncomes", splitIncomes);
-        model.addAttribute("isSplit", !splitIncomes.isEmpty());
+        model.addAttribute("splitTransactions", splitIncomes);
         
         return "transactions/income-detail";
     }
@@ -289,7 +276,7 @@ public class TransactionController {
                 return "redirect:/transactions/incomes/" + id + "?type=" + type;
             }
             
-            incomeSplitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts);
+            splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts);
             redirectAttributes.addFlashAttribute("message", "収入を手動分割しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "分割に失敗しました: " + e.getMessage());

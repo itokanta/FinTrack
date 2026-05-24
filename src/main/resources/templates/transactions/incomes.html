@@ -50,18 +50,18 @@
                             </span>
                         </td>
                         <td>
-                            <span th:if="${income.incomeSplitPatternId != null}">
-                                <span th:if="${income.incomeSplitPatternId >= 1}" class="badge bg-success">
+                            <span th:if="${income.splitMethod != null}">
+                                <span th:if="${income.splitMethod.name() == 'PATTERN'}" class="badge bg-success">
                                     分配済み (パターン)
                                 </span>
-                                <span th:if="${income.incomeSplitPatternId == 0}" class="badge bg-success">
+                                <span th:if="${income.splitMethod.name() == 'SINGLE'}" class="badge bg-success">
                                     分配済み (単一)
                                 </span>
-                                <span th:if="${income.incomeSplitPatternId == -1}" class="badge bg-success">
+                                <span th:if="${income.splitMethod.name() == 'MANUAL'}" class="badge bg-success">
                                     分配済み (手動)
                                 </span>
                             </span>
-                            <span th:unless="${income.incomeSplitPatternId != null}" 
+                            <span th:unless="${income.splitMethod != null}" 
                                   class="badge bg-warning">未分配</span>
                         </td>
                         <td>
