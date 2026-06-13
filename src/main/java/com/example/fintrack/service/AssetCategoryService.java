@@ -36,7 +36,7 @@ public class AssetCategoryService {
     return assetCategoryRepository.findByUserId(userId);
   }
 
-  public void deleteById(Long id) {
-    assetCategoryRepository.deleteById(id);
+  public void deleteById(Long id, Long userId) {
+    assetCategoryRepository.deleteById(id, userId);
   }
 }

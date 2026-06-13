@@ -56,9 +56,11 @@ public class AssetCategoryRepository {
         return template.queryForObject(sql, params, Long.class);
     }
 
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM asset_categories WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+    public void deleteById(Long id, Long userId) {
+        String sql = "DELETE FROM asset_categories WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         template.update(sql, params);
     }
 }

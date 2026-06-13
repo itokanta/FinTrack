@@ -105,10 +105,10 @@ public class CategoryController {
      * 資産カテゴリ削除
      */
     @PostMapping("/asset/{id}/delete")
-    public String deleteAssetCategory(@PathVariable Long id,
-                                      RedirectAttributes redirectAttributes) {
+    public String deleteAssetCategory(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
-            assetCategoryService.deleteById(id);
+            assetCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました: " + e.getMessage());
