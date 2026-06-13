@@ -27,9 +27,12 @@ public class AssetCategoryRepository {
         this.template = template;
     }
 
-    public Optional<AssetCategory> findById(Long id) {
-        String sql = "SELECT id, user_id, category_name, created_at FROM asset_categories WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+    public Optional<AssetCategory> findById(Long id, Long userId) {
+        String sql = "SELECT id, user_id, category_name, created_at FROM asset_categories "
+                + "WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         List<AssetCategory> categories = template.query(sql, params, ROW_MAPPER);
         if (categories.isEmpty()) {
             return Optional.empty();

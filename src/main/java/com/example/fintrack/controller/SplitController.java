@@ -212,9 +212,11 @@ public class SplitController {
     public String splitIncome(@RequestParam(required = false) Long bankTransactionId,
                              @RequestParam(required = false) Long cardTransactionId,
                              @RequestParam Long patternId,
-                             RedirectAttributes redirectAttributes) {
+                             RedirectAttributes redirectAttributes,
+                             Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
-            splitService.splitIncome(bankTransactionId, cardTransactionId, patternId);
+            splitService.splitIncome(bankTransactionId, cardTransactionId, patternId, userId);
             redirectAttributes.addFlashAttribute("message", "収入を分配しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
@@ -233,9 +235,11 @@ public class SplitController {
     public String splitExpense(@RequestParam(required = false) Long bankTransactionId,
                               @RequestParam(required = false) Long cardTransactionId,
                               @RequestParam Long patternId,
-                              RedirectAttributes redirectAttributes) {
+                              RedirectAttributes redirectAttributes,
+                              Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
-            splitService.splitExpense(bankTransactionId, cardTransactionId, patternId);
+            splitService.splitExpense(bankTransactionId, cardTransactionId, patternId, userId);
             redirectAttributes.addFlashAttribute("message", "支出を分配しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
@@ -254,9 +258,11 @@ public class SplitController {
     public String splitIncomeSingle(@RequestParam(required = false) Long bankTransactionId,
             @RequestParam(required = false) Long cardTransactionId,
             @RequestParam Long categoryId,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
-            splitService.splitIncomeSingle(bankTransactionId, cardTransactionId, categoryId);
+            splitService.splitIncomeSingle(bankTransactionId, cardTransactionId, categoryId, userId);
             redirectAttributes.addFlashAttribute("message", "収入を分配しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
@@ -275,9 +281,11 @@ public class SplitController {
     public String splitExpenseSingle(@RequestParam(required = false) Long bankTransactionId,
                                     @RequestParam(required = false) Long cardTransactionId,
                                     @RequestParam Long categoryId,
-                                    RedirectAttributes redirectAttributes) {
+                                    RedirectAttributes redirectAttributes,
+                                    Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
-            splitService.splitExpenseSingle(bankTransactionId, cardTransactionId, categoryId);
+            splitService.splitExpenseSingle(bankTransactionId, cardTransactionId, categoryId, userId);
             redirectAttributes.addFlashAttribute("message", "支出を分配しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
@@ -296,7 +304,9 @@ public class SplitController {
     public String splitIncomeManual(@RequestParam(required = false) Long bankTransactionId,
                                    @RequestParam(required = false) Long cardTransactionId,
                                    @RequestParam Map<String, String> params,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,
+                                   Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
             // カテゴリIDと金額のマップを作成
             Map<Long, Long> categoryAmounts = new HashMap<>();
@@ -316,7 +326,7 @@ public class SplitController {
                 }
             }
             
-            splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts);
+            splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts, userId);
             redirectAttributes.addFlashAttribute("message", "収入を手動分配しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
@@ -335,7 +345,9 @@ public class SplitController {
     public String splitExpenseManual(@RequestParam(required = false) Long bankTransactionId,
                                     @RequestParam(required = false) Long cardTransactionId,
                                     @RequestParam Map<String, String> params,
-                                    RedirectAttributes redirectAttributes) {
+                                    RedirectAttributes redirectAttributes,
+                                    Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
             // カテゴリIDと金額のマップを作成
             Map<Long, Long> categoryAmounts = new HashMap<>();
@@ -355,7 +367,7 @@ public class SplitController {
                 }
             }
             
-            splitService.splitExpenseManual(bankTransactionId, cardTransactionId, categoryAmounts);
+            splitService.splitExpenseManual(bankTransactionId, cardTransactionId, categoryAmounts, userId);
             redirectAttributes.addFlashAttribute("message", "支出を手動分配しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 

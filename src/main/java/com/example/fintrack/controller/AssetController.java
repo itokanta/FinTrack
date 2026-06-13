@@ -148,7 +148,9 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-single")
     public String bulkSplitSingle(@RequestParam Long categoryId,
                                   @RequestParam(required = false) List<String> transactionIds,
-                                  RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes,
+                                  Authentication authentication) {
+        Long userId = getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
@@ -159,11 +161,11 @@ public class AssetController {
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncomeSingle(bankId, null, categoryId);
+                    splitService.splitIncomeSingle(bankId, null, categoryId, userId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncomeSingle(null, cardId, categoryId);
+                    splitService.splitIncomeSingle(null, cardId, categoryId, userId);
                     count++;
                 }
             }
@@ -184,7 +186,9 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-income")
     public String bulkSplitIncome(@RequestParam Long patternId,
                                   @RequestParam(required = false) List<String> transactionIds,
-                                  RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes,
+                                  Authentication authentication) {
+        Long userId = getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
@@ -195,11 +199,11 @@ public class AssetController {
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncome(bankId, null, patternId);
+                    splitService.splitIncome(bankId, null, patternId, userId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncome(null, cardId, patternId);
+                    splitService.splitIncome(null, cardId, patternId, userId);
                     count++;
                 }
             }
@@ -220,7 +224,9 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-expense-single")
     public String bulkSplitExpenseSingle(@RequestParam Long categoryId,
                                          @RequestParam(required = false) List<String> transactionIds,
-                                         RedirectAttributes redirectAttributes) {
+                                         RedirectAttributes redirectAttributes,
+                                         Authentication authentication) {
+        Long userId = getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.EXPENSE);
@@ -231,11 +237,11 @@ public class AssetController {
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpenseSingle(bankId, null, categoryId);
+                    splitService.splitExpenseSingle(bankId, null, categoryId, userId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpenseSingle(null, cardId, categoryId);
+                    splitService.splitExpenseSingle(null, cardId, categoryId, userId);
                     count++;
                 }
             }
@@ -256,7 +262,9 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-expense")
     public String bulkSplitExpense(@RequestParam Long patternId,
                                    @RequestParam(required = false) List<String> transactionIds,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,
+                                   Authentication authentication) {
+        Long userId = getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.EXPENSE);
@@ -267,11 +275,11 @@ public class AssetController {
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpense(bankId, null, patternId);
+                    splitService.splitExpense(bankId, null, patternId, userId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpense(null, cardId, patternId);
+                    splitService.splitExpense(null, cardId, patternId, userId);
                     count++;
                 }
             }

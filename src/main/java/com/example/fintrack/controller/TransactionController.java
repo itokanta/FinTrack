@@ -138,7 +138,7 @@ public class TransactionController {
         Long userId = getUserId(authentication);
         
         if ("bank".equals(type)) {
-            BankTransaction transaction = transactionService.getBankTransaction(id)
+            BankTransaction transaction = transactionService.getBankTransaction(id, userId)
                     .orElseThrow(() -> new IllegalArgumentException("取引が見つかりません"));
             model.addAttribute("transaction", transaction);
             model.addAttribute("type", "bank");
@@ -185,7 +185,7 @@ public class TransactionController {
         Long userId = getUserId(authentication);
         
         if ("bank".equals(type)) {
-            BankTransaction transaction = transactionService.getBankTransaction(id)
+            BankTransaction transaction = transactionService.getBankTransaction(id, userId)
                     .orElseThrow(() -> new IllegalArgumentException("取引が見つかりません"));
             model.addAttribute("transaction", transaction);
             model.addAttribute("type", "bank");
@@ -227,19 +227,21 @@ public class TransactionController {
                                        @RequestParam String type,
                                        @RequestParam(required = false) Long assetCategoryId,
                                        @RequestParam(required = false) Long expenseCategoryId,
-                                       RedirectAttributes redirectAttributes) {
+                                       RedirectAttributes redirectAttributes,
+                                       Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
             Long bankTransactionId = "bank".equals(type) ? id : null;
             Long cardTransactionId = "card".equals(type) ? id : null;
             
             // 資産カテゴリを更新（残高も移動）
             if (assetCategoryId != null) {
-                transactionService.updateExpenseAssetCategory(bankTransactionId, cardTransactionId, assetCategoryId);
+                transactionService.updateExpenseAssetCategory(bankTransactionId, cardTransactionId, assetCategoryId, userId);
             }
             
             // 支出カテゴリを更新
             if (expenseCategoryId != null) {
-                transactionService.updateExpenseCategory(bankTransactionId, cardTransactionId, expenseCategoryId);
+                transactionService.updateExpenseCategory(bankTransactionId, cardTransactionId, expenseCategoryId, userId);
             }
             
             redirectAttributes.addFlashAttribute("message", "カテゴリを更新しました");
@@ -257,7 +259,9 @@ public class TransactionController {
     public String splitIncomeManual(@PathVariable Long id,
                                    @RequestParam String type,
                                    @RequestParam Map<String, String> params,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,
+                                   Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
             Long bankTransactionId = "bank".equals(type) ? id : null;
             Long cardTransactionId = "card".equals(type) ? id : null;
@@ -276,7 +280,7 @@ public class TransactionController {
                 return "redirect:/transactions/incomes/" + id + "?type=" + type;
             }
             
-            splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts);
+            splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts, userId);
             redirectAttributes.addFlashAttribute("message", "収入を手動分割しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "分割に失敗しました: " + e.getMessage());

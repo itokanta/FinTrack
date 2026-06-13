@@ -314,7 +314,7 @@ public class DiscrepancyTransactionService {
 
     List<CardTransaction> afterCardTransactionList = cardTransactionRepository.findByUserIdAndPaymentMonth(discrepancy.getUserId(), discrepancy.getPaymentMonth());
     List<CsvImportUpdateHistory> csvImportUpdateHistoryList = new ArrayList<>();
-    Optional<BankTransaction> cardPaymentTransaction = bankTransactionRepository.findById(discrepancy.getBankTransactionId());
+    Optional<BankTransaction> cardPaymentTransaction = bankTransactionRepository.findById(discrepancy.getBankTransactionId(), userId);
     Long csvImportHistoryId = cardPaymentTransaction
         .orElseThrow(() -> new IllegalStateException(
             "card payment bank transaction not found. id=" + discrepancy.getBankTransactionId())).getCsvImportHistoryId();

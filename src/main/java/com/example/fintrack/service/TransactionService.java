@@ -177,8 +177,8 @@ public class TransactionService {
     /**
      * 銀行取引を取得
      */
-    public Optional<BankTransaction> getBankTransaction(Long id) {
-        return bankTransactionRepository.findById(id);
+    public Optional<BankTransaction> getBankTransaction(Long id, Long userId) {
+        return bankTransactionRepository.findById(id, userId);
     }
     
     /**
@@ -193,12 +193,11 @@ public class TransactionService {
      * 残高も適切に移動する
      */
     @Transactional
-    public void updateExpenseAssetCategory(Long bankTransactionId, Long cardTransactionId, Long newAssetCategoryId) {
+    public void updateExpenseAssetCategory(Long bankTransactionId, Long cardTransactionId, Long newAssetCategoryId, Long userId) {
         if (bankTransactionId != null) {
-            BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId)
+            BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
-            
-            Long userId = transaction.getUserId();
+
             Long oldAssetCategoryId = transaction.getAssetCategoryId();
             Long amount = transaction.getAmount();
             
@@ -217,8 +216,7 @@ public class TransactionService {
         } else if (cardTransactionId != null) {
             CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
-            
-            Long userId = transaction.getUserId();
+
             Long oldAssetCategoryId = transaction.getAssetCategoryId();
             Long amount = transaction.getAmount();
             
@@ -240,9 +238,9 @@ public class TransactionService {
      * 支出カテゴリを更新
      */
     @Transactional
-    public void updateExpenseCategory(Long bankTransactionId, Long cardTransactionId, Long expenseCategoryId) {
+    public void updateExpenseCategory(Long bankTransactionId, Long cardTransactionId, Long expenseCategoryId, Long userId) {
         if (bankTransactionId != null) {
-            BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId)
+            BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             transaction.setExpenseCategoryId(expenseCategoryId);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
