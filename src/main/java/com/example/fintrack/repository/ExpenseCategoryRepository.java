@@ -46,19 +46,22 @@ public class ExpenseCategoryRepository {
             category.setId(((Number) result.get("id")).longValue());
             category.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
         } else {
-            String sql = "UPDATE expense_categories SET user_id = :userId, category_name = :categoryName WHERE id = :id";
+            String sql = "UPDATE expense_categories SET user_id = :userId, category_name = :categoryName WHERE id = :id AND user_id = :userId";
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue("userId", category.getUserId())
                     .addValue("categoryName", category.getCategoryName())
-                    .addValue("id", category.getId());
+                    .addValue("id", category.getId())
+                    .addValue("userId", category.getUserId());
             template.update(sql, params);
         }
         return category;
     }
 
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM expense_categories WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+    public void deleteById(Long id, Long userId) {
+        String sql = "DELETE FROM expense_categories WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         template.update(sql, params);
     }
 }

@@ -122,9 +122,11 @@ public class CategoryController {
      */
     @PostMapping("/expense/{id}/delete")
     public String deleteExpenseCategory(@PathVariable Long id,
-                                       RedirectAttributes redirectAttributes) {
+                                       RedirectAttributes redirectAttributes,
+                                       Authentication authentication) {
+        Long userId = getUserId(authentication);
         try {
-            expenseCategoryRepository.deleteById(id);
+            expenseCategoryRepository.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを削除しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "支出カテゴリの削除に失敗しました: " + e.getMessage());
