@@ -143,7 +143,7 @@ public class TransactionController {
             model.addAttribute("transaction", transaction);
             model.addAttribute("type", "bank");
         } else {
-            CardTransaction transaction = transactionService.getCardTransaction(id)
+            CardTransaction transaction = transactionService.getCardTransaction(id, userId)
                     .orElseThrow(() -> new IllegalArgumentException("取引が見つかりません"));
             model.addAttribute("transaction", transaction);
             model.addAttribute("type", "card");
@@ -190,7 +190,7 @@ public class TransactionController {
             model.addAttribute("transaction", transaction);
             model.addAttribute("type", "bank");
         } else {
-            CardTransaction transaction = transactionService.getCardTransaction(id)
+            CardTransaction transaction = transactionService.getCardTransaction(id, userId)
                     .orElseThrow(() -> new IllegalArgumentException("取引が見つかりません"));
             model.addAttribute("transaction", transaction);
             model.addAttribute("type", "card");

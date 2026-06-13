@@ -68,14 +68,15 @@ public class CardTransactionRepository {
         this.template = template;
     }
     
-    public Optional<CardTransaction> findById(Long id) {
+    public Optional<CardTransaction> findById(Long id, Long userId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " + 
                     "asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, card_type, " +
                     "payment_month, is_paid, created_at, csv_import_history_id, update_count, updated_at " +
                     "FROM card_transactions " +
-                    "WHERE id = :id";
+                    "WHERE id = :id AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("id", id);
+            .addValue("id", id)
+            .addValue("userId", userId);
         List<CardTransaction> transactions = template.query(sql, params, ROW_MAPPER);
         if (transactions.isEmpty()) {
             return Optional.empty();

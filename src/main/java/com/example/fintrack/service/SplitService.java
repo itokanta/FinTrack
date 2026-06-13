@@ -211,7 +211,7 @@ public class SplitService {
             bankTransaction.setAssetCategoryId(null);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
-            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
             
@@ -350,7 +350,7 @@ public class SplitService {
             bankTransaction.setAssetCategoryId(categoryId);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
-            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
             
@@ -402,7 +402,7 @@ public class SplitService {
             bankTransaction.setAssetCategoryId(null);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
-            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
             

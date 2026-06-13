@@ -184,8 +184,8 @@ public class TransactionService {
     /**
      * カード取引を取得
      */
-    public Optional<CardTransaction> getCardTransaction(Long id) {
-        return cardTransactionRepository.findById(id);
+    public Optional<CardTransaction> getCardTransaction(Long id, Long userId) {
+        return cardTransactionRepository.findById(id, userId);
     }
     
     /**
@@ -214,7 +214,7 @@ public class TransactionService {
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
             
         } else if (cardTransactionId != null) {
-            CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
+            CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
 
             Long oldAssetCategoryId = transaction.getAssetCategoryId();
@@ -246,7 +246,7 @@ public class TransactionService {
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
             
         } else if (cardTransactionId != null) {
-            CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId)
+            CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             transaction.setExpenseCategoryId(expenseCategoryId);
             cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
