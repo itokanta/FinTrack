@@ -3,7 +3,6 @@ package com.example.fintrack.repository;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -28,16 +27,6 @@ public class ExpenseCategoryRepository {
 
     public ExpenseCategoryRepository(NamedParameterJdbcTemplate template) {
         this.template = template;
-    }
-
-    public Optional<ExpenseCategory> findById(Long id) {
-        String sql = "SELECT id, user_id, category_name, created_at FROM expense_categories WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
-        List<ExpenseCategory> categories = template.query(sql, params, ROW_MAPPER);
-        if (categories.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(categories.get(0));
     }
 
     public List<ExpenseCategory> findByUserId(Long userId) {

@@ -1,6 +1,5 @@
 package com.example.fintrack.repository;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -9,24 +8,9 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitPattern;
-import org.springframework.jdbc.core.RowMapper;
 
 @Repository
 public class SplitPatternRepository {
-
-    private static final RowMapper<SplitPattern> ROW_MAPPER = (rs, rowNum) -> {
-        SplitPattern pattern = new SplitPattern();
-        pattern.setId(rs.getLong("id"));
-        pattern.setPatternId(rs.getLong("pattern_id"));
-        pattern.setUserId(rs.getLong("user_id"));
-        pattern.setAssetCategoryId(rs.getLong("asset_category_id"));
-        BigDecimal splitRatio = rs.getBigDecimal("split_ratio");
-        pattern.setSplitRatio(rs.wasNull() ? null : splitRatio);
-        Long splitAmount = rs.getLong("split_amount");
-        pattern.setSplitAmount(rs.wasNull() ? null : splitAmount);
-        pattern.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-        return pattern;
-    };
 
     private final NamedParameterJdbcTemplate template;
 
