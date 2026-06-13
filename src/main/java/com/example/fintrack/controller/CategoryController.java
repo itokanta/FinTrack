@@ -14,9 +14,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.ExpenseCategory;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.AssetCategoryService;
+import com.example.fintrack.service.ExpenseCategoryService;
+import com.example.fintrack.service.UserService;
 
 /**
  * カテゴリ管理コントローラー
@@ -26,17 +26,16 @@ import com.example.fintrack.service.AssetCategoryService;
 public class CategoryController {
     
     private final AssetCategoryService assetCategoryService;
-    private final ExpenseCategoryRepository expenseCategoryRepository;
-    private final UserRepository userRepository;
-    
-    public CategoryController(AssetCategoryService assetCategoryService,
-                             ExpenseCategoryRepository expenseCategoryRepository,
-                             UserRepository userRepository) {
+    private final ExpenseCategoryService expenseCategoryService;
+    private final UserService userService;
+ 
+    public CategoryController(AssetCategoryService assetCategoryService, ExpenseCategoryService expenseCategoryService,
+            UserService userService) {
         this.assetCategoryService = assetCategoryService;
-        this.expenseCategoryRepository = expenseCategoryRepository;
-        this.userRepository = userRepository;
+        this.expenseCategoryService = expenseCategoryService;
+        this.userService = userService;
     }
-    
+
     /**
      * カテゴリ管理画面
      */
@@ -45,7 +44,7 @@ public class CategoryController {
         Long userId = getUserId(authentication);
         
         List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
-        List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserId(userId);
+        List<ExpenseCategory> expenseCategories = expenseCategoryService.findByUserId(userId);
         
         model.addAttribute("assetCategories", assetCategories);
         model.addAttribute("expenseCategories", expenseCategories);
@@ -86,12 +85,11 @@ public class CategoryController {
                                     RedirectAttributes redirectAttributes) {
         try {
             Long userId = getUserId(authentication);
-            
             ExpenseCategory category = new ExpenseCategory();
             category.setUserId(userId);
             category.setCategoryName(categoryName.trim());
             
-            expenseCategoryRepository.save(category);
+            expenseCategoryService.save(category);
             
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを追加しました");
         } catch (Exception e) {
@@ -106,8 +104,8 @@ public class CategoryController {
      */
     @PostMapping("/asset/{id}/delete")
     public String deleteAssetCategory(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
-        Long userId = getUserId(authentication);
         try {
+            Long userId = getUserId(authentication);
             assetCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
         } catch (Exception e) {
@@ -124,9 +122,9 @@ public class CategoryController {
     public String deleteExpenseCategory(@PathVariable Long id,
                                        RedirectAttributes redirectAttributes,
                                        Authentication authentication) {
-        Long userId = getUserId(authentication);
         try {
-            expenseCategoryRepository.deleteById(id, userId);
+            Long userId = getUserId(authentication);
+            expenseCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを削除しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "支出カテゴリの削除に失敗しました: " + e.getMessage());
@@ -140,7 +138,7 @@ public class CategoryController {
      */
     private Long getUserId(Authentication authentication) {
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
+        return userService.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
                 .getId();
     }
