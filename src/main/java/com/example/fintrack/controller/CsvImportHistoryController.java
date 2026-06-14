@@ -80,8 +80,6 @@ public class CsvImportHistoryController {
    */
   private Long getUserId(Authentication authentication) {
     String username = authentication.getName();
-    return userService.findByUsername(username)
-        .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-        .getId();
+    return userService.findUserIdByUsername(username);
   }
 }
