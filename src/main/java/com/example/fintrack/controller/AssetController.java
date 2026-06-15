@@ -15,11 +15,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.AssetService;
 import com.example.fintrack.service.SplitService;
 import com.example.fintrack.service.TransactionService;
+import com.example.fintrack.service.UserService;
 
 /**
  * 資産管理コントローラー
@@ -29,18 +29,17 @@ import com.example.fintrack.service.TransactionService;
 public class AssetController {
     
     private final AssetService assetService;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final TransactionService transactionService;
-    private final AssetCategoryRepository assetCategoryRepository;
-    private final com.example.fintrack.service.SplitService splitService;
+    private final AssetCategoryService assetCategoryService;
+    private final SplitService splitService;
 
-    public AssetController(AssetService assetService, UserRepository userRepository,
-        TransactionService transactionService, AssetCategoryRepository assetCategoryRepository,
-        SplitService splitService) {
+    public AssetController(AssetService assetService, UserService userService, TransactionService transactionService,
+        AssetCategoryService assetCategoryService, SplitService splitService) {
       this.assetService = assetService;
-      this.userRepository = userRepository;
+      this.userService = userService;
       this.transactionService = transactionService;
-      this.assetCategoryRepository = assetCategoryRepository;
+      this.assetCategoryService = assetCategoryService;
       this.splitService = splitService;
     }
 
@@ -115,7 +114,7 @@ public class AssetController {
             transactions = transactionService.getUncategorizedIncomes(userId);
             
             // 資産カテゴリ一覧を取得
-            List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+            List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
             // 分割パターン一覧を取得
@@ -127,7 +126,7 @@ public class AssetController {
             transactions = transactionService.getUncategorizedExpenses(userId);
             
             // 資産カテゴリ一覧を取得
-            List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+            List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
             // 分割パターン一覧を取得（支出用）
@@ -303,8 +302,6 @@ public class AssetController {
      */
     private Long getUserId(Authentication authentication) {
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
+        return userService.findUserIdByUsername(username);
     }
 }
