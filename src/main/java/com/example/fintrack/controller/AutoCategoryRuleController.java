@@ -3,11 +3,11 @@ package com.example.fintrack.controller;
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.AutoCategoryRule;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.AutoCategoryRuleRepository;
-import com.example.fintrack.repository.BankTransactionRepository;
-import com.example.fintrack.repository.CardTransactionRepository;
-import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.service.AssetCategoryService;
+import com.example.fintrack.service.AutoCategoryRuleService;
+import com.example.fintrack.service.TransactionService;
+import com.example.fintrack.service.UserService;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,240 +23,224 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/auto-category-rules")
 public class AutoCategoryRuleController {
-    
-    private final AutoCategoryRuleRepository autoCategoryRuleRepository;
-    private final AssetCategoryRepository assetCategoryRepository;
-    private final UserRepository userRepository;
-    private final BankTransactionRepository bankTransactionRepository;
-    private final CardTransactionRepository cardTransactionRepository;
-    
-    public AutoCategoryRuleController(AutoCategoryRuleRepository autoCategoryRuleRepository,
-                                     AssetCategoryRepository assetCategoryRepository,
-                                     UserRepository userRepository,
-                                     BankTransactionRepository bankTransactionRepository,
-                                     CardTransactionRepository cardTransactionRepository) {
-        this.autoCategoryRuleRepository = autoCategoryRuleRepository;
-        this.assetCategoryRepository = assetCategoryRepository;
-        this.userRepository = userRepository;
-        this.bankTransactionRepository = bankTransactionRepository;
-        this.cardTransactionRepository = cardTransactionRepository;
+
+    private final AutoCategoryRuleService autoCategoryRuleService;
+    private final AssetCategoryService assetCategoryService;
+    private final UserService userService;
+    private final TransactionService transactionService;
+
+    public AutoCategoryRuleController(AutoCategoryRuleService autoCategoryRuleService,
+            AssetCategoryService assetCategoryService, UserService userService, TransactionService transactionService) {
+        this.autoCategoryRuleService = autoCategoryRuleService;
+        this.assetCategoryService = assetCategoryService;
+        this.userService = userService;
+        this.transactionService = transactionService;
     }
-    
+
     /**
      * 自動カテゴリルール一覧
      */
     @GetMapping
     public String index(Authentication authentication, Model model) {
         Long userId = getUserId(authentication);
-        
+
         // ルール一覧を取得
-        List<AutoCategoryRule> rules = autoCategoryRuleRepository.findByUserId(userId);
-        
+        List<AutoCategoryRule> rules = autoCategoryRuleService.findByUserId(userId);
+
         // 資産カテゴリのマップを作成
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         Map<Long, String> assetCategoryMap = new HashMap<>();
         for (AssetCategory category : assetCategories) {
             assetCategoryMap.put(category.getId(), category.getCategoryName());
         }
-        
+
         model.addAttribute("rules", rules);
         model.addAttribute("assetCategoryMap", assetCategoryMap);
-        
+
         return "auto-category-rules/index";
     }
-    
+
     /**
      * 新規ルール作成画面
      */
     @GetMapping("/new")
     public String newRule(Authentication authentication, Model model) {
         Long userId = getUserId(authentication);
-        
+
         // 資産カテゴリ一覧を取得
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         model.addAttribute("rule", new AutoCategoryRule());
         model.addAttribute("assetCategories", assetCategories);
         model.addAttribute("transactionTypes", TransactionType.values());
-        
+
         return "auto-category-rules/form";
     }
-    
+
     /**
      * ルール編集画面
      */
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Long id,
-                      Authentication authentication,
-                      Model model,
-                      RedirectAttributes redirectAttributes) {
+            Authentication authentication,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         Long userId = getUserId(authentication);
-        
+
         // ルールを取得
-        AutoCategoryRule rule = autoCategoryRuleRepository.findById(id)
+        AutoCategoryRule rule = autoCategoryRuleService.findById(id, userId)
                 .orElse(null);
-        
-        if (rule == null || !rule.getUserId().equals(userId)) {
+
+        if (rule == null) {
             redirectAttributes.addFlashAttribute("error", "ルールが見つかりません");
             return "redirect:/auto-category-rules";
         }
-        
+
         // 資産カテゴリ一覧を取得
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
-        
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
+
         model.addAttribute("rule", rule);
         model.addAttribute("assetCategories", assetCategories);
         model.addAttribute("transactionTypes", TransactionType.values());
-        
+
         return "auto-category-rules/form";
     }
-    
+
     /**
      * ルール保存
      */
     @PostMapping
     public String save(@RequestParam(required = false) Long id,
-                      @RequestParam Long assetCategoryId,
-                      @RequestParam String descriptionPattern,
-                      @RequestParam TransactionType transactionType,
-                      Authentication authentication,
-                      RedirectAttributes redirectAttributes) {
+            @RequestParam Long assetCategoryId,
+            @RequestParam String descriptionPattern,
+            @RequestParam TransactionType transactionType,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         Long userId = getUserId(authentication);
-        
+
         try {
             AutoCategoryRule rule;
-            
+
             if (id != null) {
                 // 更新
-                rule = autoCategoryRuleRepository.findById(id)
+                rule = autoCategoryRuleService.findById(id, userId)
                         .orElseThrow(() -> new IllegalArgumentException("ルールが見つかりません"));
-                
-                if (!rule.getUserId().equals(userId)) {
-                    throw new IllegalArgumentException("権限がありません");
-                }
+
             } else {
                 // 新規作成
                 rule = new AutoCategoryRule();
                 rule.setUserId(userId);
             }
-            
+
             rule.setAssetCategoryId(assetCategoryId);
             rule.setDescriptionPattern(descriptionPattern);
             rule.setTransactionType(transactionType);
-            
-            autoCategoryRuleRepository.save(rule);
-            
-            redirectAttributes.addFlashAttribute("message", 
+
+            autoCategoryRuleService.save(rule);
+
+            redirectAttributes.addFlashAttribute("message",
                     id != null ? "ルールを更新しました" : "ルールを作成しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
+            redirectAttributes.addFlashAttribute("error",
                     "ルールの保存に失敗しました: " + e.getMessage());
         }
-        
+
         return "redirect:/auto-category-rules";
     }
-    
+
     /**
      * ルール削除
      */
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id,
-                        Authentication authentication,
-                        RedirectAttributes redirectAttributes) {
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         Long userId = getUserId(authentication);
-        
+
         try {
-            AutoCategoryRule rule = autoCategoryRuleRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("ルールが見つかりません"));
-            
-            if (!rule.getUserId().equals(userId)) {
-                throw new IllegalArgumentException("権限がありません");
-            }
-            
-            autoCategoryRuleRepository.deleteById(id);
+            autoCategoryRuleService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "ルールを削除しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
+            redirectAttributes.addFlashAttribute("error",
                     "ルールの削除に失敗しました: " + e.getMessage());
         }
-        
+
         return "redirect:/auto-category-rules";
     }
-    
+
     /**
      * 摘要検索（過去の取引履歴から）
      */
     @GetMapping("/search-descriptions")
     @ResponseBody
     public List<DescriptionSuggestion> searchDescriptions(@RequestParam String query,
-                                                          Authentication authentication) {
+            Authentication authentication) {
         Long userId = getUserId(authentication);
-        
+
         // 銀行取引とカード取引から摘要を取得
         Set<DescriptionSuggestion> suggestions = new LinkedHashSet<>();
-        
+
         // 銀行取引から取得
-        List<String> bankDescriptions = bankTransactionRepository.findDistinctDescriptionsByUserId(userId);
+        List<String> bankDescriptions = transactionService.findBankDistinctDescriptionsByUserId(userId);
         for (String desc : bankDescriptions) {
             if (desc.toLowerCase().contains(query.toLowerCase())) {
                 suggestions.add(new DescriptionSuggestion(desc, "銀行"));
             }
         }
-        
+
         // カード取引から取得
-        List<String> cardDescriptions = cardTransactionRepository.findDistinctDescriptionsByUserId(userId);
+        List<String> cardDescriptions = transactionService.findCardDistinctDescriptionsByUserId(userId);
         for (String desc : cardDescriptions) {
             if (desc.toLowerCase().contains(query.toLowerCase())) {
                 suggestions.add(new DescriptionSuggestion(desc, "カード"));
             }
         }
-        
+
         return suggestions.stream()
                 .limit(20)
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * 摘要候補のDTO
      */
     public static class DescriptionSuggestion {
         private String description;
         private String source;
-        
+
         public DescriptionSuggestion(String description, String source) {
             this.description = description;
             this.source = source;
         }
-        
+
         public String getDescription() {
             return description;
         }
-        
+
         public String getSource() {
             return source;
         }
-        
+
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             DescriptionSuggestion that = (DescriptionSuggestion) o;
             return Objects.equals(description, that.description);
         }
-        
+
         @Override
         public int hashCode() {
             return Objects.hash(description);
         }
     }
-    
+
     /**
      * ユーザーIDを取得
      */
     private Long getUserId(Authentication authentication) {
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
+        return userService.findUserIdByUsername(username);
     }
 }
-
