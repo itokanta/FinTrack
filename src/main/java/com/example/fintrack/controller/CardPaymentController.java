@@ -80,22 +80,6 @@ public class CardPaymentController {
     }
     
     /**
-     * カード差異を解決済みにする
-     */
-    @PostMapping("/discrepancies/{id}/resolve")
-    public String resolveDiscrepancy(@PathVariable Long id,
-                                    RedirectAttributes redirectAttributes) {
-        try {
-            cardPaymentService.markDiscrepancyAsResolved(id);
-            redirectAttributes.addFlashAttribute("message", "差異を解決済みにしました");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "処理に失敗しました: " + e.getMessage());
-        }
-        
-        return "redirect:/card-payments/discrepancies";
-    }
-    
-    /**
      * ユーザーIDを取得
      */
     private Long getUserId(Authentication authentication) {

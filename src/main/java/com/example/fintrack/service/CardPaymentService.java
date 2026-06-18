@@ -52,12 +52,4 @@ public class CardPaymentService {
   public List<CardPaymentDiscrepancy> getAllDiscrepancies(Long userId) {
     return discrepancyRepository.findByUserId(userId);
   }
-
-  /**
-   * カード差異を解決済みにする
-   */
-  @Transactional
-  public void markDiscrepancyAsResolved(Long discrepancyId) {
-    discrepancyRepository.markAsResolved(discrepancyId);
-  }
 }
