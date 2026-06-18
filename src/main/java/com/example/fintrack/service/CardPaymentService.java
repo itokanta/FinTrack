@@ -51,4 +51,8 @@ public class CardPaymentService {
   public List<CardPaymentDiscrepancy> getAllDiscrepancies(Long userId) {
     return discrepancyRepository.findByUserId(userId);
   }
+
+  public CardPaymentDiscrepancy findById(Long id, Long userId) {
+    return discrepancyRepository.findById(id, userId).orElseThrow(() -> new IllegalArgumentException("カード差異が見つかりません。"));
+  }
 }

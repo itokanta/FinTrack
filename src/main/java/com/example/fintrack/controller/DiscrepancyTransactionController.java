@@ -51,10 +51,7 @@ public class DiscrepancyTransactionController {
     Long userId = authenticationUserIdResolver.getUserId(authentication);
 
     // 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = cardPaymentService.getAllDiscrepancies(userId).stream()
-        .filter(d -> d.getId().equals(id))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("差異が見つかりません"));
+    CardPaymentDiscrepancy discrepancy = cardPaymentService.findById(id, userId);
 
     // カテゴリ一覧を取得
     model.addAttribute("discrepancy", discrepancy);
