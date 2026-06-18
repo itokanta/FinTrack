@@ -15,8 +15,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
+import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.CardPaymentService;
 import com.example.fintrack.service.DiscrepancyTransactionService;
 import com.example.fintrack.service.SplitService;
@@ -27,21 +27,18 @@ public class DiscrepancyTransactionController {
 
   private final DiscrepancyTransactionService discrepancyTransactionService;
   private final CardPaymentService cardPaymentService;
-  private final AssetCategoryRepository assetCategoryRepository;
+  private final AssetCategoryService assetCategoryService;
   private final SplitService splitService;
-  private final UserRepository userRepository;
+  private final AuthenticationUserIdResolver authenticationUserIdResolver;
 
-  public DiscrepancyTransactionController(
-      DiscrepancyTransactionService discrepancyTransactionService,
-      CardPaymentService cardPaymentService,
-      AssetCategoryRepository assetCategoryRepository,
-      SplitService splitService,
-      UserRepository userRepository) {
+  public DiscrepancyTransactionController(DiscrepancyTransactionService discrepancyTransactionService,
+      CardPaymentService cardPaymentService, AssetCategoryService assetCategoryService, SplitService splitService,
+      AuthenticationUserIdResolver authenticationUserIdResolver) {
     this.discrepancyTransactionService = discrepancyTransactionService;
     this.cardPaymentService = cardPaymentService;
-    this.assetCategoryRepository = assetCategoryRepository;
+    this.assetCategoryService = assetCategoryService;
     this.splitService = splitService;
-    this.userRepository = userRepository;
+    this.authenticationUserIdResolver = authenticationUserIdResolver;
   }
 
   /**
@@ -51,7 +48,7 @@ public class DiscrepancyTransactionController {
   public String showResolveForm(@PathVariable Long id,
       Authentication authentication,
       Model model) {
-    Long userId = getUserId(authentication);
+    Long userId = authenticationUserIdResolver.getUserId(authentication);
 
     // 差異情報を取得
     CardPaymentDiscrepancy discrepancy = cardPaymentService.getAllDiscrepancies(userId).stream()
@@ -61,7 +58,7 @@ public class DiscrepancyTransactionController {
 
     // カテゴリ一覧を取得
     model.addAttribute("discrepancy", discrepancy);
-    model.addAttribute("assetCategories", assetCategoryRepository.findByUserId(userId));
+    model.addAttribute("assetCategories", assetCategoryService.findByUserId(userId));
     
     // 差異の絶対値を計算（テンプレートで使用）
     model.addAttribute("absoluteDifference", Math.abs(discrepancy.getDifferenceAmount()));
@@ -152,12 +149,5 @@ public class DiscrepancyTransactionController {
     }
 
     return "redirect:/card-payments/discrepancies";
-  }
-
-  private Long getUserId(Authentication authentication) {
-    String username = authentication.getName();
-    return userRepository.findByUsername(username)
-        .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-        .getId();
   }
 }
