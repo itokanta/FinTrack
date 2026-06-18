@@ -66,9 +66,9 @@ public class DiscrepancyTransactionService {
    * @param assetCategoryId 資産カテゴリID
    */
   @Transactional
-  public void resolveDiscrepancySingle(Long discrepancyId, String description, Long assetCategoryId) {
+  public void resolveDiscrepancySingle(Long discrepancyId, String description, Long assetCategoryId, Long userId) {
     // 1. 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
+    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId, userId);
 
     // 2. 差異取引データを作成（split_method = SINGLE: 単一カテゴリ）
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
@@ -97,9 +97,9 @@ public class DiscrepancyTransactionService {
    */
   @Transactional
   public void resolveDiscrepancyManual(Long discrepancyId, String description,
-      Map<Long, Long> categoryAmounts) {
+      Map<Long, Long> categoryAmounts, Long userId) {
     // 1. 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
+    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId, userId);
 
     // 2. 合計金額の検証
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
@@ -154,11 +154,9 @@ public class DiscrepancyTransactionService {
    * @param patternId     分割パターンID
    */
   @Transactional
-  public void resolveDiscrepancyPattern(Long discrepancyId, String description, Long patternId) {
+  public void resolveDiscrepancyPattern(Long discrepancyId, String description, Long patternId, Long userId) {
     // 1. 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
-
-    Long userId = discrepancy.getUserId();
+    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId, userId);
 
     // 2. 分割パターンを取得
     SplitPatternGroup splitPatternGroup = splitPatternGroupRepository.findWithSplitPatternAndAssetCategoryByUserIdAndId(userId, patternId);
@@ -252,8 +250,8 @@ public class DiscrepancyTransactionService {
 
   // ========== プライベートヘルパーメソッド ==========
 
-  private CardPaymentDiscrepancy getAndValidateDiscrepancy(Long discrepancyId) {
-    CardPaymentDiscrepancy discrepancy = cardPaymentDiscrepancyRepository.findById(discrepancyId)
+  private CardPaymentDiscrepancy getAndValidateDiscrepancy(Long discrepancyId, Long userId) {
+    CardPaymentDiscrepancy discrepancy = cardPaymentDiscrepancyRepository.findById(discrepancyId, userId)
         .orElseThrow(() -> new IllegalArgumentException("差異が見つかりません（ID: " + discrepancyId + "）"));
 
     if (Boolean.TRUE.equals(discrepancy.getIsResolved())) {
@@ -341,6 +339,6 @@ public class DiscrepancyTransactionService {
     }
     
     // 差異を解決済みにマーク
-    cardPaymentDiscrepancyRepository.markAsResolved(discrepancy.getId());
+    cardPaymentDiscrepancyRepository.markAsResolved(discrepancy.getId(), userId);
   }
 }

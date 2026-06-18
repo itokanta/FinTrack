@@ -79,9 +79,11 @@ public class DiscrepancyTransactionController {
   public String resolveDiscrepancySingle(@PathVariable Long id,
       @RequestParam String description,
       @RequestParam Long categoryId,
-      RedirectAttributes redirectAttributes) {
+      RedirectAttributes redirectAttributes,
+      Authentication authentication) {
+    Long userId = authenticationUserIdResolver.getUserId(authentication);
     try {
-      discrepancyTransactionService.resolveDiscrepancySingle(id, description, categoryId);
+      discrepancyTransactionService.resolveDiscrepancySingle(id, description, categoryId, userId);
       redirectAttributes.addFlashAttribute("message",
           "差異を解決しました。資産カテゴリに登録し、残高を調整しました。");
     } catch (IllegalStateException | IllegalArgumentException e) {
@@ -101,7 +103,9 @@ public class DiscrepancyTransactionController {
   public String resolveDiscrepancyManual(@PathVariable Long id,
       @RequestParam String description,
       @RequestParam Map<String, String> params,
-      RedirectAttributes redirectAttributes) {
+      RedirectAttributes redirectAttributes,
+      Authentication authentication) {
+    Long userId = authenticationUserIdResolver.getUserId(authentication);
     try {
       // パラメータから category_ で始まるものを抽出
       Map<Long, Long> categoryAmounts = params.entrySet().stream()
@@ -116,7 +120,7 @@ public class DiscrepancyTransactionController {
         return "redirect:/discrepancy-transactions/" + id + "/resolve";
       }
 
-      discrepancyTransactionService.resolveDiscrepancyManual(id, description, categoryAmounts);
+      discrepancyTransactionService.resolveDiscrepancyManual(id, description, categoryAmounts, userId);
       redirectAttributes.addFlashAttribute("message",
           "差異を解決しました。各資産カテゴリに分割登録し、残高を調整しました。");
     } catch (IllegalStateException | IllegalArgumentException e) {
@@ -136,9 +140,11 @@ public class DiscrepancyTransactionController {
   public String resolveDiscrepancyPattern(@PathVariable Long id,
       @RequestParam String description,
       @RequestParam Long patternId,
-      RedirectAttributes redirectAttributes) {
+      RedirectAttributes redirectAttributes,
+      Authentication authentication) {
+    Long userId = authenticationUserIdResolver.getUserId(authentication);
     try {
-      discrepancyTransactionService.resolveDiscrepancyPattern(id, description, patternId);
+      discrepancyTransactionService.resolveDiscrepancyPattern(id, description, patternId, userId);
       redirectAttributes.addFlashAttribute("message",
           "差異を解決しました。分割パターンに従って登録し、残高を調整しました。");
     } catch (IllegalStateException | IllegalArgumentException e) {

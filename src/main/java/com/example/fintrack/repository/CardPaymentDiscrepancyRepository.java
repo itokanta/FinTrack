@@ -39,11 +39,14 @@ public class CardPaymentDiscrepancyRepository {
         this.template = template;
     }
 
-    public Optional<CardPaymentDiscrepancy> findById(Long id) {
+    public Optional<CardPaymentDiscrepancy> findById(Long id, Long userId) {
         String sql = "SELECT id, user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
                      "difference_amount, is_resolved, created_at, resolved_at " +
-                     "FROM card_payment_discrepancies WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+                     "FROM card_payment_discrepancies " +
+                     "WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         List<CardPaymentDiscrepancy> discrepancies = template.query(sql, params, ROW_MAPPER);
         if (discrepancies.isEmpty()) {
             return Optional.empty();
@@ -92,7 +95,7 @@ public class CardPaymentDiscrepancyRepository {
                          "user_id = :userId, payment_month = :paymentMonth, bank_transaction_id = :bankTransactionId, " +
                          "expected_amount = :expectedAmount, actual_amount = :actualAmount, " +
                          "difference_amount = :differenceAmount, is_resolved = :isResolved, resolved_at = :resolvedAt " +
-                         "WHERE id = :id";
+                         "WHERE id = :id AND user_id = :userId";
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue("userId", discrepancy.getUserId())
                     .addValue("paymentMonth", discrepancy.getPaymentMonth())
@@ -108,13 +111,14 @@ public class CardPaymentDiscrepancyRepository {
         return discrepancy;
     }
 
-    public void markAsResolved(Long id) {
+    public void markAsResolved(Long id, Long userId) {
         String sql = "UPDATE card_payment_discrepancies SET " +
                      "is_resolved = TRUE, resolved_at = :resolvedAt " +
-                     "WHERE id = :id";
+                     "WHERE id = :id AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("resolvedAt", LocalDateTime.now())
-                .addValue("id", id);
+                .addValue("id", id)
+                .addValue("userId", userId);
         template.update(sql, params);
     }
 }
