@@ -2,8 +2,9 @@ package com.example.fintrack.controller;
 
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
 import com.example.fintrack.domain.CardTransaction;
-import com.example.fintrack.repository.UserRepository;
 import com.example.fintrack.service.CardPaymentService;
+import com.example.fintrack.service.UserService;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,14 +23,13 @@ import java.util.List;
 public class CardPaymentController {
     
     private final CardPaymentService cardPaymentService;
-    private final UserRepository userRepository;
+    private final UserService userService;
     
-    public CardPaymentController(CardPaymentService cardPaymentService,
-                                UserRepository userRepository) {
-        this.cardPaymentService = cardPaymentService;
-        this.userRepository = userRepository;
+    public CardPaymentController(CardPaymentService cardPaymentService, UserService userService) {
+      this.cardPaymentService = cardPaymentService;
+      this.userService = userService;
     }
-    
+
     /**
      * 支払い月別カード明細
      */
@@ -100,8 +100,6 @@ public class CardPaymentController {
      */
     private Long getUserId(Authentication authentication) {
         String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
+        return userService.findUserIdByUsername(username);
     }
 }
