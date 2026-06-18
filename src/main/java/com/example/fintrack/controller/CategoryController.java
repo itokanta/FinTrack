@@ -14,9 +14,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.ExpenseCategory;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.ExpenseCategoryService;
-import com.example.fintrack.service.UserService;
 
 /**
  * カテゴリ管理コントローラー
@@ -27,13 +27,13 @@ public class CategoryController {
     
     private final AssetCategoryService assetCategoryService;
     private final ExpenseCategoryService expenseCategoryService;
-    private final UserService userService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
  
     public CategoryController(AssetCategoryService assetCategoryService, ExpenseCategoryService expenseCategoryService,
-            UserService userService) {
-        this.assetCategoryService = assetCategoryService;
-        this.expenseCategoryService = expenseCategoryService;
-        this.userService = userService;
+        AuthenticationUserIdResolver authenticationUserIdResolver) {
+      this.assetCategoryService = assetCategoryService;
+      this.expenseCategoryService = expenseCategoryService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
     }
 
     /**
@@ -41,7 +41,7 @@ public class CategoryController {
      */
     @GetMapping
     public String categories(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         List<ExpenseCategory> expenseCategories = expenseCategoryService.findByUserId(userId);
@@ -60,7 +60,7 @@ public class CategoryController {
                                    Authentication authentication,
                                    RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             
             AssetCategory category = new AssetCategory();
             category.setUserId(userId);
@@ -84,7 +84,7 @@ public class CategoryController {
                                     Authentication authentication,
                                     RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             ExpenseCategory category = new ExpenseCategory();
             category.setUserId(userId);
             category.setCategoryName(categoryName.trim());
@@ -105,7 +105,7 @@ public class CategoryController {
     @PostMapping("/asset/{id}/delete")
     public String deleteAssetCategory(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             assetCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
         } catch (Exception e) {
@@ -123,7 +123,7 @@ public class CategoryController {
                                        RedirectAttributes redirectAttributes,
                                        Authentication authentication) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             expenseCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを削除しました");
         } catch (Exception e) {
@@ -131,14 +131,6 @@ public class CategoryController {
         }
         
         return "redirect:/categories";
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userService.findUserIdByUsername(username);
     }
 }
 

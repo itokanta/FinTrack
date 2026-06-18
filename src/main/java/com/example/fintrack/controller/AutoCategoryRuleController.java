@@ -1,21 +1,31 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.AssetCategory;
-import com.example.fintrack.domain.AutoCategoryRule;
-import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.service.AssetCategoryService;
-import com.example.fintrack.service.AutoCategoryRuleService;
-import com.example.fintrack.service.TransactionService;
-import com.example.fintrack.service.UserService;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.example.fintrack.domain.AssetCategory;
+import com.example.fintrack.domain.AutoCategoryRule;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
+import com.example.fintrack.service.AssetCategoryService;
+import com.example.fintrack.service.AutoCategoryRuleService;
+import com.example.fintrack.service.TransactionService;
 
 /**
  * 自動カテゴリルール管理コントローラー
@@ -26,15 +36,16 @@ public class AutoCategoryRuleController {
 
     private final AutoCategoryRuleService autoCategoryRuleService;
     private final AssetCategoryService assetCategoryService;
-    private final UserService userService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
     private final TransactionService transactionService;
 
     public AutoCategoryRuleController(AutoCategoryRuleService autoCategoryRuleService,
-            AssetCategoryService assetCategoryService, UserService userService, TransactionService transactionService) {
-        this.autoCategoryRuleService = autoCategoryRuleService;
-        this.assetCategoryService = assetCategoryService;
-        this.userService = userService;
-        this.transactionService = transactionService;
+        AssetCategoryService assetCategoryService, AuthenticationUserIdResolver authenticationUserIdResolver,
+        TransactionService transactionService) {
+      this.autoCategoryRuleService = autoCategoryRuleService;
+      this.assetCategoryService = assetCategoryService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
+      this.transactionService = transactionService;
     }
 
     /**
@@ -42,7 +53,7 @@ public class AutoCategoryRuleController {
      */
     @GetMapping
     public String index(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
 
         // ルール一覧を取得
         List<AutoCategoryRule> rules = autoCategoryRuleService.findByUserId(userId);
@@ -65,7 +76,7 @@ public class AutoCategoryRuleController {
      */
     @GetMapping("/new")
     public String newRule(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
 
         // 資産カテゴリ一覧を取得
         List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
@@ -84,7 +95,7 @@ public class AutoCategoryRuleController {
             Authentication authentication,
             Model model,
             RedirectAttributes redirectAttributes) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
 
         // ルールを取得
         AutoCategoryRule rule = autoCategoryRuleService.findById(id, userId)
@@ -115,7 +126,7 @@ public class AutoCategoryRuleController {
             @RequestParam TransactionType transactionType,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
 
         try {
             AutoCategoryRule rule;
@@ -154,7 +165,7 @@ public class AutoCategoryRuleController {
     public String delete(@PathVariable Long id,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
 
         try {
             autoCategoryRuleService.deleteById(id, userId);
@@ -174,7 +185,7 @@ public class AutoCategoryRuleController {
     @ResponseBody
     public List<DescriptionSuggestion> searchDescriptions(@RequestParam String query,
             Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
 
         // 銀行取引とカード取引から摘要を取得
         Set<DescriptionSuggestion> suggestions = new LinkedHashSet<>();
@@ -234,13 +245,5 @@ public class AutoCategoryRuleController {
         public int hashCode() {
             return Objects.hash(description);
         }
-    }
-
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userService.findUserIdByUsername(username);
     }
 }

@@ -13,8 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.csv.BankType;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.CsvImportService;
-import com.example.fintrack.service.UserService;
 
 
 /**
@@ -25,11 +25,12 @@ import com.example.fintrack.service.UserService;
 public class CsvImportController {
     
     private final CsvImportService csvImportService;
-    private final UserService userService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
 
-    public CsvImportController(CsvImportService csvImportService, UserService userService) {
+    public CsvImportController(CsvImportService csvImportService,
+        AuthenticationUserIdResolver authenticationUserIdResolver) {
       this.csvImportService = csvImportService;
-      this.userService = userService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
     }
 
     /**
@@ -51,7 +52,7 @@ public class CsvImportController {
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             int count = csvImportService.importBankTransactions(file, bankType, userId, hasHeader);
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の銀行取引をインポートしました");
@@ -76,7 +77,7 @@ public class CsvImportController {
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             int count = csvImportService.importCardTransactions(file, bankType, userId, hasHeader);
             redirectAttributes.addFlashAttribute("message", 
                     count + "件のカード取引をインポートしました");
@@ -89,14 +90,6 @@ public class CsvImportController {
         }
         
         return "redirect:/csv/import";
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userService.findUserIdByUsername(username);
     }
 }
 

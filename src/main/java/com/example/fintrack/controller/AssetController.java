@@ -15,11 +15,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.AssetService;
 import com.example.fintrack.service.SplitService;
 import com.example.fintrack.service.TransactionService;
-import com.example.fintrack.service.UserService;
 
 /**
  * 資産管理コントローラー
@@ -29,15 +29,15 @@ import com.example.fintrack.service.UserService;
 public class AssetController {
     
     private final AssetService assetService;
-    private final UserService userService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
     private final TransactionService transactionService;
     private final AssetCategoryService assetCategoryService;
     private final SplitService splitService;
 
-    public AssetController(AssetService assetService, UserService userService, TransactionService transactionService,
-        AssetCategoryService assetCategoryService, SplitService splitService) {
+    public AssetController(AssetService assetService, AuthenticationUserIdResolver authenticationUserIdResolver,
+        TransactionService transactionService, AssetCategoryService assetCategoryService, SplitService splitService) {
       this.assetService = assetService;
-      this.userService = userService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
       this.transactionService = transactionService;
       this.assetCategoryService = assetCategoryService;
       this.splitService = splitService;
@@ -48,7 +48,7 @@ public class AssetController {
      */
     @GetMapping
     public String assets(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // カテゴリ別残高を取得
         Map<AssetCategory, Long> balances = assetService.getBalanceByCategory(userId);
@@ -71,7 +71,7 @@ public class AssetController {
      */
     @GetMapping("/confirmed")
     public String confirmed(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 通常の残高を取得
         Map<AssetCategory, Long> balances = assetService.getBalanceByCategory(userId);
@@ -105,7 +105,7 @@ public class AssetController {
             @RequestParam(value = "type", defaultValue = "EXPENSE") TransactionType transactionType,
             Authentication authentication,
             Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         List<TransactionService.TransactionWithAsset> transactions;
         
@@ -149,7 +149,7 @@ public class AssetController {
                                   @RequestParam(required = false) List<String> transactionIds,
                                   RedirectAttributes redirectAttributes,
                                   Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
@@ -187,7 +187,7 @@ public class AssetController {
                                   @RequestParam(required = false) List<String> transactionIds,
                                   RedirectAttributes redirectAttributes,
                                   Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
@@ -225,7 +225,7 @@ public class AssetController {
                                          @RequestParam(required = false) List<String> transactionIds,
                                          RedirectAttributes redirectAttributes,
                                          Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.EXPENSE);
@@ -263,7 +263,7 @@ public class AssetController {
                                    @RequestParam(required = false) List<String> transactionIds,
                                    RedirectAttributes redirectAttributes,
                                    Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.EXPENSE);
@@ -295,13 +295,5 @@ public class AssetController {
     
     private static String redirectUncategorized(TransactionType transactionType) {
         return "redirect:/assets/uncategorized?type=" + transactionType.name();
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userService.findUserIdByUsername(username);
     }
 }
