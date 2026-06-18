@@ -73,41 +73,22 @@ public class CardPaymentDiscrepancyRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
-    public CardPaymentDiscrepancy save(CardPaymentDiscrepancy discrepancy) {
-        if (discrepancy.getId() == null) {
-            String sql = "INSERT INTO card_payment_discrepancies " +
-                         "(user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
-                         "difference_amount, is_resolved) " +
-                         "VALUES (:userId, :paymentMonth, :bankTransactionId, :expectedAmount, :actualAmount, " +
-                         ":differenceAmount, false) RETURNING id, created_at";
-            MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue("userId", discrepancy.getUserId())
-                    .addValue("paymentMonth", discrepancy.getPaymentMonth())
-                    .addValue("bankTransactionId", discrepancy.getBankTransactionId())
-                    .addValue("expectedAmount", discrepancy.getExpectedAmount())
-                    .addValue("actualAmount", discrepancy.getActualAmount())
-                    .addValue("differenceAmount", discrepancy.getDifferenceAmount());
-            Map<String, Object> result = template.queryForMap(sql, params);
-            discrepancy.setId(((Number) result.get("id")).longValue());
-            discrepancy.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
-        } else {
-            String sql = "UPDATE card_payment_discrepancies SET " +
-                         "user_id = :userId, payment_month = :paymentMonth, bank_transaction_id = :bankTransactionId, " +
-                         "expected_amount = :expectedAmount, actual_amount = :actualAmount, " +
-                         "difference_amount = :differenceAmount, is_resolved = :isResolved, resolved_at = :resolvedAt " +
-                         "WHERE id = :id AND user_id = :userId";
-            MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue("userId", discrepancy.getUserId())
-                    .addValue("paymentMonth", discrepancy.getPaymentMonth())
-                    .addValue("bankTransactionId", discrepancy.getBankTransactionId())
-                    .addValue("expectedAmount", discrepancy.getExpectedAmount())
-                    .addValue("actualAmount", discrepancy.getActualAmount())
-                    .addValue("differenceAmount", discrepancy.getDifferenceAmount())
-                    .addValue("isResolved", discrepancy.getIsResolved())
-                    .addValue("resolvedAt", discrepancy.getResolvedAt())
-                    .addValue("id", discrepancy.getId());
-            template.update(sql, params);
-        }
+    public CardPaymentDiscrepancy insert(CardPaymentDiscrepancy discrepancy) {
+        String sql = "INSERT INTO card_payment_discrepancies " +
+                        "(user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
+                        "difference_amount, is_resolved) " +
+                        "VALUES (:userId, :paymentMonth, :bankTransactionId, :expectedAmount, :actualAmount, " +
+                        ":differenceAmount, false) RETURNING id, created_at";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userId", discrepancy.getUserId())
+                .addValue("paymentMonth", discrepancy.getPaymentMonth())
+                .addValue("bankTransactionId", discrepancy.getBankTransactionId())
+                .addValue("expectedAmount", discrepancy.getExpectedAmount())
+                .addValue("actualAmount", discrepancy.getActualAmount())
+                .addValue("differenceAmount", discrepancy.getDifferenceAmount());
+        Map<String, Object> result = template.queryForMap(sql, params);
+        discrepancy.setId(((Number) result.get("id")).longValue());
+        discrepancy.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
         return discrepancy;
     }
 
