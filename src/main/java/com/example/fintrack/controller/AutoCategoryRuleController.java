@@ -8,6 +8,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,6 +35,8 @@ import com.example.fintrack.service.TransactionService;
 @Controller
 @RequestMapping("/auto-category-rules")
 public class AutoCategoryRuleController {
+
+    private static final Logger log = LoggerFactory.getLogger(AutoCategoryRuleController.class);
 
     private final AutoCategoryRuleService autoCategoryRuleService;
     private final AssetCategoryService assetCategoryService;
@@ -151,8 +155,8 @@ public class AutoCategoryRuleController {
             redirectAttributes.addFlashAttribute("message",
                     id != null ? "ルールを更新しました" : "ルールを作成しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "ルールの保存に失敗しました: " + e.getMessage());
+            log.error("自動カテゴリルールの保存に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "ルールの保存に失敗しました");
         }
 
         return "redirect:/auto-category-rules";
@@ -171,8 +175,8 @@ public class AutoCategoryRuleController {
             autoCategoryRuleService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "ルールを削除しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "ルールの削除に失敗しました: " + e.getMessage());
+            log.error("自動カテゴリルールの削除に失敗しました: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "ルールの削除に失敗しました");
         }
 
         return "redirect:/auto-category-rules";

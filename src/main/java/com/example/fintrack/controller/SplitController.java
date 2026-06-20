@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,6 +30,8 @@ import com.example.fintrack.service.SplitService;
 @Controller
 @RequestMapping("/split")
 public class SplitController {
+
+    private static final Logger log = LoggerFactory.getLogger(SplitController.class);
 
     private final SplitService splitService;
     private final AssetCategoryService assetCategoryService;
@@ -133,8 +137,8 @@ public class SplitController {
             redirectAttributes.addFlashAttribute("message",
                     "分割パターンを登録しました (ID: " + patternId + ")");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "分割パターンの登録に失敗しました: " + e.getMessage());
+            log.error("分割パターン（割合指定）の登録に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "分割パターンの登録に失敗しました");
         }
 
         return transactionType == TransactionType.INCOME
@@ -177,8 +181,8 @@ public class SplitController {
             redirectAttributes.addFlashAttribute("message",
                     "分割パターンを登録しました (ID: " + patternId + ")");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "分割パターンの登録に失敗しました: " + e.getMessage());
+            log.error("分割パターン（金額指定）の登録に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "分割パターンの登録に失敗しました");
         }
 
         return transactionType == TransactionType.INCOME
@@ -198,8 +202,8 @@ public class SplitController {
             splitService.deletePattern(id, userId);
             redirectAttributes.addFlashAttribute("message", "分割パターンを削除しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "分割パターンの削除に失敗しました: " + e.getMessage());
+            log.error("分割パターンの削除に失敗しました: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "分割パターンの削除に失敗しました");
         }
 
         return transactionType == TransactionType.INCOME
@@ -221,8 +225,8 @@ public class SplitController {
             splitService.splitIncome(bankTransactionId, cardTransactionId, patternId, userId);
             redirectAttributes.addFlashAttribute("message", "収入を分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "収入の分配に失敗しました: " + e.getMessage());
+            log.error("収入の分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の分配に失敗しました");
         }
 
         String type = bankTransactionId != null ? "bank" : "card";
@@ -244,8 +248,8 @@ public class SplitController {
             splitService.splitExpense(bankTransactionId, cardTransactionId, patternId, userId);
             redirectAttributes.addFlashAttribute("message", "支出を分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "支出の分配に失敗しました: " + e.getMessage());
+            log.error("支出の分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の分配に失敗しました");
         }
 
         String type = bankTransactionId != null ? "bank" : "card";
@@ -267,8 +271,8 @@ public class SplitController {
             splitService.splitIncomeSingle(bankTransactionId, cardTransactionId, categoryId, userId);
             redirectAttributes.addFlashAttribute("message", "収入を分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "収入の分配に失敗しました: " + e.getMessage());
+            log.error("収入の分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の分配に失敗しました");
         }
 
         String type = bankTransactionId != null ? "bank" : "card";
@@ -290,8 +294,8 @@ public class SplitController {
             splitService.splitExpenseSingle(bankTransactionId, cardTransactionId, categoryId, userId);
             redirectAttributes.addFlashAttribute("message", "支出を分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "支出の分配に失敗しました: " + e.getMessage());
+            log.error("支出の分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の分配に失敗しました");
         }
 
         String type = bankTransactionId != null ? "bank" : "card";
@@ -332,8 +336,8 @@ public class SplitController {
             splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts, userId);
             redirectAttributes.addFlashAttribute("message", "収入を手動分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "収入の手動分配に失敗しました: " + e.getMessage());
+            log.error("収入の手動分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の手動分配に失敗しました");
         }
 
         String type = bankTransactionId != null ? "bank" : "card";
@@ -374,8 +378,8 @@ public class SplitController {
             splitService.splitExpenseManual(bankTransactionId, cardTransactionId, categoryAmounts, userId);
             redirectAttributes.addFlashAttribute("message", "支出を手動分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error",
-                    "支出の手動分配に失敗しました: " + e.getMessage());
+            log.error("支出の手動分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の手動分配に失敗しました");
         }
 
         String type = bankTransactionId != null ? "bank" : "card";

@@ -2,6 +2,8 @@ package com.example.fintrack.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +26,9 @@ import com.example.fintrack.service.ExpenseCategoryService;
 @Controller
 @RequestMapping("/categories")
 public class CategoryController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(CategoryController.class);
+
     private final AssetCategoryService assetCategoryService;
     private final ExpenseCategoryService expenseCategoryService;
     private final AuthenticationUserIdResolver authenticationUserIdResolver;
@@ -70,7 +74,8 @@ public class CategoryController {
             
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを追加しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "資産カテゴリの追加に失敗しました: " + e.getMessage());
+            log.error("資産カテゴリの追加に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "資産カテゴリの追加に失敗しました");
         }
         
         return "redirect:/categories";
@@ -93,7 +98,8 @@ public class CategoryController {
             
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを追加しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "支出カテゴリの追加に失敗しました: " + e.getMessage());
+            log.error("支出カテゴリの追加に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出カテゴリの追加に失敗しました");
         }
         
         return "redirect:/categories";
@@ -109,7 +115,8 @@ public class CategoryController {
             assetCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました: " + e.getMessage());
+            log.error("資産カテゴリの削除に失敗しました: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました");
         }
         
         return "redirect:/categories";
@@ -127,7 +134,8 @@ public class CategoryController {
             expenseCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを削除しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "支出カテゴリの削除に失敗しました: " + e.getMessage());
+            log.error("支出カテゴリの削除に失敗しました: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "支出カテゴリの削除に失敗しました");
         }
         
         return "redirect:/categories";

@@ -2,6 +2,8 @@ package com.example.fintrack.controller;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,7 +25,9 @@ import com.example.fintrack.service.CsvImportService;
 @Controller
 @RequestMapping("/csv")
 public class CsvImportController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(CsvImportController.class);
+
     private final CsvImportService csvImportService;
     private final AuthenticationUserIdResolver authenticationUserIdResolver;
 
@@ -57,11 +61,11 @@ public class CsvImportController {
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の銀行取引をインポートしました");
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "CSVファイルの読み込みに失敗しました: " + e.getMessage());
+            log.error("銀行取引CSVの読み込みに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "CSVファイルの読み込みに失敗しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "インポート中にエラーが発生しました: " + e.getMessage());
+            log.error("銀行取引CSVのインポートに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "インポート中にエラーが発生しました");
         }
         
         return "redirect:/csv/import";
@@ -82,11 +86,11 @@ public class CsvImportController {
             redirectAttributes.addFlashAttribute("message", 
                     count + "件のカード取引をインポートしました");
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "CSVファイルの読み込みに失敗しました: " + e.getMessage());
+            log.error("カード取引CSVの読み込みに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "CSVファイルの読み込みに失敗しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "インポート中にエラーが発生しました: " + e.getMessage());
+            log.error("カード取引CSVのインポートに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "インポート中にエラーが発生しました");
         }
         
         return "redirect:/csv/import";

@@ -2,6 +2,8 @@ package com.example.fintrack.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +24,8 @@ import com.example.fintrack.service.CsvImportHistoryService;
 @Controller
 @RequestMapping("/csv")
 public class CsvImportHistoryController {
+
+  private static final Logger log = LoggerFactory.getLogger(CsvImportHistoryController.class);
 
   private final AuthenticationUserIdResolver authenticationUserIdResolver;
   private final CsvImportHistoryService csvImportHistoryService;
@@ -70,7 +74,8 @@ public class CsvImportHistoryController {
         csvImportHistoryService.deleteCsvImport(userId, id);
         redirectAttributes.addFlashAttribute("message", "CSV登録履歴を削除しました");
       } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("error", "削除に失敗しました：" + e.getMessage());
+        log.error("CSV登録履歴の削除に失敗しました: id={}", id, e);
+        redirectAttributes.addFlashAttribute("error", "削除に失敗しました");
       }
       
       return "redirect:/csv/import/history";

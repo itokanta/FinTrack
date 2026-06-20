@@ -3,6 +3,8 @@ package com.example.fintrack.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,7 +29,9 @@ import com.example.fintrack.service.TransactionService;
 @Controller
 @RequestMapping("/assets")
 public class AssetController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(AssetController.class);
+
     private final AssetService assetService;
     private final AuthenticationUserIdResolver authenticationUserIdResolver;
     private final TransactionService transactionService;
@@ -172,8 +176,8 @@ public class AssetController {
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の収入を1つのカテゴリに分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "収入の分配に失敗しました: " + e.getMessage());
+            log.error("未分類収入の単一カテゴリ一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.INCOME);
@@ -210,8 +214,8 @@ public class AssetController {
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の収入を分割パターンで分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "収入の分配に失敗しました: " + e.getMessage());
+            log.error("未分類収入の分割パターン一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.INCOME);
@@ -248,8 +252,8 @@ public class AssetController {
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の支出を1つのカテゴリに分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "支出の分配に失敗しました: " + e.getMessage());
+            log.error("未分類支出の単一カテゴリ一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.EXPENSE);
@@ -286,8 +290,8 @@ public class AssetController {
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の支出を分割パターンで分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "支出の分配に失敗しました: " + e.getMessage());
+            log.error("未分類支出の分割パターン一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.EXPENSE);

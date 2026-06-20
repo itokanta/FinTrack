@@ -3,6 +3,8 @@ package com.example.fintrack.controller;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +26,8 @@ import com.example.fintrack.service.SplitService;
 @Controller
 @RequestMapping("/discrepancy-transactions")
 public class DiscrepancyTransactionController {
+
+  private static final Logger log = LoggerFactory.getLogger(DiscrepancyTransactionController.class);
 
   private final DiscrepancyTransactionService discrepancyTransactionService;
   private final CardPaymentService cardPaymentService;
@@ -83,11 +87,9 @@ public class DiscrepancyTransactionController {
       discrepancyTransactionService.resolveDiscrepancySingle(id, description, categoryId, userId);
       redirectAttributes.addFlashAttribute("message",
           "差異を解決しました。資産カテゴリに登録し、残高を調整しました。");
-    } catch (IllegalStateException | IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute("error", e.getMessage());
     } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error",
-          "差異解決に失敗しました: " + e.getMessage());
+      log.error("差異の単一カテゴリ解決に失敗しました: id={}", id, e);
+      redirectAttributes.addFlashAttribute("error", "差異解決に失敗しました");
     }
 
     return "redirect:/card-payments/discrepancies";
@@ -120,11 +122,9 @@ public class DiscrepancyTransactionController {
       discrepancyTransactionService.resolveDiscrepancyManual(id, description, categoryAmounts, userId);
       redirectAttributes.addFlashAttribute("message",
           "差異を解決しました。各資産カテゴリに分割登録し、残高を調整しました。");
-    } catch (IllegalStateException | IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute("error", e.getMessage());
     } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error",
-          "差異解決に失敗しました: " + e.getMessage());
+      log.error("差異の手動分割解決に失敗しました: id={}", id, e);
+      redirectAttributes.addFlashAttribute("error", "差異解決に失敗しました");
     }
 
     return "redirect:/card-payments/discrepancies";
@@ -144,11 +144,9 @@ public class DiscrepancyTransactionController {
       discrepancyTransactionService.resolveDiscrepancyPattern(id, description, patternId, userId);
       redirectAttributes.addFlashAttribute("message",
           "差異を解決しました。分割パターンに従って登録し、残高を調整しました。");
-    } catch (IllegalStateException | IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute("error", e.getMessage());
     } catch (Exception e) {
-      redirectAttributes.addFlashAttribute("error",
-          "差異解決に失敗しました: " + e.getMessage());
+      log.error("差異の分割パターン解決に失敗しました: id={}", id, e);
+      redirectAttributes.addFlashAttribute("error", "差異解決に失敗しました");
     }
 
     return "redirect:/card-payments/discrepancies";
