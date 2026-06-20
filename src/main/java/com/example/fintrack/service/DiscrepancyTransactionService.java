@@ -135,7 +135,7 @@ public class DiscrepancyTransactionService {
       splitTransaction.setCardTransactionId(null);
       splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
       
-      splitTransactionRepository.save(splitTransaction);
+      splitTransactionRepository.insert(splitTransaction);
 
       // 資産残高を調整
       Long amountDelta = calculateAmountDelta(transactionType, amount);
@@ -202,7 +202,7 @@ public class DiscrepancyTransactionService {
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
         
-        splitTransactionRepository.save(splitTransaction);
+        splitTransactionRepository.insert(splitTransaction);
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
@@ -233,7 +233,7 @@ public class DiscrepancyTransactionService {
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
         
-        splitTransactionRepository.save(splitTransaction);
+        splitTransactionRepository.insert(splitTransaction);
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
