@@ -1,15 +1,19 @@
 package com.example.fintrack.service;
 
-import com.example.fintrack.domain.*;
-import com.example.fintrack.repository.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.example.fintrack.domain.BankTransaction;
+import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.domain.SplitMethod;
+import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.repository.BankTransactionRepository;
+import com.example.fintrack.repository.CardTransactionRepository;
 
 /**
  * 取引管理サービス
@@ -19,14 +23,11 @@ public class TransactionService {
 
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
-    private final AssetRepository assetRepository;
 
     public TransactionService(BankTransactionRepository bankTransactionRepository,
-            CardTransactionRepository cardTransactionRepository,
-            AssetRepository assetRepository) {
+            CardTransactionRepository cardTransactionRepository) {
         this.bankTransactionRepository = bankTransactionRepository;
         this.cardTransactionRepository = cardTransactionRepository;
-        this.assetRepository = assetRepository;
     }
 
     public List<String> findBankDistinctDescriptionsByUserId(Long userId) {
@@ -194,73 +195,6 @@ public class TransactionService {
      */
     public Optional<CardTransaction> getCardTransaction(Long id, Long userId) {
         return cardTransactionRepository.findById(id, userId);
-    }
-
-    /**
-     * 支出の資産カテゴリを更新
-     * 残高も適切に移動する
-     */
-    @Transactional
-    public void updateExpenseAssetCategory(Long bankTransactionId, Long cardTransactionId, Long newAssetCategoryId,
-            Long userId) {
-        if (bankTransactionId != null) {
-            BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId, userId)
-                    .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
-
-            Long oldAssetCategoryId = transaction.getAssetCategoryId();
-            Long amount = transaction.getAmount();
-
-            // 旧カテゴリに戻す（マイナスを取り消す）
-            if (oldAssetCategoryId != null || newAssetCategoryId != null) {
-                assetRepository.updateAmountByCategoryId(userId, oldAssetCategoryId, amount);
-
-                // 新カテゴリから引く
-                assetRepository.updateAmountByCategoryId(userId, newAssetCategoryId, -amount);
-            }
-
-            // 取引のカテゴリを更新
-            transaction.setAssetCategoryId(newAssetCategoryId);
-            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
-
-        } else if (cardTransactionId != null) {
-            CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId, userId)
-                    .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
-
-            Long oldAssetCategoryId = transaction.getAssetCategoryId();
-            Long amount = transaction.getAmount();
-
-            // 旧カテゴリに戻す（マイナスを取り消す）
-            if (oldAssetCategoryId != null || newAssetCategoryId != null) {
-                assetRepository.updateAmountByCategoryId(userId, oldAssetCategoryId, amount);
-
-                // 新カテゴリから引く
-                assetRepository.updateAmountByCategoryId(userId, newAssetCategoryId, -amount);
-            }
-
-            // 取引のカテゴリを更新
-            transaction.setAssetCategoryId(newAssetCategoryId);
-            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
-        }
-    }
-
-    /**
-     * 支出カテゴリを更新
-     */
-    @Transactional
-    public void updateExpenseCategory(Long bankTransactionId, Long cardTransactionId, Long expenseCategoryId,
-            Long userId) {
-        if (bankTransactionId != null) {
-            BankTransaction transaction = bankTransactionRepository.findById(bankTransactionId, userId)
-                    .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
-            transaction.setExpenseCategoryId(expenseCategoryId);
-            bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
-
-        } else if (cardTransactionId != null) {
-            CardTransaction transaction = cardTransactionRepository.findById(cardTransactionId, userId)
-                    .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
-            transaction.setExpenseCategoryId(expenseCategoryId);
-            cardTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(transaction);
-        }
     }
 
     /**

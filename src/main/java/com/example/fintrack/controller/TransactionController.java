@@ -10,10 +10,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.BankTransaction;
@@ -219,39 +217,6 @@ public class TransactionController {
         model.addAttribute("splitTransactions", splitIncomes);
         
         return "transactions/income-detail";
-    }
-    
-    /**
-     * 支出カテゴリを更新
-     */
-    @PostMapping("/expenses/{id}/update-category")
-    public String updateExpenseCategory(@PathVariable Long id,
-                                       @RequestParam String type,
-                                       @RequestParam(required = false) Long assetCategoryId,
-                                       @RequestParam(required = false) Long expenseCategoryId,
-                                       RedirectAttributes redirectAttributes,
-                                       Authentication authentication) {
-        Long userId = authenticationUserIdResolver.getUserId(authentication);
-        try {
-            Long bankTransactionId = "bank".equals(type) ? id : null;
-            Long cardTransactionId = "card".equals(type) ? id : null;
-            
-            // 資産カテゴリを更新（残高も移動）
-            if (assetCategoryId != null) {
-                transactionService.updateExpenseAssetCategory(bankTransactionId, cardTransactionId, assetCategoryId, userId);
-            }
-            
-            // 支出カテゴリを更新
-            if (expenseCategoryId != null) {
-                transactionService.updateExpenseCategory(bankTransactionId, cardTransactionId, expenseCategoryId, userId);
-            }
-            
-            redirectAttributes.addFlashAttribute("message", "カテゴリを更新しました");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "カテゴリの更新に失敗しました: " + e.getMessage());
-        }
-        
-        return "redirect:/transactions/expenses/" + id + "?type=" + type;
     }
 }
 
