@@ -160,9 +160,10 @@
                     <h5 class="mb-0">金額を指定して分割</h5>
                 </div>
                 <div class="card-body">
-                    <form th:action="@{/transactions/incomes/{id}/split-manual(id=${transaction.id})}" method="post" id="manualSplitForm">
-                        <input type="hidden" name="type" th:value="${type}">
-                        
+                    <form th:action="@{/split/income/split-manual}" method="post" id="manualSplitForm">
+                        <input type="hidden" name="bankTransactionId" th:value="${type == 'bank' ? transaction.id : null}">
+                        <input type="hidden" name="cardTransactionId" th:value="${type == 'card' ? transaction.id : null}">
+
                         <div class="mb-3">
                             <div class="alert alert-info">
                                 <strong>収入金額: <span th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')}">0</span>円</strong><br>
@@ -177,7 +178,7 @@
                                     <div class="input-group">
                                         <input type="number" 
                                                class="form-control category-amount" 
-                                               th:name="'categoryAmount_' + ${category.id}" 
+                                               th:name="'category_' + ${category.id}" 
                                                th:id="'amount_' + ${category.id}"
                                                min="0" 
                                                step="1"

@@ -253,42 +253,5 @@ public class TransactionController {
         
         return "redirect:/transactions/expenses/" + id + "?type=" + type;
     }
-    
-    /**
-     * 収入を手動分割する
-     */
-    @PostMapping("/incomes/{id}/split-manual")
-    public String splitIncomeManual(@PathVariable Long id,
-                                   @RequestParam String type,
-                                   @RequestParam Map<String, String> params,
-                                   RedirectAttributes redirectAttributes,
-                                   Authentication authentication) {
-        Long userId = authenticationUserIdResolver.getUserId(authentication);
-        try {
-            Long bankTransactionId = "bank".equals(type) ? id : null;
-            Long cardTransactionId = "card".equals(type) ? id : null;
-            
-            // パラメータから categoryAmount_ で始まるものを抽出
-            Map<Long, Long> categoryAmounts = params.entrySet().stream()
-                    .filter(e -> e.getKey().startsWith("categoryAmount_"))
-                    .filter(e -> e.getValue() != null && !e.getValue().trim().isEmpty())
-                    .collect(Collectors.toMap(
-                        e -> Long.parseLong(e.getKey().substring("categoryAmount_".length())),
-                        e -> Long.parseLong(e.getValue())
-                    ));
-            
-            if (categoryAmounts.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "分割金額を入力してください");
-                return "redirect:/transactions/incomes/" + id + "?type=" + type;
-            }
-            
-            splitService.splitIncomeManual(bankTransactionId, cardTransactionId, categoryAmounts, userId);
-            redirectAttributes.addFlashAttribute("message", "収入を手動分割しました");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "分割に失敗しました: " + e.getMessage());
-        }
-        
-        return "redirect:/transactions/incomes/" + id + "?type=" + type;
-    }
 }
 
