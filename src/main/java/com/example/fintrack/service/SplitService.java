@@ -182,6 +182,20 @@ public class SplitService {
     public void splitIncome(Long bankTransactionId, Long cardTransactionId, Long patternId, Long userId) {
         splitTransaction(bankTransactionId, cardTransactionId, userId, patternId, TransactionType.INCOME);
     }
+
+    /**
+     * 収入をパターンで一括分割
+     */
+    @Transactional
+    public void splitIncomeAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
+                               Long patternId, Long userId) {
+        for (Long bankTransactionId : bankTransactionIdList) {
+            splitTransaction(bankTransactionId, null, userId, patternId, TransactionType.INCOME);
+        }
+        for (Long cardTransactionId : cardTransactionIdList) {
+            splitTransaction(null, cardTransactionId, userId, patternId, TransactionType.INCOME);
+        }
+    }
     
     /**
      * 支出をパターンで分割
@@ -189,6 +203,20 @@ public class SplitService {
     @Transactional
     public void splitExpense(Long bankTransactionId, Long cardTransactionId, Long patternId, Long userId) {
         splitTransaction(bankTransactionId, cardTransactionId, userId, patternId, TransactionType.EXPENSE);
+    }
+
+    /**
+     * 支出をパターンで一括分割
+     */
+    @Transactional
+    public void splitExpenseAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
+                                Long patternId, Long userId) {
+        for (Long bankTransactionId : bankTransactionIdList) {
+            splitTransaction(bankTransactionId, null, userId, patternId, TransactionType.EXPENSE);
+        }
+        for (Long cardTransactionId : cardTransactionIdList) {
+            splitTransaction(null, cardTransactionId, userId, patternId, TransactionType.EXPENSE);
+        }
     }
     
     /**
@@ -319,6 +347,20 @@ public class SplitService {
     public void splitIncomeSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, Long userId) {
         splitSingle(bankTransactionId, cardTransactionId, userId, categoryId, TransactionType.INCOME);
     }
+
+    /**
+     * 収入を単一カテゴリに一括分配
+     */
+    @Transactional
+    public void splitIncomeSingleAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList, Long categoryId, Long userId) {
+        for ( Long bankTransactionId : bankTransactionIdList){
+            splitSingle(bankTransactionId, null, userId, categoryId, TransactionType.INCOME);
+        }
+
+        for ( Long cardTransactionId :cardTransactionIdList){
+            splitSingle(null, cardTransactionId, userId, categoryId, TransactionType.INCOME);
+        }
+    }
     
     /**
      * 支出を単一カテゴリに分配
@@ -326,6 +368,20 @@ public class SplitService {
     @Transactional
     public void splitExpenseSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, Long userId) {
         splitSingle(bankTransactionId, cardTransactionId, userId, categoryId, TransactionType.EXPENSE);
+    }
+
+    /**
+     * 支出を単一カテゴリに一括分配
+     */
+    @Transactional
+    public void splitExpenseSingleAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
+                                      Long categoryId, Long userId) {
+        for (Long bankTransactionId : bankTransactionIdList) {
+            splitSingle(bankTransactionId, null, userId, categoryId, TransactionType.EXPENSE);
+        }
+        for (Long cardTransactionId : cardTransactionIdList) {
+            splitSingle(null, cardTransactionId, userId, categoryId, TransactionType.EXPENSE);
+        }
     }
     
     /**

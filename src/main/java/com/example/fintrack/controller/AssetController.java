@@ -1,5 +1,6 @@
 package com.example.fintrack.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -158,21 +159,26 @@ public class AssetController {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
         }
+
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
         
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncomeSingle(bankId, null, categoryId, userId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncomeSingle(null, cardId, categoryId, userId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
             
+            splitService.splitIncomeSingleAll(bankIdList, cardIdList, categoryId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の収入を1つのカテゴリに分配しました");
         } catch (Exception e) {
@@ -197,20 +203,25 @@ public class AssetController {
             return redirectUncategorized(TransactionType.INCOME);
         }
         
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
+
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncome(bankId, null, patternId, userId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncome(null, cardId, patternId, userId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
-            
+
+            splitService.splitIncomeAll(bankIdList, cardIdList, patternId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の収入を分割パターンで分配しました");
         } catch (Exception e) {
@@ -235,20 +246,25 @@ public class AssetController {
             return redirectUncategorized(TransactionType.EXPENSE);
         }
         
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
+
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpenseSingle(bankId, null, categoryId, userId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpenseSingle(null, cardId, categoryId, userId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
-            
+
+            splitService.splitExpenseSingleAll(bankIdList, cardIdList, categoryId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の支出を1つのカテゴリに分配しました");
         } catch (Exception e) {
@@ -273,20 +289,25 @@ public class AssetController {
             return redirectUncategorized(TransactionType.EXPENSE);
         }
         
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
+
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpense(bankId, null, patternId, userId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpense(null, cardId, patternId, userId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
-            
+
+            splitService.splitExpenseAll(bankIdList, cardIdList, patternId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の支出を分割パターンで分配しました");
         } catch (Exception e) {
