@@ -1,12 +1,11 @@
 package com.example.fintrack.repository;
 
-import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitMethod;
@@ -107,7 +106,7 @@ public class SplitTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
-    public void insert(SplitTransaction splitTransaction) {
+    public void insert(List<SplitTransaction> splitTransactionList) {
         String sql = "INSERT INTO split_transactions " +
                 "(transaction_type, asset_category_id, split_pattern_id, " +
                 "split_method, amount, bank_transaction_id, card_transaction_id, " +
@@ -115,25 +114,25 @@ public class SplitTransactionRepository {
                 "VALUES (:transactionType, :assetCategoryId, :splitPatternId, " +
                 ":splitMethod, :amount, :bankTransactionId, :cardTransactionId, " +
                 ":discrepancyTransactionId)";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("transactionType",
-                        splitTransaction.getTransactionType() == null ? null
-                                : splitTransaction.getTransactionType().name())
-                .addValue("assetCategoryId", splitTransaction.getAssetCategoryId())
-                .addValue("splitPatternId", splitTransaction.getSplitPatternId())
-                .addValue("splitMethod",
-                        splitTransaction.getSplitMethod() == null ? null : splitTransaction.getSplitMethod().name())
-                .addValue("amount", splitTransaction.getAmount())
-                .addValue("bankTransactionId", splitTransaction.getBankTransactionId())
-                .addValue("cardTransactionId", splitTransaction.getCardTransactionId())
-                .addValue("discrepancyTransactionId", splitTransaction.getDiscrepancyTransactionId());
-        template.queryForMap(sql, params);
-    }
-
-    public List<SplitTransaction> saveAll(List<SplitTransaction> splitTransactions) {
-        for (SplitTransaction splitTransaction : splitTransactions) {
-            insert(splitTransaction);
+        
+        SqlParameterSource[] batchParams = new SqlParameterSource[splitTransactionList.size()];
+        for (int i = 0; i < splitTransactionList.size(); i++){
+            SplitTransaction splitTransaction = splitTransactionList.get(i);
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("transactionType",
+                            splitTransaction.getTransactionType() == null ? null
+                                    : splitTransaction.getTransactionType().name())
+                    .addValue("assetCategoryId", splitTransaction.getAssetCategoryId())
+                    .addValue("splitPatternId", splitTransaction.getSplitPatternId())
+                    .addValue("splitMethod",
+                            splitTransaction.getSplitMethod() == null ? null : splitTransaction.getSplitMethod().name())
+                    .addValue("amount", splitTransaction.getAmount())
+                    .addValue("bankTransactionId", splitTransaction.getBankTransactionId())
+                    .addValue("cardTransactionId", splitTransaction.getCardTransactionId())
+                    .addValue("discrepancyTransactionId", splitTransaction.getDiscrepancyTransactionId());
+            batchParams[i] = params;
         }
-        return splitTransactions;
+
+        template.batchUpdate(sql, batchParams);
     }
 }

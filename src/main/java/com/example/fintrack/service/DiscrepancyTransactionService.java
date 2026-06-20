@@ -120,6 +120,8 @@ public class DiscrepancyTransactionService {
     transaction.setSplitMethod(SplitMethod.MANUAL);
     DiscrepancyTransaction savedTransaction = discrepancyTransactionRepository.save(transaction);
 
+    List<SplitTransaction> splitTransactionList = new ArrayList<>();
+
     // 4. 各カテゴリに split_transactions レコードを作成
     for (Map.Entry<Long, Long> entry : categoryAmounts.entrySet()) {
       Long assetCategoryId = entry.getKey();
@@ -135,12 +137,13 @@ public class DiscrepancyTransactionService {
       splitTransaction.setCardTransactionId(null);
       splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
       
-      splitTransactionRepository.insert(splitTransaction);
+      splitTransactionList.add(splitTransaction);
 
       // 資産残高を調整
       Long amountDelta = calculateAmountDelta(transactionType, amount);
       assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), assetCategoryId, amountDelta);
     }
+    splitTransactionRepository.insert(splitTransactionList);
 
     // 5. 後処理
     finalizeDiscrepancyResolution(discrepancy);
@@ -178,6 +181,8 @@ public class DiscrepancyTransactionService {
     List<SplitPattern> splitPatternList = splitPatternGroup.getSplitPatternList();
     Long totalSplitAmount = 0L;
 
+    List<SplitTransaction> splitTransactionList = new ArrayList<>();
+
     if ("RATIO".equals(splitType)) {
       // 割合指定の場合
       for (int i = 0; i < splitPatternList.size(); i++) {
@@ -202,12 +207,13 @@ public class DiscrepancyTransactionService {
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
         
-        splitTransactionRepository.insert(splitTransaction);
+        splitTransactionList.add(splitTransaction);
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
         assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), pattern.getAssetCategoryId(), amountDelta);
       }
+      splitTransactionRepository.insert(splitTransactionList);
     } else if ("AMOUNT".equals(splitType)) {
 
       Long patternAmountSum = 0L;
@@ -233,13 +239,14 @@ public class DiscrepancyTransactionService {
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
         
-        splitTransactionRepository.insert(splitTransaction);
+        splitTransactionList.add(splitTransaction);
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
         assetRepository.updateAmountByCategoryId(discrepancy.getUserId(),
             pattern.getAssetCategoryId(), amountDelta);
       }
+      splitTransactionRepository.insert(splitTransactionList);
     } else {
       throw new IllegalArgumentException("不明な分割タイプです: " + splitType);
     }

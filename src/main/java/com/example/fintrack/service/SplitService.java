@@ -303,7 +303,7 @@ public class SplitService {
         }
         
         // 保存
-        splitTransactionRepository.saveAll(splits);
+        splitTransactionRepository.insert(splits);
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
@@ -499,7 +499,7 @@ public class SplitService {
         }
         
         // 保存
-        splitTransactionRepository.saveAll(splits);
+        splitTransactionRepository.insert(splits);
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
