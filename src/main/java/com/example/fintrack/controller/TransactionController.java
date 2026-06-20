@@ -22,9 +22,9 @@ import com.example.fintrack.domain.ExpenseCategory;
 import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
+import com.example.fintrack.service.AssetCategoryService;
+import com.example.fintrack.service.ExpenseCategoryService;
 import com.example.fintrack.service.SplitService;
 import com.example.fintrack.service.TransactionService;
 import com.example.fintrack.service.TransactionService.TransactionWithAsset;
@@ -38,18 +38,18 @@ public class TransactionController {
     
     private final TransactionService transactionService;
     private final SplitService splitService;
-    private final UserRepository userRepository;
-    private final AssetCategoryRepository assetCategoryRepository;
-    private final ExpenseCategoryRepository expenseCategoryRepository;
-   
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
+    private final AssetCategoryService assetCategoryService;
+    private final ExpenseCategoryService expenseCategoryService;
+
     public TransactionController(TransactionService transactionService, SplitService splitService,
-        UserRepository userRepository, AssetCategoryRepository assetCategoryRepository,
-        ExpenseCategoryRepository expenseCategoryRepository) {
-      this.transactionService = transactionService;
-      this.splitService = splitService;
-      this.userRepository = userRepository;
-      this.assetCategoryRepository = assetCategoryRepository;
-      this.expenseCategoryRepository = expenseCategoryRepository;
+            AuthenticationUserIdResolver authenticationUserIdResolver, AssetCategoryService assetCategoryService,
+            ExpenseCategoryService expenseCategoryService) {
+        this.transactionService = transactionService;
+        this.splitService = splitService;
+        this.authenticationUserIdResolver = authenticationUserIdResolver;
+        this.assetCategoryService = assetCategoryService;
+        this.expenseCategoryService = expenseCategoryService;
     }
 
     /**
@@ -60,7 +60,7 @@ public class TransactionController {
                           @RequestParam(required = false) String month,
                           @RequestParam(defaultValue = "0") int page,
                           Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 月の指定がない場合は今月
         YearMonth yearMonth;
@@ -74,11 +74,11 @@ public class TransactionController {
                 transactionService.getExpensesByMonth(userId, yearMonth, page, 20);
         
         // カテゴリ情報を取得してMapに変換
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         Map<Long, String> assetCategoryMap = assetCategories.stream()
                 .collect(Collectors.toMap(AssetCategory::getId, AssetCategory::getCategoryName));
         
-        List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserId(userId);
+        List<ExpenseCategory> expenseCategories = expenseCategoryService.findByUserId(userId);
         Map<Long, String> expenseCategoryMap = expenseCategories.stream()
                 .collect(Collectors.toMap(ExpenseCategory::getId, ExpenseCategory::getCategoryName));
         
@@ -105,7 +105,7 @@ public class TransactionController {
                          @RequestParam(required = false) String month,
                          @RequestParam(defaultValue = "0") int page,
                          Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 月の指定がない場合は今月
         YearMonth yearMonth;
@@ -135,7 +135,7 @@ public class TransactionController {
                                @RequestParam String type,
                                Authentication authentication,
                                Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         if ("bank".equals(type)) {
             BankTransaction transaction = transactionService.getBankTransaction(id, userId)
@@ -150,9 +150,9 @@ public class TransactionController {
         }
         
         // カテゴリ一覧を取得
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         model.addAttribute("assetCategories", assetCategories);
-        model.addAttribute("expenseCategories", expenseCategoryRepository.findByUserId(userId));
+        model.addAttribute("expenseCategories", expenseCategoryService.findByUserId(userId));
         
         // 資産カテゴリのマップを作成（ID -> 名前）
         Map<Long, String> assetCategoryMap = assetCategories.stream()
@@ -182,7 +182,7 @@ public class TransactionController {
                               @RequestParam String type,
                               Authentication authentication,
                               Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         if ("bank".equals(type)) {
             BankTransaction transaction = transactionService.getBankTransaction(id, userId)
@@ -197,7 +197,7 @@ public class TransactionController {
         }
         
         // 資産カテゴリ一覧を取得
-        List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+        List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
         model.addAttribute("assetCategories", assetCategories);
         
         // 資産カテゴリのマップを作成（ID -> 名前）
@@ -229,7 +229,7 @@ public class TransactionController {
                                        @RequestParam(required = false) Long expenseCategoryId,
                                        RedirectAttributes redirectAttributes,
                                        Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         try {
             Long bankTransactionId = "bank".equals(type) ? id : null;
             Long cardTransactionId = "card".equals(type) ? id : null;
@@ -261,7 +261,7 @@ public class TransactionController {
                                    @RequestParam Map<String, String> params,
                                    RedirectAttributes redirectAttributes,
                                    Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         try {
             Long bankTransactionId = "bank".equals(type) ? id : null;
             Long cardTransactionId = "card".equals(type) ? id : null;
@@ -287,16 +287,6 @@ public class TransactionController {
         }
         
         return "redirect:/transactions/incomes/" + id + "?type=" + type;
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
     }
 }
 
