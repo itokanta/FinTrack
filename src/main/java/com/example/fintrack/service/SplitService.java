@@ -452,11 +452,11 @@ public class SplitService {
     /**
      * 取引の分割状況を取得
      */
-    public List<SplitTransaction> getSplitTransactionsByTransaction(Long bankTransactionId, Long cardTransactionId) {
+    public List<SplitTransaction> getSplitTransactionsByTransaction(Long bankTransactionId, Long cardTransactionId, Long userId) {
         if (bankTransactionId != null) {
-            return splitTransactionRepository.findByBankTransactionId(bankTransactionId);
+            return splitTransactionRepository.findByBankTransactionId(bankTransactionId, userId);
         } else if (cardTransactionId != null) {
-            return splitTransactionRepository.findByCardTransactionId(cardTransactionId);
+            return splitTransactionRepository.findByCardTransactionId(cardTransactionId, userId);
         }
         return List.of();
     }

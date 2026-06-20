@@ -45,45 +45,63 @@ public class SplitTransactionRepository {
         this.template = template;
     }
 
-    public List<SplitTransaction> findByBankTransactionIds(List<Long> bankTransactionIds) {
+    public List<SplitTransaction> findByBankTransactionIds(List<Long> bankTransactionIds, Long userId) {
         if (bankTransactionIds.isEmpty()) return List.of();
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
                      "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
-                     "FROM split_transactions WHERE bank_transaction_id IN (:ids)";
-        return template.query(sql, new MapSqlParameterSource("ids", bankTransactionIds), ROW_MAPPER);
-    }
-
-    public List<SplitTransaction> findByCardTransactionIds(List<Long> cardTransactionIds) {
-        if (cardTransactionIds.isEmpty()) return List.of();
-        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                     "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
-                     "FROM split_transactions WHERE card_transaction_id IN (:ids)";
-        return template.query(sql, new MapSqlParameterSource("ids", cardTransactionIds), ROW_MAPPER);
-    }
-
-    public List<SplitTransaction> findByDiscrepancyTransactionIds(List<Long> discrepancyTransactionIds) {
-        if (discrepancyTransactionIds.isEmpty()) {
-            return List.of();
-        }
-        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, "
-                + "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at "
-                + "FROM split_transactions WHERE discrepancy_transaction_id IN (:ids)";
-        return template.query(sql, new MapSqlParameterSource("ids", discrepancyTransactionIds), ROW_MAPPER);
-    }
-
-    public List<SplitTransaction> findByBankTransactionId(Long bankTransactionId) {
-        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                     "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
-                     "FROM split_transactions WHERE bank_transaction_id = :bankTransactionId";
-        MapSqlParameterSource params = new MapSqlParameterSource("bankTransactionId", bankTransactionId);
+                     "FROM split_transactions " +
+                     "WHERE bank_transaction_id IN (:ids) AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", bankTransactionIds)
+                .addValue("userId", userId);
         return template.query(sql, params, ROW_MAPPER);
     }
 
-    public List<SplitTransaction> findByCardTransactionId(Long cardTransactionId) {
+    public List<SplitTransaction> findByCardTransactionIds(List<Long> cardTransactionIds, Long userId) {
+        if (cardTransactionIds.isEmpty()) return List.of();
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
                      "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
-                     "FROM split_transactions WHERE card_transaction_id = :cardTransactionId";
-        MapSqlParameterSource params = new MapSqlParameterSource("cardTransactionId", cardTransactionId);
+                     "FROM split_transactions " +
+                     "WHERE card_transaction_id IN (:ids) AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", cardTransactionIds)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByDiscrepancyTransactionIds(List<Long> discrepancyTransactionIds, Long userId) {
+        if (discrepancyTransactionIds.isEmpty()) {
+            return List.of();
+        }
+        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
+                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                "FROM split_transactions " +
+                "WHERE discrepancy_transaction_id IN (:ids) AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", discrepancyTransactionIds)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByBankTransactionId(Long bankTransactionId, Long userId) {
+        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
+                     "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                     "FROM split_transactions " + 
+                     "WHERE bank_transaction_id = :bankTransactionId AND user_id = ;userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("bankTransactionId", bankTransactionId)
+                .addValue("userId", userId);
+        return template.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByCardTransactionId(Long cardTransactionId, Long userId) {
+        String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
+                     "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                     "FROM split_transactions " +
+                     "WHERE card_transaction_id = :cardTransactionId AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("cardTransactionId", cardTransactionId)
+                .addValue("userId", userId);
         return template.query(sql, params, ROW_MAPPER);
     }
 

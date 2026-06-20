@@ -167,7 +167,8 @@ public class TransactionController {
         // 分割済みの情報を取得
         List<SplitTransaction> splitTransactions = splitService.getSplitTransactionsByTransaction(
             "bank".equals(type) ? id : null,
-            "card".equals(type) ? id : null
+            "card".equals(type) ? id : null,
+            userId
         );
         model.addAttribute("splitTransactions", splitTransactions);
         
@@ -212,7 +213,8 @@ public class TransactionController {
         // 分割済みの情報を取得
         List<SplitTransaction> splitIncomes = splitService.getSplitTransactionsByTransaction(
             "bank".equals(type) ? id : null,
-            "card".equals(type) ? id : null
+            "card".equals(type) ? id : null,
+            userId
         );
         model.addAttribute("splitTransactions", splitIncomes);
         
