@@ -87,7 +87,7 @@ public class SplitTransactionRepository {
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
                      "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
                      "FROM split_transactions " + 
-                     "WHERE bank_transaction_id = :bankTransactionId AND user_id = ;userId";
+                     "WHERE bank_transaction_id = :bankTransactionId AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("bankTransactionId", bankTransactionId)
                 .addValue("userId", userId);
