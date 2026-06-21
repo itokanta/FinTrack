@@ -33,10 +33,13 @@ public class AutoCategoryRuleRepository {
         this.template = template;
     }
 
-    public Optional<AutoCategoryRule> findById(Long id) {
+    public Optional<AutoCategoryRule> findById(Long id, Long userId) {
         String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
-                     "FROM auto_category_rules WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+                     "FROM auto_category_rules " +
+                     "WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         List<AutoCategoryRule> rules = template.query(sql, params, ROW_MAPPER);
         if (rules.isEmpty()) {
             return Optional.empty();
@@ -69,7 +72,7 @@ public class AutoCategoryRuleRepository {
             String sql = "UPDATE auto_category_rules SET " +
                          "user_id = :userId, asset_category_id = :assetCategoryId, " +
                          "description_pattern = :descriptionPattern, transaction_type = :transactionType " +
-                         "WHERE id = :id";
+                         "WHERE id = :id AND user_id = :userId";
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue("userId", rule.getUserId())
                     .addValue("assetCategoryId", rule.getAssetCategoryId())
@@ -81,9 +84,11 @@ public class AutoCategoryRuleRepository {
         return rule;
     }
 
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM auto_category_rules WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+    public void deleteById(Long id, Long userId) {
+        String sql = "DELETE FROM auto_category_rules WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         template.update(sql, params);
     }
 }

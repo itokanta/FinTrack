@@ -36,7 +36,14 @@ public class AssetCategoryService {
     return assetCategoryRepository.findByUserId(userId);
   }
 
-  public void deleteById(Long id) {
-    assetCategoryRepository.deleteById(id);
+  @Transactional
+  public void deleteById(Long id, Long userId) {
+    Long targetCategoryAmount = assetRepository.getBalanceByCategory(userId, id);
+
+    if (targetCategoryAmount != 0L) {
+      throw new IllegalArgumentException();
+    }
+    assetRepository.deleteByAssetCategoryId(id, userId);
+    assetCategoryRepository.deleteById(id, userId);
   }
 }

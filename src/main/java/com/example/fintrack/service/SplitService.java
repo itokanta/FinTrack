@@ -3,14 +3,12 @@ package com.example.fintrack.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.SplitMethod;
@@ -89,7 +87,7 @@ public class SplitService {
      * 新しい分割パターンを作成（割合指定）
      */
     @Transactional
-    public Long createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
+    public void createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
                                          Map<Long, BigDecimal> categoryRatios) {
         
         // 合計が100%になるか確認
@@ -114,13 +112,7 @@ public class SplitService {
         for (Map.Entry<Long, BigDecimal> entry : categoryRatios.entrySet()) {
             Long categoryId = entry.getKey();
             
-            // カテゴリの存在確認とユーザー所有確認
-            AssetCategory category = assetCategoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
-            
-            if (!category.getUserId().equals(userId)) {
-                throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
-            }
+            requireAssetCategory(categoryId, userId);
             
             SplitPattern pattern = new SplitPattern();
             pattern.setPatternId(patternId);
@@ -133,15 +125,13 @@ public class SplitService {
         }
 
         splitPatternRepository.insert(splitPatternList);
-        
-        return patternId;
     }
     
     /**
      * 新しい分割パターンを作成（金額指定）
      */
     @Transactional
-    public Long createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
+    public void createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
                                           Map<Long, Long> categoryAmounts) {
 
         SplitPatternGroup splitPatternGroup = new SplitPatternGroup();
@@ -163,13 +153,7 @@ public class SplitService {
                 continue; // 金額が0以下の場合はスキップ
             }
             
-            // カテゴリの存在確認とユーザー所有確認
-            AssetCategory category = assetCategoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
-            
-            if (!category.getUserId().equals(userId)) {
-                throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
-            }
+            requireAssetCategory(categoryId, userId);
             
             SplitPattern pattern = new SplitPattern();
             pattern.setPatternId(patternId);
@@ -185,41 +169,65 @@ public class SplitService {
             throw new IllegalArgumentException("有効な分割金額が1件以上必要です");
         }
         splitPatternRepository.insert(splitPatternList);
-
-        return patternId;
     }
     
     /**
      * 収入をパターンで分割
      */
     @Transactional
-    public void splitIncome(Long bankTransactionId, Long cardTransactionId, Long patternId) {
-        splitTransaction(bankTransactionId, cardTransactionId, patternId, TransactionType.INCOME);
+    public void splitIncome(Long bankTransactionId, Long cardTransactionId, Long patternId, Long userId) {
+        splitTransaction(bankTransactionId, cardTransactionId, userId, patternId, TransactionType.INCOME);
+    }
+
+    /**
+     * 収入をパターンで一括分割
+     */
+    @Transactional
+    public void splitIncomeAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
+                               Long patternId, Long userId) {
+        for (Long bankTransactionId : bankTransactionIdList) {
+            splitTransaction(bankTransactionId, null, userId, patternId, TransactionType.INCOME);
+        }
+        for (Long cardTransactionId : cardTransactionIdList) {
+            splitTransaction(null, cardTransactionId, userId, patternId, TransactionType.INCOME);
+        }
     }
     
     /**
      * 支出をパターンで分割
      */
     @Transactional
-    public void splitExpense(Long bankTransactionId, Long cardTransactionId, Long patternId) {
-        splitTransaction(bankTransactionId, cardTransactionId, patternId, TransactionType.EXPENSE);
+    public void splitExpense(Long bankTransactionId, Long cardTransactionId, Long patternId, Long userId) {
+        splitTransaction(bankTransactionId, cardTransactionId, userId, patternId, TransactionType.EXPENSE);
+    }
+
+    /**
+     * 支出をパターンで一括分割
+     */
+    @Transactional
+    public void splitExpenseAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
+                                Long patternId, Long userId) {
+        for (Long bankTransactionId : bankTransactionIdList) {
+            splitTransaction(bankTransactionId, null, userId, patternId, TransactionType.EXPENSE);
+        }
+        for (Long cardTransactionId : cardTransactionIdList) {
+            splitTransaction(null, cardTransactionId, userId, patternId, TransactionType.EXPENSE);
+        }
     }
     
     /**
      * 収支をパターンで分割（共通処理）
      */
-    private void splitTransaction(Long bankTransactionId, Long cardTransactionId, Long patternId, TransactionType transactionType) {
+    private void splitTransaction(Long bankTransactionId, Long cardTransactionId, Long userId, Long patternId, TransactionType transactionType) {
         // 取引を取得
         Long totalAmount;
-        Long userId;
         BankTransaction bankTransaction = null;
         CardTransaction cardTransaction = null;
         
         if (bankTransactionId != null) {
-            bankTransaction = bankTransactionRepository.findById(bankTransactionId)
+            bankTransaction = bankTransactionRepository.findById(bankTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             totalAmount = bankTransaction.getAmount();
-            userId = bankTransaction.getUserId();
             
             // 取引に分割パターンIDを設定、asset_category_idはNULLに
             bankTransaction.setSplitPatternId(patternId);
@@ -227,10 +235,9 @@ public class SplitService {
             bankTransaction.setAssetCategoryId(null);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
-            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
-            userId = cardTransaction.getUserId();
             
             // 取引に分割パターンIDを設定、asset_category_idはNULLに
             cardTransaction.setSplitPatternId(patternId);
@@ -266,7 +273,7 @@ public class SplitService {
                 totalSplitAmount += splitAmount;
                 
                 SplitTransaction split = createSplitTransaction(pattern, splitAmount, bankTransactionId, 
-                                                               cardTransactionId, patternId, transactionType);
+                                                               cardTransactionId, patternId, transactionType, userId);
                 splits.add(split);
             }
         } else {
@@ -281,7 +288,7 @@ public class SplitService {
                 totalSplitAmount += splitAmount;
                 
                 SplitTransaction split = createSplitTransaction(pattern, splitAmount, bankTransactionId, 
-                                                               cardTransactionId, patternId, transactionType);
+                                                               cardTransactionId, patternId, transactionType, userId);
                 splits.add(split);
             }
             
@@ -292,7 +299,7 @@ public class SplitService {
         }
         
         // 保存
-        splitTransactionRepository.saveAll(splits);
+        splitTransactionRepository.insert(splits);
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
@@ -300,7 +307,7 @@ public class SplitService {
     
     private SplitTransaction createSplitTransaction(SplitPattern pattern, long splitAmount, 
                                                    Long bankTransactionId, Long cardTransactionId, 
-                                                   Long patternId, TransactionType transactionType) {
+                                                   Long patternId, TransactionType transactionType, Long userId) {
         SplitTransaction split = new SplitTransaction();
         split.setTransactionType(transactionType);
         split.setAssetCategoryId(pattern.getAssetCategoryId());
@@ -309,6 +316,7 @@ public class SplitService {
         split.setAmount(splitAmount);
         split.setBankTransactionId(bankTransactionId);
         split.setCardTransactionId(cardTransactionId);
+        split.setUserId(userId);
         
         return split;
     }
@@ -317,49 +325,77 @@ public class SplitService {
      * 収入を手動で金額指定して分割
      */
     @Transactional
-    public void splitIncomeManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts) {
-        splitManual(bankTransactionId, cardTransactionId, categoryAmounts, TransactionType.INCOME);
+    public void splitIncomeManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts, Long userId) {
+        splitManual(bankTransactionId, cardTransactionId, userId, categoryAmounts, TransactionType.INCOME);
     }
     
     /**
      * 支出を手動で金額指定して分割
      */
     @Transactional
-    public void splitExpenseManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts) {
-        splitManual(bankTransactionId, cardTransactionId, categoryAmounts, TransactionType.EXPENSE);
+    public void splitExpenseManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts, Long userId) {
+        splitManual(bankTransactionId, cardTransactionId, userId, categoryAmounts, TransactionType.EXPENSE);
     }
     
     /**
      * 収入を単一カテゴリに分配
      */
     @Transactional
-    public void splitIncomeSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId) {
-        splitSingle(bankTransactionId, cardTransactionId, categoryId, TransactionType.INCOME);
+    public void splitIncomeSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, Long userId) {
+        splitSingle(bankTransactionId, cardTransactionId, userId, categoryId, TransactionType.INCOME);
+    }
+
+    /**
+     * 収入を単一カテゴリに一括分配
+     */
+    @Transactional
+    public void splitIncomeSingleAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList, Long categoryId, Long userId) {
+        for ( Long bankTransactionId : bankTransactionIdList){
+            splitSingle(bankTransactionId, null, userId, categoryId, TransactionType.INCOME);
+        }
+
+        for ( Long cardTransactionId :cardTransactionIdList){
+            splitSingle(null, cardTransactionId, userId, categoryId, TransactionType.INCOME);
+        }
     }
     
     /**
      * 支出を単一カテゴリに分配
      */
     @Transactional
-    public void splitExpenseSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId) {
-        splitSingle(bankTransactionId, cardTransactionId, categoryId, TransactionType.EXPENSE);
+    public void splitExpenseSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, Long userId) {
+        splitSingle(bankTransactionId, cardTransactionId, userId, categoryId, TransactionType.EXPENSE);
+    }
+
+    /**
+     * 支出を単一カテゴリに一括分配
+     */
+    @Transactional
+    public void splitExpenseSingleAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
+                                      Long categoryId, Long userId) {
+        for (Long bankTransactionId : bankTransactionIdList) {
+            splitSingle(bankTransactionId, null, userId, categoryId, TransactionType.EXPENSE);
+        }
+        for (Long cardTransactionId : cardTransactionIdList) {
+            splitSingle(null, cardTransactionId, userId, categoryId, TransactionType.EXPENSE);
+        }
     }
     
     /**
      * 収支を単一カテゴリに分配（共通処理）
      */
-    private void splitSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, TransactionType transactionType) {
+    private void splitSingle(Long bankTransactionId, Long cardTransactionId, Long userId, Long categoryId, TransactionType transactionType) {
+        requireAssetCategory(categoryId, userId);
+
         // 取引を取得
         Long totalAmount;
-        Long userId;
         BankTransaction bankTransaction = null;
         CardTransaction cardTransaction = null;
         
         if (bankTransactionId != null) {
-            bankTransaction = bankTransactionRepository.findById(bankTransactionId)
+            bankTransaction = bankTransactionRepository.findById(bankTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             totalAmount = bankTransaction.getAmount();
-            userId = bankTransaction.getUserId();
             
             // 取引に単一カテゴリを設定
             bankTransaction.setSplitPatternId(null);
@@ -367,10 +403,9 @@ public class SplitService {
             bankTransaction.setAssetCategoryId(categoryId);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
-            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
-            userId = cardTransaction.getUserId();
             
             // 取引に単一カテゴリを設定
             cardTransaction.setSplitPatternId(null);
@@ -380,15 +415,7 @@ public class SplitService {
         } else {
             throw new IllegalArgumentException("取引IDが指定されていません");
         }
-        
-        // カテゴリの存在確認とユーザー所有確認
-        AssetCategory category = assetCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
-        
-        if (!category.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
-        }
-        
+
         // 単一カテゴリの場合、split_transactionsには登録しない
         // asset_category_idに直接設定するのみ
 
@@ -407,19 +434,20 @@ public class SplitService {
     /**
      * 収支を手動で金額指定して分割（共通処理）
      */
-    private void splitManual(Long bankTransactionId, Long cardTransactionId, 
-                            Map<Long, Long> categoryAmounts, TransactionType transactionType) {
+    private void splitManual(Long bankTransactionId, Long cardTransactionId, Long userId, Map<Long, Long> categoryAmounts, TransactionType transactionType) {
+        for (Long categoryId : categoryAmounts.keySet()) {
+            requireAssetCategory(categoryId, userId);
+        }
+
         // 取引を取得
         Long totalAmount;
-        Long userId;
         BankTransaction bankTransaction = null;
         CardTransaction cardTransaction = null;
         
         if (bankTransactionId != null) {
-            bankTransaction = bankTransactionRepository.findById(bankTransactionId)
+            bankTransaction = bankTransactionRepository.findById(bankTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("銀行取引が見つかりません"));
             totalAmount = bankTransaction.getAmount();
-            userId = bankTransaction.getUserId();
             
             // 取引に手動分割を設定
             bankTransaction.setSplitPatternId(null);
@@ -427,10 +455,9 @@ public class SplitService {
             bankTransaction.setAssetCategoryId(null);
             bankTransactionRepository.updateAssetCategoryOrSplitPatternOrExpenseCategory(bankTransaction);
         } else if (cardTransactionId != null) {
-            cardTransaction = cardTransactionRepository.findById(cardTransactionId)
+            cardTransaction = cardTransactionRepository.findById(cardTransactionId, userId)
                     .orElseThrow(() -> new IllegalArgumentException("カード取引が見つかりません"));
             totalAmount = cardTransaction.getAmount();
-            userId = cardTransaction.getUserId();
             
             // 取引に手動分割を設定
             cardTransaction.setSplitPatternId(null);
@@ -456,14 +483,6 @@ public class SplitService {
             Long categoryId = entry.getKey();
             Long amount = entry.getValue();
             
-            // カテゴリの存在確認とユーザー所有確認
-            AssetCategory category = assetCategoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
-            
-            if (!category.getUserId().equals(userId)) {
-                throw new IllegalArgumentException("他のユーザーのカテゴリは使用できません");
-            }
-            
             SplitTransaction split = new SplitTransaction();
             split.setTransactionType(transactionType);
             split.setAssetCategoryId(categoryId);
@@ -472,12 +491,13 @@ public class SplitService {
             split.setAmount(amount);
             split.setBankTransactionId(bankTransactionId);
             split.setCardTransactionId(cardTransactionId);
+            split.setUserId(userId);
             
             splits.add(split);
         }
         
         // 保存
-        splitTransactionRepository.saveAll(splits);
+        splitTransactionRepository.insert(splits);
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
@@ -486,15 +506,20 @@ public class SplitService {
     /**
      * 取引の分割状況を取得
      */
-    public List<SplitTransaction> getSplitTransactionsByTransaction(Long bankTransactionId, Long cardTransactionId) {
+    public List<SplitTransaction> getSplitTransactionsByTransaction(Long bankTransactionId, Long cardTransactionId, Long userId) {
         if (bankTransactionId != null) {
-            return splitTransactionRepository.findByBankTransactionId(bankTransactionId);
+            return splitTransactionRepository.findByBankTransactionId(bankTransactionId, userId);
         } else if (cardTransactionId != null) {
-            return splitTransactionRepository.findByCardTransactionId(cardTransactionId);
+            return splitTransactionRepository.findByCardTransactionId(cardTransactionId, userId);
         }
         return List.of();
     }
     
+    private void requireAssetCategory(Long categoryId, Long userId) {
+        assetCategoryRepository.findById(categoryId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("資産カテゴリが見つかりません"));
+    }
+
     /**
      * 残高を更新（収入・支出共通）
      */
