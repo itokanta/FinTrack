@@ -114,6 +114,8 @@ public class CategoryController {
             Long userId = authenticationUserIdResolver.getUserId(authentication);
             assetCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "残高がある資産カテゴリは削除できません");
         } catch (Exception e) {
             log.error("資産カテゴリの削除に失敗しました: id={}", id, e);
             redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました");
