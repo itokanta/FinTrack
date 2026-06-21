@@ -132,10 +132,10 @@ public class SplitController {
                 }
             }
 
-            Long patternId = splitService.createSplitPatternByRatio(userId, transactionType, patternName,
+            splitService.createSplitPatternByRatio(userId, transactionType, patternName,
                     categoryRatios);
             redirectAttributes.addFlashAttribute("message",
-                    "分割パターンを登録しました (ID: " + patternId + ")");
+                    "分割パターンを登録しました");
         } catch (Exception e) {
             log.error("分割パターン（割合指定）の登録に失敗しました", e);
             redirectAttributes.addFlashAttribute("error", "分割パターンの登録に失敗しました");
@@ -176,10 +176,10 @@ public class SplitController {
                 }
             }
 
-            Long patternId = splitService.createSplitPatternByAmount(userId, transactionType, patternName,
+            splitService.createSplitPatternByAmount(userId, transactionType, patternName,
                     categoryAmounts);
             redirectAttributes.addFlashAttribute("message",
-                    "分割パターンを登録しました (ID: " + patternId + ")");
+                    "分割パターンを登録しました");
         } catch (Exception e) {
             log.error("分割パターン（金額指定）の登録に失敗しました", e);
             redirectAttributes.addFlashAttribute("error", "分割パターンの登録に失敗しました");
