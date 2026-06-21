@@ -35,6 +35,7 @@ public class SplitTransactionRepository {
         splitTransaction.setDiscrepancyTransactionId(rs.wasNull() ? null : discrepancyTransactionId);
         splitTransaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         splitTransaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        splitTransaction.setUserId(rs.getLong("user_id"));
         return splitTransaction;
     };
 
@@ -48,7 +49,7 @@ public class SplitTransactionRepository {
         if (bankTransactionIds.isEmpty())
             return List.of();
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
                 "FROM split_transactions " +
                 "WHERE bank_transaction_id IN (:ids) AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -61,7 +62,7 @@ public class SplitTransactionRepository {
         if (cardTransactionIds.isEmpty())
             return List.of();
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
                 "FROM split_transactions " +
                 "WHERE card_transaction_id IN (:ids) AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -75,7 +76,7 @@ public class SplitTransactionRepository {
             return List.of();
         }
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
                 "FROM split_transactions " +
                 "WHERE discrepancy_transaction_id IN (:ids) AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -86,7 +87,7 @@ public class SplitTransactionRepository {
 
     public List<SplitTransaction> findByBankTransactionId(Long bankTransactionId, Long userId) {
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
                 "FROM split_transactions " +
                 "WHERE bank_transaction_id = :bankTransactionId AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -97,7 +98,7 @@ public class SplitTransactionRepository {
 
     public List<SplitTransaction> findByCardTransactionId(Long cardTransactionId, Long userId) {
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
-                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at " +
+                "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
                 "FROM split_transactions " +
                 "WHERE card_transaction_id = :cardTransactionId AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -110,10 +111,10 @@ public class SplitTransactionRepository {
         String sql = "INSERT INTO split_transactions " +
                 "(transaction_type, asset_category_id, split_pattern_id, " +
                 "split_method, amount, bank_transaction_id, card_transaction_id, " +
-                "discrepancy_transaction_id) " +
+                "discrepancy_transaction_id, user_id) " +
                 "VALUES (:transactionType, :assetCategoryId, :splitPatternId, " +
                 ":splitMethod, :amount, :bankTransactionId, :cardTransactionId, " +
-                ":discrepancyTransactionId)";
+                ":discrepancyTransactionId, :userId)";
         
         SqlParameterSource[] batchParams = new SqlParameterSource[splitTransactionList.size()];
         for (int i = 0; i < splitTransactionList.size(); i++){
@@ -129,7 +130,8 @@ public class SplitTransactionRepository {
                     .addValue("amount", splitTransaction.getAmount())
                     .addValue("bankTransactionId", splitTransaction.getBankTransactionId())
                     .addValue("cardTransactionId", splitTransaction.getCardTransactionId())
-                    .addValue("discrepancyTransactionId", splitTransaction.getDiscrepancyTransactionId());
+                    .addValue("discrepancyTransactionId", splitTransaction.getDiscrepancyTransactionId())
+                    .addValue("userId", splitTransaction.getUserId());
             batchParams[i] = params;
         }
 

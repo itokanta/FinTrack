@@ -136,6 +136,7 @@ public class DiscrepancyTransactionService {
       splitTransaction.setBankTransactionId(null);
       splitTransaction.setCardTransactionId(null);
       splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
+      splitTransaction.setUserId(userId);
       
       splitTransactionList.add(splitTransaction);
 
@@ -206,6 +207,7 @@ public class DiscrepancyTransactionService {
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
+        splitTransaction.setUserId(userId);
         
         splitTransactionList.add(splitTransaction);
 
@@ -238,6 +240,7 @@ public class DiscrepancyTransactionService {
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
+        splitTransaction.setUserId(userId);
         
         splitTransactionList.add(splitTransaction);
 

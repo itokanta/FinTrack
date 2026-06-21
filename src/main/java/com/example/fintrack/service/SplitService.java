@@ -320,6 +320,7 @@ public class SplitService {
         split.setAmount(splitAmount);
         split.setBankTransactionId(bankTransactionId);
         split.setCardTransactionId(cardTransactionId);
+        split.setUserId(patternId);
         
         return split;
     }
@@ -494,6 +495,7 @@ public class SplitService {
             split.setAmount(amount);
             split.setBankTransactionId(bankTransactionId);
             split.setCardTransactionId(cardTransactionId);
+            split.setUserId(userId);
             
             splits.add(split);
         }

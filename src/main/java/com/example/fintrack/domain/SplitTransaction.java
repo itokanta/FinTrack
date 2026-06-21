@@ -26,6 +26,7 @@ public class SplitTransaction {
     private Long discrepancyTransactionId; // 差異取引ID
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long userId;
     
     // JOIN時に使用
     private AssetCategory assetCategory;
