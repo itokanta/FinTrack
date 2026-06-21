@@ -9,16 +9,6 @@
     <div layout:fragment="content">
         <h2 class="mb-4">カード支払い差異一覧</h2>
         
-        <!-- メッセージ表示 -->
-        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${message}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        
         <!-- 未解決の差異 -->
         <div th:if="${!#lists.isEmpty(unresolvedDiscrepancies)}" class="alert alert-warning">
             <h5><i class="bi bi-exclamation-triangle"></i> 未解決の差異があります</h5>

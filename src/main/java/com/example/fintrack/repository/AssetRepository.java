@@ -180,4 +180,12 @@ public class AssetRepository {
                 .addValue("amount", asset.getAmount());
         template.update(sql, param);
     }
+
+    public void deleteByAssetCategoryId(Long assetCategoryId, Long userId) {
+        String sql = "DELETE FROM assets WHERE asset_category_id = :assetCategoryId AND user_id = :userId";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("assetCategoryId", assetCategoryId)
+                .addValue("userId", userId);
+        template.update(sql, param);
+    }
 }

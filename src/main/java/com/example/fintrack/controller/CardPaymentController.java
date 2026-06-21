@@ -1,18 +1,20 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.domain.CardPaymentDiscrepancy;
-import com.example.fintrack.domain.CardTransaction;
-import com.example.fintrack.repository.UserRepository;
-import com.example.fintrack.service.CardPaymentService;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.example.fintrack.domain.CardPaymentDiscrepancy;
+import com.example.fintrack.domain.CardTransaction;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
+import com.example.fintrack.service.CardPaymentService;
 
 /**
  * カード支払い管理コントローラー
@@ -22,14 +24,14 @@ import java.util.List;
 public class CardPaymentController {
     
     private final CardPaymentService cardPaymentService;
-    private final UserRepository userRepository;
-    
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
+
     public CardPaymentController(CardPaymentService cardPaymentService,
-                                UserRepository userRepository) {
-        this.cardPaymentService = cardPaymentService;
-        this.userRepository = userRepository;
+        AuthenticationUserIdResolver authenticationUserIdResolver) {
+      this.cardPaymentService = cardPaymentService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
     }
-    
+
     /**
      * 支払い月別カード明細
      */
@@ -37,7 +39,7 @@ public class CardPaymentController {
     public String byMonth(Authentication authentication,
                          @RequestParam(required = false) String paymentMonth,
                          Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 支払い月の指定がない場合は今月
         String targetPaymentMonth;
@@ -63,7 +65,7 @@ public class CardPaymentController {
      */
     @GetMapping("/discrepancies")
     public String discrepancies(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 未解決の差異を取得
         List<CardPaymentDiscrepancy> unresolvedDiscrepancies = 
@@ -77,31 +79,5 @@ public class CardPaymentController {
         model.addAttribute("allDiscrepancies", allDiscrepancies);
         
         return "card-payments/discrepancies";
-    }
-    
-    /**
-     * カード差異を解決済みにする
-     */
-    @PostMapping("/discrepancies/{id}/resolve")
-    public String resolveDiscrepancy(@PathVariable Long id,
-                                    RedirectAttributes redirectAttributes) {
-        try {
-            cardPaymentService.markDiscrepancyAsResolved(id);
-            redirectAttributes.addFlashAttribute("message", "差異を解決済みにしました");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "処理に失敗しました: " + e.getMessage());
-        }
-        
-        return "redirect:/card-payments/discrepancies";
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
     }
 }

@@ -9,16 +9,6 @@
     <div layout:fragment="content">
         <h2 class="mb-4" th:text="${transactionType.name() == 'INCOME' ? '収入分割パターン管理' : '支出分割パターン管理'}">分割パターン管理</h2>
         
-        <!-- メッセージ表示 -->
-        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${message}">メッセージ</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}">エラー</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        
         <div class="mb-3">
             <a th:href="${transactionType.name() == 'INCOME' ? '/split/income/patterns/new' : '/split/expense/patterns/new'}" 
                class="btn btn-primary">
@@ -45,9 +35,6 @@
                             <tr th:each="pattern : ${splitPatternGroupList}">
                                 <td>
                                     <strong th:text="${pattern.patternName}">パターン名</strong>
-                                    <br>
-                                    <small class="text-muted">ID: <span th:text="${pattern.id}">1</span></small>
-                                </td>
                                 <td>
                                     <span class="badge" 
                                           th:classappend="${pattern.splitType == 'RATIO' ? 'bg-primary' : 'bg-success'}"

@@ -66,9 +66,9 @@ public class DiscrepancyTransactionService {
    * @param assetCategoryId 資産カテゴリID
    */
   @Transactional
-  public void resolveDiscrepancySingle(Long discrepancyId, String description, Long assetCategoryId) {
+  public void resolveDiscrepancySingle(Long discrepancyId, String description, Long assetCategoryId, Long userId) {
     // 1. 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
+    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId, userId);
 
     // 2. 差異取引データを作成（split_method = SINGLE: 単一カテゴリ）
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
@@ -97,9 +97,9 @@ public class DiscrepancyTransactionService {
    */
   @Transactional
   public void resolveDiscrepancyManual(Long discrepancyId, String description,
-      Map<Long, Long> categoryAmounts) {
+      Map<Long, Long> categoryAmounts, Long userId) {
     // 1. 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
+    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId, userId);
 
     // 2. 合計金額の検証
     Long absoluteAmount = Math.abs(discrepancy.getDifferenceAmount());
@@ -120,6 +120,8 @@ public class DiscrepancyTransactionService {
     transaction.setSplitMethod(SplitMethod.MANUAL);
     DiscrepancyTransaction savedTransaction = discrepancyTransactionRepository.save(transaction);
 
+    List<SplitTransaction> splitTransactionList = new ArrayList<>();
+
     // 4. 各カテゴリに split_transactions レコードを作成
     for (Map.Entry<Long, Long> entry : categoryAmounts.entrySet()) {
       Long assetCategoryId = entry.getKey();
@@ -134,13 +136,15 @@ public class DiscrepancyTransactionService {
       splitTransaction.setBankTransactionId(null);
       splitTransaction.setCardTransactionId(null);
       splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
+      splitTransaction.setUserId(userId);
       
-      splitTransactionRepository.save(splitTransaction);
+      splitTransactionList.add(splitTransaction);
 
       // 資産残高を調整
       Long amountDelta = calculateAmountDelta(transactionType, amount);
       assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), assetCategoryId, amountDelta);
     }
+    splitTransactionRepository.insert(splitTransactionList);
 
     // 5. 後処理
     finalizeDiscrepancyResolution(discrepancy);
@@ -154,11 +158,9 @@ public class DiscrepancyTransactionService {
    * @param patternId     分割パターンID
    */
   @Transactional
-  public void resolveDiscrepancyPattern(Long discrepancyId, String description, Long patternId) {
+  public void resolveDiscrepancyPattern(Long discrepancyId, String description, Long patternId, Long userId) {
     // 1. 差異情報を取得
-    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId);
-
-    Long userId = discrepancy.getUserId();
+    CardPaymentDiscrepancy discrepancy = getAndValidateDiscrepancy(discrepancyId, userId);
 
     // 2. 分割パターンを取得
     SplitPatternGroup splitPatternGroup = splitPatternGroupRepository.findWithSplitPatternAndAssetCategoryByUserIdAndId(userId, patternId);
@@ -179,6 +181,8 @@ public class DiscrepancyTransactionService {
 
     List<SplitPattern> splitPatternList = splitPatternGroup.getSplitPatternList();
     Long totalSplitAmount = 0L;
+
+    List<SplitTransaction> splitTransactionList = new ArrayList<>();
 
     if ("RATIO".equals(splitType)) {
       // 割合指定の場合
@@ -203,13 +207,15 @@ public class DiscrepancyTransactionService {
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
+        splitTransaction.setUserId(userId);
         
-        splitTransactionRepository.save(splitTransaction);
+        splitTransactionList.add(splitTransaction);
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
         assetRepository.updateAmountByCategoryId(discrepancy.getUserId(), pattern.getAssetCategoryId(), amountDelta);
       }
+      splitTransactionRepository.insert(splitTransactionList);
     } else if ("AMOUNT".equals(splitType)) {
 
       Long patternAmountSum = 0L;
@@ -234,14 +240,16 @@ public class DiscrepancyTransactionService {
         splitTransaction.setBankTransactionId(null);
         splitTransaction.setCardTransactionId(null);
         splitTransaction.setDiscrepancyTransactionId(savedTransaction.getId());
+        splitTransaction.setUserId(userId);
         
-        splitTransactionRepository.save(splitTransaction);
+        splitTransactionList.add(splitTransaction);
 
         // 資産残高を調整
         Long amountDelta = calculateAmountDelta(transactionType, splitAmount);
         assetRepository.updateAmountByCategoryId(discrepancy.getUserId(),
             pattern.getAssetCategoryId(), amountDelta);
       }
+      splitTransactionRepository.insert(splitTransactionList);
     } else {
       throw new IllegalArgumentException("不明な分割タイプです: " + splitType);
     }
@@ -252,8 +260,8 @@ public class DiscrepancyTransactionService {
 
   // ========== プライベートヘルパーメソッド ==========
 
-  private CardPaymentDiscrepancy getAndValidateDiscrepancy(Long discrepancyId) {
-    CardPaymentDiscrepancy discrepancy = cardPaymentDiscrepancyRepository.findById(discrepancyId)
+  private CardPaymentDiscrepancy getAndValidateDiscrepancy(Long discrepancyId, Long userId) {
+    CardPaymentDiscrepancy discrepancy = cardPaymentDiscrepancyRepository.findById(discrepancyId, userId)
         .orElseThrow(() -> new IllegalArgumentException("差異が見つかりません（ID: " + discrepancyId + "）"));
 
     if (Boolean.TRUE.equals(discrepancy.getIsResolved())) {
@@ -314,7 +322,7 @@ public class DiscrepancyTransactionService {
 
     List<CardTransaction> afterCardTransactionList = cardTransactionRepository.findByUserIdAndPaymentMonth(discrepancy.getUserId(), discrepancy.getPaymentMonth());
     List<CsvImportUpdateHistory> csvImportUpdateHistoryList = new ArrayList<>();
-    Optional<BankTransaction> cardPaymentTransaction = bankTransactionRepository.findById(discrepancy.getBankTransactionId());
+    Optional<BankTransaction> cardPaymentTransaction = bankTransactionRepository.findById(discrepancy.getBankTransactionId(), userId);
     Long csvImportHistoryId = cardPaymentTransaction
         .orElseThrow(() -> new IllegalStateException(
             "card payment bank transaction not found. id=" + discrepancy.getBankTransactionId())).getCsvImportHistoryId();
@@ -341,6 +349,6 @@ public class DiscrepancyTransactionService {
     }
     
     // 差異を解決済みにマーク
-    cardPaymentDiscrepancyRepository.markAsResolved(discrepancy.getId());
+    cardPaymentDiscrepancyRepository.markAsResolved(discrepancy.getId(), userId);
   }
 }

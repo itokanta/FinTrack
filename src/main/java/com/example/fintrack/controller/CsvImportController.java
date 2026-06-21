@@ -2,6 +2,8 @@ package com.example.fintrack.controller;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.csv.BankType;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.CsvImportService;
-import com.example.fintrack.service.UserService;
 
 
 /**
@@ -23,13 +25,16 @@ import com.example.fintrack.service.UserService;
 @Controller
 @RequestMapping("/csv")
 public class CsvImportController {
-    
-    private final CsvImportService csvImportService;
-    private final UserService userService;
 
-    public CsvImportController(CsvImportService csvImportService, UserService userService) {
+    private static final Logger log = LoggerFactory.getLogger(CsvImportController.class);
+
+    private final CsvImportService csvImportService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
+
+    public CsvImportController(CsvImportService csvImportService,
+        AuthenticationUserIdResolver authenticationUserIdResolver) {
       this.csvImportService = csvImportService;
-      this.userService = userService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
     }
 
     /**
@@ -51,16 +56,16 @@ public class CsvImportController {
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             int count = csvImportService.importBankTransactions(file, bankType, userId, hasHeader);
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の銀行取引をインポートしました");
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "CSVファイルの読み込みに失敗しました: " + e.getMessage());
+            log.error("銀行取引CSVの読み込みに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "CSVファイルの読み込みに失敗しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "インポート中にエラーが発生しました: " + e.getMessage());
+            log.error("銀行取引CSVのインポートに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "インポート中にエラーが発生しました");
         }
         
         return "redirect:/csv/import";
@@ -76,29 +81,19 @@ public class CsvImportController {
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             int count = csvImportService.importCardTransactions(file, bankType, userId, hasHeader);
             redirectAttributes.addFlashAttribute("message", 
                     count + "件のカード取引をインポートしました");
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "CSVファイルの読み込みに失敗しました: " + e.getMessage());
+            log.error("カード取引CSVの読み込みに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "CSVファイルの読み込みに失敗しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "インポート中にエラーが発生しました: " + e.getMessage());
+            log.error("カード取引CSVのインポートに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "インポート中にエラーが発生しました");
         }
         
         return "redirect:/csv/import";
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userService.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
     }
 }
 

@@ -2,6 +2,8 @@ package com.example.fintrack.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +16,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.ExpenseCategory;
-import com.example.fintrack.repository.ExpenseCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.AssetCategoryService;
+import com.example.fintrack.service.ExpenseCategoryService;
 
 /**
  * カテゴリ管理コントローラー
@@ -24,28 +26,29 @@ import com.example.fintrack.service.AssetCategoryService;
 @Controller
 @RequestMapping("/categories")
 public class CategoryController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(CategoryController.class);
+
     private final AssetCategoryService assetCategoryService;
-    private final ExpenseCategoryRepository expenseCategoryRepository;
-    private final UserRepository userRepository;
-    
-    public CategoryController(AssetCategoryService assetCategoryService,
-                             ExpenseCategoryRepository expenseCategoryRepository,
-                             UserRepository userRepository) {
-        this.assetCategoryService = assetCategoryService;
-        this.expenseCategoryRepository = expenseCategoryRepository;
-        this.userRepository = userRepository;
+    private final ExpenseCategoryService expenseCategoryService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
+ 
+    public CategoryController(AssetCategoryService assetCategoryService, ExpenseCategoryService expenseCategoryService,
+        AuthenticationUserIdResolver authenticationUserIdResolver) {
+      this.assetCategoryService = assetCategoryService;
+      this.expenseCategoryService = expenseCategoryService;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
     }
-    
+
     /**
      * カテゴリ管理画面
      */
     @GetMapping
     public String categories(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
-        List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserId(userId);
+        List<ExpenseCategory> expenseCategories = expenseCategoryService.findByUserId(userId);
         
         model.addAttribute("assetCategories", assetCategories);
         model.addAttribute("expenseCategories", expenseCategories);
@@ -61,7 +64,7 @@ public class CategoryController {
                                    Authentication authentication,
                                    RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             
             AssetCategory category = new AssetCategory();
             category.setUserId(userId);
@@ -71,7 +74,8 @@ public class CategoryController {
             
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを追加しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "資産カテゴリの追加に失敗しました: " + e.getMessage());
+            log.error("資産カテゴリの追加に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "資産カテゴリの追加に失敗しました");
         }
         
         return "redirect:/categories";
@@ -85,17 +89,17 @@ public class CategoryController {
                                     Authentication authentication,
                                     RedirectAttributes redirectAttributes) {
         try {
-            Long userId = getUserId(authentication);
-            
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
             ExpenseCategory category = new ExpenseCategory();
             category.setUserId(userId);
             category.setCategoryName(categoryName.trim());
             
-            expenseCategoryRepository.save(category);
+            expenseCategoryService.save(category);
             
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを追加しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "支出カテゴリの追加に失敗しました: " + e.getMessage());
+            log.error("支出カテゴリの追加に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出カテゴリの追加に失敗しました");
         }
         
         return "redirect:/categories";
@@ -105,13 +109,16 @@ public class CategoryController {
      * 資産カテゴリ削除
      */
     @PostMapping("/asset/{id}/delete")
-    public String deleteAssetCategory(@PathVariable Long id,
-                                      RedirectAttributes redirectAttributes) {
+    public String deleteAssetCategory(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
         try {
-            assetCategoryService.deleteById(id);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
+            assetCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "資産カテゴリを削除しました");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "残高がある資産カテゴリは削除できません");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました: " + e.getMessage());
+            log.error("資産カテゴリの削除に失敗しました: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "資産カテゴリの削除に失敗しました");
         }
         
         return "redirect:/categories";
@@ -122,25 +129,18 @@ public class CategoryController {
      */
     @PostMapping("/expense/{id}/delete")
     public String deleteExpenseCategory(@PathVariable Long id,
-                                       RedirectAttributes redirectAttributes) {
+                                       RedirectAttributes redirectAttributes,
+                                       Authentication authentication) {
         try {
-            expenseCategoryRepository.deleteById(id);
+            Long userId = authenticationUserIdResolver.getUserId(authentication);
+            expenseCategoryService.deleteById(id, userId);
             redirectAttributes.addFlashAttribute("message", "支出カテゴリを削除しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "支出カテゴリの削除に失敗しました: " + e.getMessage());
+            log.error("支出カテゴリの削除に失敗しました: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "支出カテゴリの削除に失敗しました");
         }
         
         return "redirect:/categories";
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
     }
 }
 
