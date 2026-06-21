@@ -45,9 +45,6 @@
                             <tr th:each="pattern : ${splitPatternGroupList}">
                                 <td>
                                     <strong th:text="${pattern.patternName}">パターン名</strong>
-                                    <br>
-                                    <small class="text-muted">ID: <span th:text="${pattern.id}">1</span></small>
-                                </td>
                                 <td>
                                     <span class="badge" 
                                           th:classappend="${pattern.splitType == 'RATIO' ? 'bg-primary' : 'bg-success'}"
