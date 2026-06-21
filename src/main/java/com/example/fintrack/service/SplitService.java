@@ -87,7 +87,7 @@ public class SplitService {
      * 新しい分割パターンを作成（割合指定）
      */
     @Transactional
-    public Long createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
+    public void createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
                                          Map<Long, BigDecimal> categoryRatios) {
         
         // 合計が100%になるか確認
@@ -125,15 +125,13 @@ public class SplitService {
         }
 
         splitPatternRepository.insert(splitPatternList);
-        
-        return patternId;
     }
     
     /**
      * 新しい分割パターンを作成（金額指定）
      */
     @Transactional
-    public Long createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
+    public void createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
                                           Map<Long, Long> categoryAmounts) {
 
         SplitPatternGroup splitPatternGroup = new SplitPatternGroup();
@@ -171,8 +169,6 @@ public class SplitService {
             throw new IllegalArgumentException("有効な分割金額が1件以上必要です");
         }
         splitPatternRepository.insert(splitPatternList);
-
-        return patternId;
     }
     
     /**
