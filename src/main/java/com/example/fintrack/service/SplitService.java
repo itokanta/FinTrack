@@ -277,7 +277,7 @@ public class SplitService {
                 totalSplitAmount += splitAmount;
                 
                 SplitTransaction split = createSplitTransaction(pattern, splitAmount, bankTransactionId, 
-                                                               cardTransactionId, patternId, transactionType);
+                                                               cardTransactionId, patternId, transactionType, userId);
                 splits.add(split);
             }
         } else {
@@ -292,7 +292,7 @@ public class SplitService {
                 totalSplitAmount += splitAmount;
                 
                 SplitTransaction split = createSplitTransaction(pattern, splitAmount, bankTransactionId, 
-                                                               cardTransactionId, patternId, transactionType);
+                                                               cardTransactionId, patternId, transactionType, userId);
                 splits.add(split);
             }
             
@@ -311,7 +311,7 @@ public class SplitService {
     
     private SplitTransaction createSplitTransaction(SplitPattern pattern, long splitAmount, 
                                                    Long bankTransactionId, Long cardTransactionId, 
-                                                   Long patternId, TransactionType transactionType) {
+                                                   Long patternId, TransactionType transactionType, Long userId) {
         SplitTransaction split = new SplitTransaction();
         split.setTransactionType(transactionType);
         split.setAssetCategoryId(pattern.getAssetCategoryId());
@@ -320,7 +320,7 @@ public class SplitService {
         split.setAmount(splitAmount);
         split.setBankTransactionId(bankTransactionId);
         split.setCardTransactionId(cardTransactionId);
-        split.setUserId(patternId);
+        split.setUserId(userId);
         
         return split;
     }
