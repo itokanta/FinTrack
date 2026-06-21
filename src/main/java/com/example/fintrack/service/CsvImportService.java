@@ -284,7 +284,7 @@ public class CsvImportService {
                 discrepancy.setDifferenceAmount(differenceAmount);
                 discrepancy.setIsResolved(false);
 
-                discrepancyRepository.save(discrepancy);
+                discrepancyRepository.insert(discrepancy);
             }
         }
 

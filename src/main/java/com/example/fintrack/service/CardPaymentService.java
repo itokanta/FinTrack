@@ -3,7 +3,6 @@ package com.example.fintrack.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
 import com.example.fintrack.domain.CardTransaction;
@@ -53,11 +52,7 @@ public class CardPaymentService {
     return discrepancyRepository.findByUserId(userId);
   }
 
-  /**
-   * カード差異を解決済みにする
-   */
-  @Transactional
-  public void markDiscrepancyAsResolved(Long discrepancyId) {
-    discrepancyRepository.markAsResolved(discrepancyId);
+  public CardPaymentDiscrepancy findById(Long id, Long userId) {
+    return discrepancyRepository.findById(id, userId).orElseThrow(() -> new IllegalArgumentException("カード差異が見つかりません。"));
   }
 }

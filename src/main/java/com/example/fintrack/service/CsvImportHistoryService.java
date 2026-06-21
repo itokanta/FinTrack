@@ -168,7 +168,7 @@ public class CsvImportHistoryService {
       }
 
       if (!isSplitCardTransactionIdList.isEmpty()) {
-        List<SplitTransaction> splitTransactionList = splitTransactionRepository.findByCardTransactionIds(isSplitCardTransactionIdList);
+        List<SplitTransaction> splitTransactionList = splitTransactionRepository.findByCardTransactionIds(isSplitCardTransactionIdList, userId);
         Long nullAmount = splitTransactionAmountRollback(splitTransactionList, assetAmountUpdateMap);
         assetCategoryIdIsNullAmount += nullAmount;
       }
@@ -251,13 +251,13 @@ public class CsvImportHistoryService {
       }
 
       if (!isSplitBankTransactionIdList.isEmpty()) {
-        List<SplitTransaction> splitTransactionList = splitTransactionRepository.findByBankTransactionIds(isSplitBankTransactionIdList);
+        List<SplitTransaction> splitTransactionList = splitTransactionRepository.findByBankTransactionIds(isSplitBankTransactionIdList, userId);
         Long nullAmount = splitTransactionAmountRollback(splitTransactionList, assetAmountUpdateMap);
         assetCategoryIdIsNullAmount += nullAmount;
       }
 
       if (!isSplitDiscrepancyTransactionIdList.isEmpty()){
-        List<SplitTransaction> splitTransactionList = splitTransactionRepository.findByDiscrepancyTransactionIds(isSplitDiscrepancyTransactionIdList);
+        List<SplitTransaction> splitTransactionList = splitTransactionRepository.findByDiscrepancyTransactionIds(isSplitDiscrepancyTransactionIdList, userId);
         Long nullAmount = splitTransactionAmountRollback(splitTransactionList, assetAmountUpdateMap);
         assetCategoryIdIsNullAmount += nullAmount;
       }

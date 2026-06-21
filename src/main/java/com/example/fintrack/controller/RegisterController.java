@@ -1,6 +1,7 @@
 package com.example.fintrack.controller;
 
-import com.example.fintrack.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,12 +9,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.fintrack.service.UserService;
+
 /**
  * ユーザー登録コントローラー
  */
 @Controller
 public class RegisterController {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(RegisterController.class);
+
     private final UserService userService;
     
     public RegisterController(UserService userService) {
@@ -65,10 +70,12 @@ public class RegisterController {
             return "redirect:/login";
             
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            log.warn("ユーザー登録のバリデーションに失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "ユーザー登録に失敗しました。入力内容を確認してください。");
             return "redirect:/register";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "ユーザー登録に失敗しました: " + e.getMessage());
+            log.error("ユーザー登録に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "ユーザー登録に失敗しました");
             return "redirect:/register";
         }
     }

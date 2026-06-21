@@ -9,16 +9,6 @@
     <div layout:fragment="content">
         <h2 class="mb-4">カード差異の解決</h2>
         
-        <!-- メッセージ表示 -->
-        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${message}">メッセージ</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}">エラー</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        
         <!-- 差異情報 -->
         <div class="card mb-4">
             <div class="card-header bg-warning">

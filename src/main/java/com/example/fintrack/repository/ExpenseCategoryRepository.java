@@ -3,7 +3,6 @@ package com.example.fintrack.repository;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -30,16 +29,6 @@ public class ExpenseCategoryRepository {
         this.template = template;
     }
 
-    public Optional<ExpenseCategory> findById(Long id) {
-        String sql = "SELECT id, user_id, category_name, created_at FROM expense_categories WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
-        List<ExpenseCategory> categories = template.query(sql, params, ROW_MAPPER);
-        if (categories.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(categories.get(0));
-    }
-
     public List<ExpenseCategory> findByUserId(Long userId) {
         String sql = "SELECT id, user_id, category_name, created_at FROM expense_categories WHERE user_id = :userId ORDER BY id";
         MapSqlParameterSource params = new MapSqlParameterSource("userId", userId);
@@ -57,19 +46,22 @@ public class ExpenseCategoryRepository {
             category.setId(((Number) result.get("id")).longValue());
             category.setCreatedAt(((Timestamp) result.get("created_at")).toLocalDateTime());
         } else {
-            String sql = "UPDATE expense_categories SET user_id = :userId, category_name = :categoryName WHERE id = :id";
+            String sql = "UPDATE expense_categories SET user_id = :userId, category_name = :categoryName WHERE id = :id AND user_id = :userId";
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue("userId", category.getUserId())
                     .addValue("categoryName", category.getCategoryName())
-                    .addValue("id", category.getId());
+                    .addValue("id", category.getId())
+                    .addValue("userId", category.getUserId());
             template.update(sql, params);
         }
         return category;
     }
 
-    public void deleteById(Long id) {
-        String sql = "DELETE FROM expense_categories WHERE id = :id";
-        MapSqlParameterSource params = new MapSqlParameterSource("id", id);
+    public void deleteById(Long id, Long userId) {
+        String sql = "DELETE FROM expense_categories WHERE id = :id AND user_id = :userId";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("userId", userId);
         template.update(sql, params);
     }
 }

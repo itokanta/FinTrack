@@ -1,8 +1,11 @@
 package com.example.fintrack.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,8 +18,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.fintrack.domain.AssetCategory;
 import com.example.fintrack.domain.SplitPatternGroup;
 import com.example.fintrack.domain.TransactionType;
-import com.example.fintrack.repository.AssetCategoryRepository;
-import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.security.AuthenticationUserIdResolver;
+import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.AssetService;
 import com.example.fintrack.service.SplitService;
 import com.example.fintrack.service.TransactionService;
@@ -27,20 +30,21 @@ import com.example.fintrack.service.TransactionService;
 @Controller
 @RequestMapping("/assets")
 public class AssetController {
-    
-    private final AssetService assetService;
-    private final UserRepository userRepository;
-    private final TransactionService transactionService;
-    private final AssetCategoryRepository assetCategoryRepository;
-    private final com.example.fintrack.service.SplitService splitService;
 
-    public AssetController(AssetService assetService, UserRepository userRepository,
-        TransactionService transactionService, AssetCategoryRepository assetCategoryRepository,
-        SplitService splitService) {
+    private static final Logger log = LoggerFactory.getLogger(AssetController.class);
+
+    private final AssetService assetService;
+    private final AuthenticationUserIdResolver authenticationUserIdResolver;
+    private final TransactionService transactionService;
+    private final AssetCategoryService assetCategoryService;
+    private final SplitService splitService;
+
+    public AssetController(AssetService assetService, AuthenticationUserIdResolver authenticationUserIdResolver,
+        TransactionService transactionService, AssetCategoryService assetCategoryService, SplitService splitService) {
       this.assetService = assetService;
-      this.userRepository = userRepository;
+      this.authenticationUserIdResolver = authenticationUserIdResolver;
       this.transactionService = transactionService;
-      this.assetCategoryRepository = assetCategoryRepository;
+      this.assetCategoryService = assetCategoryService;
       this.splitService = splitService;
     }
 
@@ -49,7 +53,7 @@ public class AssetController {
      */
     @GetMapping
     public String assets(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // カテゴリ別残高を取得
         Map<AssetCategory, Long> balances = assetService.getBalanceByCategory(userId);
@@ -72,7 +76,7 @@ public class AssetController {
      */
     @GetMapping("/confirmed")
     public String confirmed(Authentication authentication, Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 通常の残高を取得
         Map<AssetCategory, Long> balances = assetService.getBalanceByCategory(userId);
@@ -106,7 +110,7 @@ public class AssetController {
             @RequestParam(value = "type", defaultValue = "EXPENSE") TransactionType transactionType,
             Authentication authentication,
             Model model) {
-        Long userId = getUserId(authentication);
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         List<TransactionService.TransactionWithAsset> transactions;
         
@@ -115,7 +119,7 @@ public class AssetController {
             transactions = transactionService.getUncategorizedIncomes(userId);
             
             // 資産カテゴリ一覧を取得
-            List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+            List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
             // 分割パターン一覧を取得
@@ -127,7 +131,7 @@ public class AssetController {
             transactions = transactionService.getUncategorizedExpenses(userId);
             
             // 資産カテゴリ一覧を取得
-            List<AssetCategory> assetCategories = assetCategoryRepository.findByUserId(userId);
+            List<AssetCategory> assetCategories = assetCategoryService.findByUserId(userId);
             model.addAttribute("assetCategories", assetCategories);
             
             // 分割パターン一覧を取得（支出用）
@@ -148,31 +152,38 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-single")
     public String bulkSplitSingle(@RequestParam Long categoryId,
                                   @RequestParam(required = false) List<String> transactionIds,
-                                  RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes,
+                                  Authentication authentication) {
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
         }
+
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
         
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncomeSingle(bankId, null, categoryId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncomeSingle(null, cardId, categoryId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
             
+            splitService.splitIncomeSingleAll(bankIdList, cardIdList, categoryId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の収入を1つのカテゴリに分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "収入の分配に失敗しました: " + e.getMessage());
+            log.error("未分類収入の単一カテゴリ一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.INCOME);
@@ -184,31 +195,38 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-income")
     public String bulkSplitIncome(@RequestParam Long patternId,
                                   @RequestParam(required = false) List<String> transactionIds,
-                                  RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes,
+                                  Authentication authentication) {
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.INCOME);
         }
         
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
+
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncome(bankId, null, patternId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitIncome(null, cardId, patternId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
-            
+
+            splitService.splitIncomeAll(bankIdList, cardIdList, patternId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の収入を分割パターンで分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "収入の分配に失敗しました: " + e.getMessage());
+            log.error("未分類収入の分割パターン一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "収入の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.INCOME);
@@ -220,31 +238,38 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-expense-single")
     public String bulkSplitExpenseSingle(@RequestParam Long categoryId,
                                          @RequestParam(required = false) List<String> transactionIds,
-                                         RedirectAttributes redirectAttributes) {
+                                         RedirectAttributes redirectAttributes,
+                                         Authentication authentication) {
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.EXPENSE);
         }
         
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
+
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpenseSingle(bankId, null, categoryId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpenseSingle(null, cardId, categoryId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
-            
+
+            splitService.splitExpenseSingleAll(bankIdList, cardIdList, categoryId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の支出を1つのカテゴリに分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "支出の分配に失敗しました: " + e.getMessage());
+            log.error("未分類支出の単一カテゴリ一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.EXPENSE);
@@ -256,31 +281,38 @@ public class AssetController {
     @PostMapping("/uncategorized/bulk-split-expense")
     public String bulkSplitExpense(@RequestParam Long patternId,
                                    @RequestParam(required = false) List<String> transactionIds,
-                                   RedirectAttributes redirectAttributes) {
+                                   RedirectAttributes redirectAttributes,
+                                   Authentication authentication) {
+        Long userId = authenticationUserIdResolver.getUserId(authentication);
         if (transactionIds == null || transactionIds.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "取引を選択してください");
             return redirectUncategorized(TransactionType.EXPENSE);
         }
         
+        List<Long> bankIdList = new ArrayList<>();
+        List<Long> cardIdList = new ArrayList<>();
+
         try {
             int count = 0;
             for (String transactionId : transactionIds) {
                 if (transactionId.startsWith("bank_")) {
                     Long bankId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpense(bankId, null, patternId);
+                    bankIdList.add(bankId);
                     count++;
                 } else if (transactionId.startsWith("card_")) {
                     Long cardId = Long.parseLong(transactionId.substring(5));
-                    splitService.splitExpense(null, cardId, patternId);
+                    cardIdList.add(cardId);
                     count++;
                 }
             }
-            
+
+            splitService.splitExpenseAll(bankIdList, cardIdList, patternId, userId);
+
             redirectAttributes.addFlashAttribute("message", 
                     count + "件の支出を分割パターンで分配しました");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", 
-                    "支出の分配に失敗しました: " + e.getMessage());
+            log.error("未分類支出の分割パターン一括分配に失敗しました", e);
+            redirectAttributes.addFlashAttribute("error", "支出の分配に失敗しました");
         }
         
         return redirectUncategorized(TransactionType.EXPENSE);
@@ -288,15 +320,5 @@ public class AssetController {
     
     private static String redirectUncategorized(TransactionType transactionType) {
         return "redirect:/assets/uncategorized?type=" + transactionType.name();
-    }
-    
-    /**
-     * ユーザーIDを取得
-     */
-    private Long getUserId(Authentication authentication) {
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))
-                .getId();
     }
 }
