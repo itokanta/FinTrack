@@ -1,5 +1,6 @@
 package com.example.fintrack.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.jdbc.core.RowMapper;
@@ -136,5 +137,57 @@ public class SplitTransactionRepository {
         }
 
         template.batchUpdate(sql, batchParams);
+    }
+
+    public Long sumAmountFromBankSplits(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(st.amount), 0) " +
+                "FROM split_transactions st " +
+                "INNER JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
+                "WHERE st.user_id = :userId AND bt.user_id = :userId " +
+                "AND st.transaction_type = :transactionType " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
+                "AND bt.is_card_payment = FALSE";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("transactionType", transactionType.name())
+                        .addValue("startDate", startDate)
+                        .addValue("endDate", endDate);
+        return template.queryForObject(sql, param, Long.class);
+    }
+
+    public Long sumAmountFromCardSplits(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(st.amount), 0) " +
+                "FROM split_transactions st " +
+                "INNER JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
+                "WHERE st.user_id = :userId AND ct.user_id = :userId " +
+                "AND st.transaction_type = :transactionType " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND ct.transaction_date BETWEEN :startDate AND :endDate";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("transactionType", transactionType.name())
+                        .addValue("startDate", startDate)
+                        .addValue("endDate", endDate);
+        return template.queryForObject(sql, param, Long.class);
+    }
+
+    public Long sumAmountFromDiscrepancySplits(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(st.amount), 0) " +
+                "FROM split_transactions st " +
+                "INNER JOIN discrepancy_transactions dt ON st.discrepancy_transaction_id = dt.id " +
+                "WHERE st.user_id = :userId AND dt.user_id = :userId " +
+                "AND st.transaction_type = :transactionType " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND dt.transaction_date BETWEEN :startDate AND :endDate";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("transactionType", transactionType.name())
+                        .addValue("startDate", startDate)
+                        .addValue("endDate", endDate);
+        return template.queryForObject(sql, param, Long.class);
     }
 }

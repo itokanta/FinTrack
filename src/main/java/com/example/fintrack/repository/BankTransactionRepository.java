@@ -199,4 +199,19 @@ public class BankTransactionRepository {
         
         template.update(sql, param);
     }
+
+    public Long sumAmountByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) " +
+                    "FROM bank_transactions " +
+                    "WHERE user_id = :userId AND transaction_type = :transactionType " +
+                    "AND transaction_date BETWEEN :startDate AND :endDate " +
+                    "AND (split_method IS NULL OR split_method = 'SINGLE') " +
+                    "AND is_card_payment = FALSE";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("transactionType", transactionType.name())
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate);
+        return template.queryForObject(sql, param, Long.class);
+    }
 }
