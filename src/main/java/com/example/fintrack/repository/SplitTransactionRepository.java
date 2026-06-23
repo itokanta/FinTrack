@@ -149,12 +149,7 @@ public class SplitTransactionRepository {
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
                 "AND bt.is_card_payment = FALSE";
-        MapSqlParameterSource param = new MapSqlParameterSource()
-                        .addValue("userId", userId)
-                        .addValue("transactionType", transactionType.name())
-                        .addValue("startDate", startDate)
-                        .addValue("endDate", endDate);
-        return template.queryForObject(sql, param, Long.class);
+        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
     }
 
     public Long sumAmountFromCardSplits(Long userId, TransactionType transactionType,
@@ -166,12 +161,7 @@ public class SplitTransactionRepository {
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND ct.transaction_date BETWEEN :startDate AND :endDate";
-        MapSqlParameterSource param = new MapSqlParameterSource()
-                        .addValue("userId", userId)
-                        .addValue("transactionType", transactionType.name())
-                        .addValue("startDate", startDate)
-                        .addValue("endDate", endDate);
-        return template.queryForObject(sql, param, Long.class);
+        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
     }
 
     public Long sumAmountFromDiscrepancySplits(Long userId, TransactionType transactionType,
@@ -183,11 +173,16 @@ public class SplitTransactionRepository {
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND dt.transaction_date BETWEEN :startDate AND :endDate";
+        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
+    }
+
+    private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                         .addValue("userId", userId)
                         .addValue("transactionType", transactionType.name())
                         .addValue("startDate", startDate)
                         .addValue("endDate", endDate);
-        return template.queryForObject(sql, param, Long.class);
+        return param;
     }
 }
