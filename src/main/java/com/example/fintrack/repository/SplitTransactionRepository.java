@@ -176,13 +176,56 @@ public class SplitTransactionRepository {
         return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
     }
 
+    public List<SplitTransaction> findByUserIdAndTransactionDateFromBankSplits(Long userId, TransactionType transactionType,
+                    LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
+                "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id " +
+                "FROM split_transactions st " +
+                "INNER JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
+                "WHERE st.user_id = :userId AND bt.user_id = :userId " +
+                "AND st.transaction_type = :transactionType " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
+                "AND bt.is_card_payment = FALSE " +
+                "ORDER BY st.amount DESC, bt.transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByUserIdAndTransactionDateFromCardSplits(Long userId, TransactionType transactionType,
+                    LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
+                "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id " +
+                "FROM split_transactions st " +
+                "INNER JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
+                "WHERE st.user_id = :userId AND ct.user_id = :userId " +
+                "AND st.transaction_type = :transactionType " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND ct.transaction_date BETWEEN :startDate AND :endDate " +
+                "ORDER BY st.amount DESC, ct.transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
+    public List<SplitTransaction> findByUserIdAndTransactionDateFromDiscrepancySplits(Long userId, TransactionType transactionType,
+                    LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
+                "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id " +
+                "FROM split_transactions st " +
+                "INNER JOIN discrepancy_transactions dt ON st.discrepancy_transaction_id = dt.id " +
+                "WHERE st.user_id = :userId AND dt.user_id = :userId " +
+                "AND st.transaction_type = :transactionType " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND dt.transaction_date BETWEEN :startDate AND :endDate " +
+                "ORDER BY st.amount DESC, dt.transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
     private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
-                        .addValue("userId", userId)
-                        .addValue("transactionType", transactionType.name())
-                        .addValue("startDate", startDate)
-                        .addValue("endDate", endDate);
+                .addValue("userId", userId)
+                .addValue("transactionType", transactionType.name())
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate);
         return param;
     }
 }

@@ -77,11 +77,11 @@ public class DiscrepancyTransactionRepository {
         if (bankTransactionIdList.isEmpty()) {
             return List.of();
         }
-        String sql = "SELECT dt.id, dt.description, dt.amount, dt.transaction_type, dt.transaction_date, dt.user_id, "
-                     + "dt.bank_transaction_id, dt.asset_category_id, dt.expense_category_id, dt.split_pattern_id, "
-                     + "dt.card_payment_discrepancy_id, dt.created_at, dt.split_method "
-                     + "FROM discrepancy_transactions dt "
-                     + "WHERE dt.user_id = :userId AND dt.bank_transaction_id IN (:ids)";
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
+                    "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
+                    "card_payment_discrepancy_id, created_at, split_method " +
+                    "FROM discrepancy_transactions " +
+                    "WHERE user_id = :userId AND bank_transaction_id IN (:ids)";
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ids", bankTransactionIdList)
                 .addValue("userId", userId);
@@ -94,11 +94,29 @@ public class DiscrepancyTransactionRepository {
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
                 "AND (split_method IS NULL OR split_method = 'SINGLE')";
+        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
+    }
+
+    public List<DiscrepancyTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
+                "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
+                "card_payment_discrepancy_id, created_at, split_method " +
+                "FROM discrepancy_transactions " +
+                "WHERE user_id = :userId AND transaction_type = :transactionType " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND (split_method IS NULL OR split_method = 'SINGLE')" +
+                "ORDER BY amount, transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
+    private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("transactionType", transactionType.name())
                 .addValue("startDate", startDate)
                 .addValue("endDate", endDate);
-        return template.queryForObject(sql, param, Long.class);
+        return param;
     }
 }

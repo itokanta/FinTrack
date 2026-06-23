@@ -207,11 +207,30 @@ public class BankTransactionRepository {
                     "AND transaction_date BETWEEN :startDate AND :endDate " +
                     "AND (split_method IS NULL OR split_method = 'SINGLE') " +
                     "AND is_card_payment = FALSE";
+        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
+    }
+
+    public List<BankTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
+                "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
+                "is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
+                "FROM bank_transactions " +
+                "WHERE user_id = :userId AND transaction_type = :transactionType " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
+                "AND is_card_payment = FALSE" +
+                "ORDER BY amount, transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
+    private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("transactionType", transactionType.name())
                 .addValue("startDate", startDate)
                 .addValue("endDate", endDate);
-        return template.queryForObject(sql, param, Long.class);
+        return param;
     }
 }
