@@ -27,10 +27,5 @@ public class SplitTransaction {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userId;
-    
-    // JOIN時に使用
-    private AssetCategory assetCategory;
-    private BankTransaction bankTransaction;
-    private CardTransaction cardTransaction;
 }
 
