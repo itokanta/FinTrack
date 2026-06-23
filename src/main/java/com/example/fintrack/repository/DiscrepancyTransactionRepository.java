@@ -13,9 +13,14 @@ import org.springframework.stereotype.Repository;
 import com.example.fintrack.domain.DiscrepancyTransaction;
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.domain.dto.MonthlySummary;
+import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryExtractor;
 
 @Repository
 public class DiscrepancyTransactionRepository {
+
+    private static final MonthlySummaryByAssetCategoryExtractor MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR =
+            new MonthlySummaryByAssetCategoryExtractor();
 
     private static final RowMapper<DiscrepancyTransaction> ROW_MAPPER = (rs, rowNum) -> {
         DiscrepancyTransaction dt = new DiscrepancyTransaction();
@@ -108,6 +113,23 @@ public class DiscrepancyTransactionRepository {
                 "AND (split_method IS NULL OR split_method = 'SINGLE')" +
                 "ORDER BY amount, transaction_date DESC";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
+    public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategory(Long userId, LocalDate startDate,
+            LocalDate endDate) {
+        String sql = "SELECT asset_category_id, " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
+                "FROM discrepancy_transactions " +
+                "WHERE user_id = :userId " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
+                "GROUP BY asset_category_id";
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate);
+        return template.query(sql, param, MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
     private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,

@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Repository;
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.domain.dto.MonthlySummary;
+import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryExtractor;
 
 @Repository
 public class SplitTransactionRepository {
@@ -49,6 +52,9 @@ public class SplitTransactionRepository {
         splitTransaction.setDescription(rs.getString("description"));
         return splitTransaction;
     };
+
+    private static final MonthlySummaryByAssetCategoryExtractor MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR =
+            new MonthlySummaryByAssetCategoryExtractor();
 
     private final NamedParameterJdbcTemplate template;
 
@@ -229,11 +235,62 @@ public class SplitTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), WITH_DESCRIPTION_ROW_MAPPER);
     }
 
+    public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategoryFromBankSplits(Long userId, LocalDate startDate,
+            LocalDate endDate) {
+        String sql = "SELECT st.asset_category_id, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'EXPENSE' THEN st.amount END), 0) AS expense_amount " +
+                "FROM split_transactions st " +
+                "INNER JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
+                "WHERE st.user_id = :userId AND bt.user_id = :userId " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
+                "AND bt.is_card_payment = FALSE " +
+                "GROUP BY st.asset_category_id";
+        return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
+    }
+
+    public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategoryFromCardSplits(Long userId, LocalDate startDate,
+            LocalDate endDate) {
+        String sql = "SELECT st.asset_category_id, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'EXPENSE' THEN st.amount END), 0) AS expense_amount " +
+                "FROM split_transactions st " +
+                "INNER JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
+                "WHERE st.user_id = :userId AND ct.user_id = :userId " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND ct.transaction_date BETWEEN :startDate AND :endDate " +
+                "GROUP BY st.asset_category_id";
+        return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
+    }
+
+    public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategoryFromDiscrepancySplits(Long userId,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT st.asset_category_id, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'EXPENSE' THEN st.amount END), 0) AS expense_amount " +
+                "FROM split_transactions st " +
+                "INNER JOIN discrepancy_transactions dt ON st.discrepancy_transaction_id = dt.id " +
+                "WHERE st.user_id = :userId AND dt.user_id = :userId " +
+                "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND dt.transaction_date BETWEEN :startDate AND :endDate " +
+                "GROUP BY st.asset_category_id";
+        return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
+    }
+
     private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("transactionType", transactionType.name())
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate);
+        return param;
+    }
+
+    private MapSqlParameterSource makeParam(Long userId, LocalDate startDate, LocalDate endDate) {
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("userId", userId)
                 .addValue("startDate", startDate)
                 .addValue("endDate", endDate);
         return param;
