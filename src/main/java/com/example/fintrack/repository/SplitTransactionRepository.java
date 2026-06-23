@@ -1,5 +1,7 @@
 package com.example.fintrack.repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,7 +18,7 @@ import com.example.fintrack.domain.TransactionType;
 @Repository
 public class SplitTransactionRepository {
 
-    private static final RowMapper<SplitTransaction> ROW_MAPPER = (rs, rowNum) -> {
+    private static SplitTransaction mapRow(ResultSet rs) throws SQLException {
         SplitTransaction splitTransaction = new SplitTransaction();
         splitTransaction.setId(rs.getLong("id"));
         String transactionType = rs.getString("transaction_type");
@@ -37,6 +39,14 @@ public class SplitTransactionRepository {
         splitTransaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
         splitTransaction.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
         splitTransaction.setUserId(rs.getLong("user_id"));
+        return splitTransaction;
+    }
+
+    private static final RowMapper<SplitTransaction> ROW_MAPPER = (rs, rowNum) -> mapRow(rs);
+
+    private static final RowMapper<SplitTransaction> WITH_DESCRIPTION_ROW_MAPPER = (rs, rowNum) -> {
+        SplitTransaction splitTransaction = mapRow(rs);
+        splitTransaction.setDescription(rs.getString("description"));
         return splitTransaction;
     };
 
@@ -178,8 +188,8 @@ public class SplitTransactionRepository {
 
     public List<SplitTransaction> findByUserIdAndTransactionDateFromBankSplits(Long userId, TransactionType transactionType,
                     LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
-                "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id " +
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
+                "st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id, bt.description " +
                 "FROM split_transactions st " +
                 "INNER JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
                 "WHERE st.user_id = :userId AND bt.user_id = :userId " +
@@ -188,13 +198,13 @@ public class SplitTransactionRepository {
                 "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
                 "AND bt.is_card_payment = FALSE " +
                 "ORDER BY st.amount DESC, bt.transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), WITH_DESCRIPTION_ROW_MAPPER);
     }
 
     public List<SplitTransaction> findByUserIdAndTransactionDateFromCardSplits(Long userId, TransactionType transactionType,
                     LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
-                "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id " +
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
+                "st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id, ct.description " +
                 "FROM split_transactions st " +
                 "INNER JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
                 "WHERE st.user_id = :userId AND ct.user_id = :userId " +
@@ -202,13 +212,13 @@ public class SplitTransactionRepository {
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND ct.transaction_date BETWEEN :startDate AND :endDate " +
                 "ORDER BY st.amount DESC, ct.transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), WITH_DESCRIPTION_ROW_MAPPER);
     }
 
     public List<SplitTransaction> findByUserIdAndTransactionDateFromDiscrepancySplits(Long userId, TransactionType transactionType,
                     LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, " +
-                "st.bank_transaction_id, st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id " +
+        String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
+                "st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id, dt.description " +
                 "FROM split_transactions st " +
                 "INNER JOIN discrepancy_transactions dt ON st.discrepancy_transaction_id = dt.id " +
                 "WHERE st.user_id = :userId AND dt.user_id = :userId " +
@@ -216,7 +226,7 @@ public class SplitTransactionRepository {
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND dt.transaction_date BETWEEN :startDate AND :endDate " +
                 "ORDER BY st.amount DESC, dt.transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), WITH_DESCRIPTION_ROW_MAPPER);
     }
 
     private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
