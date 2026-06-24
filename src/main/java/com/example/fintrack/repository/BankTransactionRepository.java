@@ -247,7 +247,7 @@ public class BankTransactionRepository {
                 "FROM bank_transactions " +
                 "WHERE user_id = :userId " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
+                "AND split_method = 'SINGLE' " +
                 "AND is_card_payment = FALSE " +
                 "GROUP BY asset_category_id";
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
