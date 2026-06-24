@@ -5,7 +5,6 @@ import java.time.YearMonth;
 
 import org.springframework.stereotype.Service;
 
-import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.MonthlySummary;
 import com.example.fintrack.repository.BankTransactionRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
@@ -32,27 +31,21 @@ public class MonthlyReportService {
   public MonthlySummary getMonthlyTotals(Long userId, YearMonth yearMonth){
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();
+    MonthlySummary monthlySummary = new MonthlySummary(0L, 0L, 0L);
 
-    MonthlySummary monthlySummary = new MonthlySummary();
-
-    Long incomeAmount = sumByTransactionType(userId, TransactionType.INCOME, startDate, endDate);
-
-    Long expenseAmount = sumByTransactionType(userId, TransactionType.EXPENSE, startDate, endDate);
-
-    monthlySummary.setIncomeAmount(incomeAmount);
-    monthlySummary.setExpenseAmount(expenseAmount);
-    monthlySummary.setTotalAmount(incomeAmount - expenseAmount);
+    add(monthlySummary, bankTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
+    add(monthlySummary, cardTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
+    add(monthlySummary, discrepancyTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
+    add(monthlySummary, splitTransactionRepository.sumAmountFromBankSplits(userId, startDate, endDate));
+    add(monthlySummary, splitTransactionRepository.sumAmountFromCardSplits(userId, startDate, endDate));
+    add(monthlySummary, splitTransactionRepository.sumAmountFromDiscrepancySplits(userId, startDate, endDate));
 
     return monthlySummary;
   }
 
-  private Long sumByTransactionType(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
-    Long sumAmount = bankTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, transactionType,startDate, endDate) +
-        cardTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, transactionType, startDate, endDate) +
-        discrepancyTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, transactionType, startDate, endDate) +
-        splitTransactionRepository.sumAmountFromBankSplits(userId, transactionType, startDate, endDate) +
-        splitTransactionRepository.sumAmountFromCardSplits(userId, transactionType, startDate, endDate) +
-        splitTransactionRepository.sumAmountFromDiscrepancySplits(userId, transactionType, startDate, endDate);
-    return sumAmount;
+  private void add(MonthlySummary result, MonthlySummary addData) {
+    result.setIncomeAmount(result.getIncomeAmount() + addData.getIncomeAmount());
+    result.setExpenseAmount(result.getExpenseAmount() + addData.getExpenseAmount());
+    result.setTotalAmount(result.getTotalAmount() + addData.getTotalAmount());
   }
 }

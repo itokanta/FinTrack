@@ -17,6 +17,7 @@ import com.example.fintrack.domain.SplitTransaction;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.MonthlySummary;
 import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryExtractor;
+import com.example.fintrack.repository.rowmapper.MonthlySummaryRowMapper;
 
 @Repository
 public class SplitTransactionRepository {
@@ -52,6 +53,8 @@ public class SplitTransactionRepository {
         splitTransaction.setDescription(rs.getString("description"));
         return splitTransaction;
     };
+
+    private static final MonthlySummaryRowMapper MONTHLY_SUMMARY_ROW_MAPPER = new MonthlySummaryRowMapper();
 
     private static final MonthlySummaryByAssetCategoryExtractor MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR =
             new MonthlySummaryByAssetCategoryExtractor();
@@ -155,41 +158,41 @@ public class SplitTransactionRepository {
         template.batchUpdate(sql, batchParams);
     }
 
-    public Long sumAmountFromBankSplits(Long userId, TransactionType transactionType,
-            LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(st.amount), 0) " +
+    public MonthlySummary sumAmountFromBankSplits(Long userId, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'EXPENSE' THEN st.amount END), 0) AS expense_amount " +
                 "FROM split_transactions st " +
                 "INNER JOIN bank_transactions bt ON st.bank_transaction_id = bt.id " +
                 "WHERE st.user_id = :userId AND bt.user_id = :userId " +
-                "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
                 "AND bt.is_card_payment = FALSE";
-        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
+        return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
-    public Long sumAmountFromCardSplits(Long userId, TransactionType transactionType,
-            LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(st.amount), 0) " +
+    public MonthlySummary sumAmountFromCardSplits(Long userId, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, "+
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'EXPENSE' THEN st.amount END), 0) AS expense_amount " +
                 "FROM split_transactions st " +
                 "INNER JOIN card_transactions ct ON st.card_transaction_id = ct.id " +
                 "WHERE st.user_id = :userId AND ct.user_id = :userId " +
-                "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND ct.transaction_date BETWEEN :startDate AND :endDate";
-        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
+        return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
-    public Long sumAmountFromDiscrepancySplits(Long userId, TransactionType transactionType,
-            LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(st.amount), 0) " +
+    public MonthlySummary sumAmountFromDiscrepancySplits(Long userId, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN st.transaction_type = 'EXPENSE' THEN st.amount END), 0) AS expense_amount " +
                 "FROM split_transactions st " +
                 "INNER JOIN discrepancy_transactions dt ON st.discrepancy_transaction_id = dt.id " +
                 "WHERE st.user_id = :userId AND dt.user_id = :userId " +
-                "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND dt.transaction_date BETWEEN :startDate AND :endDate";
-        return template.queryForObject(sql, makeParam(userId, transactionType, startDate, endDate), Long.class);
+        return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
     public List<SplitTransaction> findByUserIdAndTransactionDateFromBankSplits(Long userId, TransactionType transactionType,
