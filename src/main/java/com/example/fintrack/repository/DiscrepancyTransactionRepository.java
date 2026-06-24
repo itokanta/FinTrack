@@ -138,6 +138,18 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
+    public MonthlySummary sumMonthlySummaryBySplitMethodIsNull(Long userId, LocalDate startDate,
+            LocalDate endDate) {
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
+                "FROM discrepancy_transactions " +
+                "WHERE user_id = :userId " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND split_method IS NULL";
+        return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
+    }
+
     private MapSqlParameterSource makeParam(Long userId, LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("userId", userId)
