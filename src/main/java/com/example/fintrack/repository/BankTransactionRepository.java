@@ -208,19 +208,7 @@ public class BankTransactionRepository {
         template.update(sql, param);
     }
 
-    public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT " +
-                "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
-                "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
-                "FROM bank_transactions " +
-                "WHERE user_id = :userId " +
-                "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
-                "AND is_card_payment = FALSE";
-        return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
-    }
-
-    public List<BankTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType,
+    public List<BankTransaction> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
                 "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
@@ -231,12 +219,19 @@ public class BankTransactionRepository {
                 "AND (split_method IS NULL OR split_method = 'SINGLE') " +
                 "AND is_card_payment = FALSE " +
                 "ORDER BY amount, transaction_date DESC";
-        MapSqlParameterSource param = new MapSqlParameterSource()
-                .addValue("userId", userId)
-                .addValue("transactionType", transactionType.name())
-                .addValue("startDate", startDate)
-                .addValue("endDate", endDate);
-        return template.query(sql, param, ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
+    public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
+                "FROM bank_transactions " +
+                "WHERE user_id = :userId " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
+                "AND is_card_payment = FALSE";
+        return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
     public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategory(Long userId, LocalDate startDate,
@@ -269,6 +264,15 @@ public class BankTransactionRepository {
     private MapSqlParameterSource makeParam(Long userId, LocalDate startDate, LocalDate endDate) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("userId", userId)
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate);
+        return param;
+    }
+
+    private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
+        MapSqlParameterSource param = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("transactionType", transactionType.name())
                 .addValue("startDate", startDate)
                 .addValue("endDate", endDate);
         return param;
