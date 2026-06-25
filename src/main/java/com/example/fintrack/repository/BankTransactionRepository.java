@@ -208,6 +208,18 @@ public class BankTransactionRepository {
         template.update(sql, param);
     }
 
+    public List<BankTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
+                "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
+                "is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
+                "FROM bank_transactions " +
+                "WHERE user_id = :userId AND transaction_type = :transactionType " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND is_card_payment = FALSE " +
+                "ORDER BY amount, transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
     public List<BankTransaction> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +

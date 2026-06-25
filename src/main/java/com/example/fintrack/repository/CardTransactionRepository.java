@@ -342,6 +342,17 @@ public class CardTransactionRepository {
         return template.query(sql, params, new CardTransactionUpdateDetailExtractor());
     }
 
+    public List<CardTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
+                "asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, card_type, " +
+                "payment_month, is_paid, created_at, csv_import_history_id, update_count, updated_at " +
+                "FROM card_transactions " +
+                "WHERE user_id = :userId AND transaction_type = :transactionType " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "ORDER BY amount, transaction_date DESC";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+    }
+
     public List<CardTransaction> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
