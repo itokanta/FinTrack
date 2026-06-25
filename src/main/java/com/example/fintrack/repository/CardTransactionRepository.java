@@ -384,9 +384,9 @@ public class CardTransactionRepository {
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
-    public MonthlySummary sumMonthlySummarySplitMethodIsNull(Long userId, LocalDate startDate,
+    public MonthlySummary sumMonthlySummaryBySplitMethodIsNull(Long userId, LocalDate startDate,
             LocalDate endDate) {
-        String sql = "SELECT asset_category_id, " +
+        String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
                 "FROM card_transactions " +

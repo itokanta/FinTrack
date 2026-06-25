@@ -255,7 +255,7 @@ public class BankTransactionRepository {
 
     public MonthlySummary sumMonthlySummaryBySplitMethodIsNull(Long userId, LocalDate startDate,
             LocalDate endDate) {
-        String sql = "SELECT asset_category_id, " +
+        String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
                 "FROM bank_transactions " +
