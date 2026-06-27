@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.SplitTransaction;
+import com.example.fintrack.domain.TransactionSource;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.MonthlySummary;
 import com.example.fintrack.domain.dto.TransactionEntry;
@@ -59,18 +60,13 @@ public class SplitTransactionRepository {
 
         if (bankId != null) {
                 transactionEntry.setBankTransactionId(bankId);
-                transactionEntry.setTransactionSource("銀行");
+                transactionEntry.setTransactionSource(TransactionSource.BANK.getSourceName());
         } else if (cardId != null) {
-                String cardType = rs.getString("card_type");
                 transactionEntry.setCardTransactionId(cardId);
-                transactionEntry.setTransactionSource(switch (cardType){
-                        case "DEBIT" -> "デビットカード";
-                        case "CREDIT" -> "クレジットカード";
-                        default -> "カード";
-                });
+                transactionEntry.setTransactionSource(TransactionSource.valueOf(rs.getString("card_type")).getSourceName());
         } else if (discrepancyId != null) {
                 transactionEntry.setDiscrepancyTransactionId(discrepancyId);
-                transactionEntry.setTransactionSource("差異取引");
+                transactionEntry.setTransactionSource(TransactionSource.DISCREPANCY.getSourceName());
         }
         return transactionEntry;
     };

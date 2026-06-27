@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.DiscrepancyTransaction;
 import com.example.fintrack.domain.SplitMethod;
+import com.example.fintrack.domain.TransactionSource;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.MonthlySummary;
 import com.example.fintrack.domain.dto.TransactionEntry;
@@ -56,7 +57,7 @@ public class DiscrepancyTransactionRepository {
     private static final RowMapper<TransactionEntry> TRANSACTION_ENTRY_ROW_MAPPER = (rs, rowNum) -> {
         TransactionEntry transactionEntry = BASE_MAPPER.mapRow(rs, rowNum);
         transactionEntry.setDiscrepancyTransactionId(rs.getLong("id"));
-        transactionEntry.setTransactionSource("差異取引");
+        transactionEntry.setTransactionSource(TransactionSource.DISCREPANCY.getSourceName());
         return transactionEntry;
     };
 
