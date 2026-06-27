@@ -14,8 +14,10 @@ import com.example.fintrack.domain.DiscrepancyTransaction;
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.MonthlySummary;
+import com.example.fintrack.domain.dto.TransactionEntry;
 import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryExtractor;
 import com.example.fintrack.repository.rowmapper.MonthlySummaryRowMapper;
+import com.example.fintrack.repository.rowmapper.TransactionEntryRowMapper;
 
 @Repository
 public class DiscrepancyTransactionRepository {
@@ -48,6 +50,14 @@ public class DiscrepancyTransactionRepository {
     };
 
     private static final MonthlySummaryRowMapper MONTHLY_SUMMARY_ROW_MAPPER = new MonthlySummaryRowMapper();
+
+    private static final TransactionEntryRowMapper BASE_MAPPER = new TransactionEntryRowMapper();
+
+    private static final RowMapper<TransactionEntry> TRANSACTION_ENTRY_ROW_MAPPER = (rs, rowNum) -> {
+        TransactionEntry transactionEntry = BASE_MAPPER.mapRow(rs, rowNum);
+        transactionEntry.setTransactionSource("差異取引");
+        return transactionEntry;
+    };
 
     private final NamedParameterJdbcTemplate template;
 
@@ -96,7 +106,7 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
-    public List<DiscrepancyTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
+    public List<TransactionEntry> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
                 "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
                 "card_payment_discrepancy_id, created_at, split_method " +
@@ -104,10 +114,10 @@ public class DiscrepancyTransactionRepository {
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
                 "ORDER BY amount, transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
-    public List<DiscrepancyTransaction> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
+    public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
                 "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
@@ -117,7 +127,7 @@ public class DiscrepancyTransactionRepository {
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
                 "AND (split_method IS NULL OR split_method = 'SINGLE') " +
                 "ORDER BY amount, transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
     public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
