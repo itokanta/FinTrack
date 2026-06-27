@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionEntry {
+  private Long bankTransactionId;
+  private Long cardTransactionId;
+  private Long discrepancyTransactionId;
   private String description;
   private Long amount;
   private TransactionType transactionType;

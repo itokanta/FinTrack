@@ -55,6 +55,7 @@ public class DiscrepancyTransactionRepository {
 
     private static final RowMapper<TransactionEntry> TRANSACTION_ENTRY_ROW_MAPPER = (rs, rowNum) -> {
         TransactionEntry transactionEntry = BASE_MAPPER.mapRow(rs, rowNum);
+        transactionEntry.setDiscrepancyTransactionId(rs.getLong("id"));
         transactionEntry.setTransactionSource("差異取引");
         return transactionEntry;
     };

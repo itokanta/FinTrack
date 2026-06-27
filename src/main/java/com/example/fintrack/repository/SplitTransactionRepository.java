@@ -58,15 +58,18 @@ public class SplitTransactionRepository {
         Long discrepancyId = rs.wasNull() ? null : discrepancyTransactionId;
 
         if (bankId != null) {
+                transactionEntry.setBankTransactionId(bankId);
                 transactionEntry.setTransactionSource("銀行");
         } else if (cardId != null) {
                 String cardType = rs.getString("card_type");
+                transactionEntry.setCardTransactionId(cardId);
                 transactionEntry.setTransactionSource(switch (cardType){
                         case "DEBIT" -> "デビットカード";
                         case "CREDIT" -> "クレジットカード";
                         default -> "カード";
                 });
         } else if (discrepancyId != null) {
+                transactionEntry.setDiscrepancyTransactionId(discrepancyId);
                 transactionEntry.setTransactionSource("差異取引");
         }
         return transactionEntry;
