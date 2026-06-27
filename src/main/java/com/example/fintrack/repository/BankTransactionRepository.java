@@ -6,19 +6,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
-import org.springframework.jdbc.core.RowMapper;
-
 import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.SplitMethod;
+import com.example.fintrack.domain.TransactionSource;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.MonthlySummary;
+import com.example.fintrack.domain.dto.TransactionEntry;
 import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryExtractor;
 import com.example.fintrack.repository.rowmapper.MonthlySummaryRowMapper;
+import com.example.fintrack.repository.rowmapper.TransactionEntryRowMapper;
 
 @Repository
 public class BankTransactionRepository {
@@ -65,6 +67,15 @@ public class BankTransactionRepository {
     };
 
     private static final MonthlySummaryRowMapper MONTHLY_SUMMARY_ROW_MAPPER = new MonthlySummaryRowMapper();
+
+    private static final TransactionEntryRowMapper BASE_MAPPER = new TransactionEntryRowMapper();
+
+    private static final RowMapper<TransactionEntry> TRANSACTION_ENTRY_ROW_MAPPER = (rs, rowNum) -> {
+        TransactionEntry transactionEntry = BASE_MAPPER.mapRow(rs, rowNum);
+        transactionEntry.setBankTransactionId(rs.getLong("id"));
+        transactionEntry.setTransactionSource(TransactionSource.BANK.getSourceName());
+        return transactionEntry;
+    };
 
     private final NamedParameterJdbcTemplate template;
 
@@ -208,7 +219,7 @@ public class BankTransactionRepository {
         template.update(sql, param);
     }
 
-    public List<BankTransaction> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
+    public List<TransactionEntry> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
                 "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
                 "is_card_payment, created_at, csv_import_history_id, update_count, updated_at " +
@@ -217,10 +228,10 @@ public class BankTransactionRepository {
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
                 "AND is_card_payment = FALSE " +
                 "ORDER BY amount, transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
-    public List<BankTransaction> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
+    public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsNullOrSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, " +
                 "user_id, asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, " +
@@ -231,7 +242,7 @@ public class BankTransactionRepository {
                 "AND (split_method IS NULL OR split_method = 'SINGLE') " +
                 "AND is_card_payment = FALSE " +
                 "ORDER BY amount, transaction_date DESC";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
     public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
