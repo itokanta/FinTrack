@@ -360,8 +360,7 @@ public class CardTransactionRepository {
                 "payment_month, is_paid, created_at, csv_import_history_id, update_count, updated_at " +
                 "FROM card_transactions " +
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
-                "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "ORDER BY amount, transaction_date DESC";
+                "AND transaction_date BETWEEN :startDate AND :endDate";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
@@ -373,8 +372,7 @@ public class CardTransactionRepository {
                 "FROM card_transactions " +
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
-                "ORDER BY amount, transaction_date DESC";
+                "AND (split_method IS NULL OR split_method = 'SINGLE')";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 

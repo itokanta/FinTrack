@@ -222,8 +222,7 @@ public class SplitTransactionRepository {
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
                 "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
-                "AND bt.is_card_payment = FALSE " +
-                "ORDER BY st.amount DESC, bt.transaction_date DESC";
+                "AND bt.is_card_payment = FALSE";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
@@ -236,8 +235,7 @@ public class SplitTransactionRepository {
                 "WHERE st.user_id = :userId AND ct.user_id = :userId " +
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
-                "AND ct.transaction_date BETWEEN :startDate AND :endDate " +
-                "ORDER BY st.amount DESC, ct.transaction_date DESC";
+                "AND ct.transaction_date BETWEEN :startDate AND :endDate";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
@@ -250,8 +248,7 @@ public class SplitTransactionRepository {
                 "WHERE st.user_id = :userId AND dt.user_id = :userId " +
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
-                "AND dt.transaction_date BETWEEN :startDate AND :endDate " +
-                "ORDER BY st.amount DESC, dt.transaction_date DESC";
+                "AND dt.transaction_date BETWEEN :startDate AND :endDate";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 

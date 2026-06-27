@@ -3,8 +3,13 @@ package com.example.fintrack.service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -12,8 +17,10 @@ import com.example.fintrack.domain.BankTransaction;
 import com.example.fintrack.domain.CardTransaction;
 import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.TransactionType;
+import com.example.fintrack.domain.dto.TransactionEntry;
 import com.example.fintrack.repository.BankTransactionRepository;
 import com.example.fintrack.repository.CardTransactionRepository;
+import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 
 /**
  * 取引管理サービス
@@ -23,11 +30,14 @@ public class TransactionService {
 
     private final BankTransactionRepository bankTransactionRepository;
     private final CardTransactionRepository cardTransactionRepository;
+    private final DiscrepancyTransactionRepository discrepancyTransactionRepository;
 
     public TransactionService(BankTransactionRepository bankTransactionRepository,
-            CardTransactionRepository cardTransactionRepository) {
-        this.bankTransactionRepository = bankTransactionRepository;
-        this.cardTransactionRepository = cardTransactionRepository;
+        CardTransactionRepository cardTransactionRepository,
+        DiscrepancyTransactionRepository discrepancyTransactionRepository) {
+      this.bankTransactionRepository = bankTransactionRepository;
+      this.cardTransactionRepository = cardTransactionRepository;
+      this.discrepancyTransactionRepository = discrepancyTransactionRepository;
     }
 
     public List<String> findBankDistinctDescriptionsByUserId(Long userId) {
@@ -195,6 +205,39 @@ public class TransactionService {
      */
     public Optional<CardTransaction> getCardTransaction(Long id, Long userId) {
         return cardTransactionRepository.findById(id, userId);
+    }
+
+    public Map<TransactionType, List<TransactionEntry>> getTransactionListByUserIdAndTransactionDate(Long userId, YearMonth yearMonth) {
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        List<TransactionEntry> bankTransactionIncomeList = bankTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> cardTransactionIncomeList = cardTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> discrepancyTransactionIncomeList = discrepancyTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> bankTransactionExpenseList = bankTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.EXPENSE, startDate, endDate);
+        List<TransactionEntry> cardTransactionExpenseList = cardTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.EXPENSE, startDate, endDate);
+        List<TransactionEntry> discrepancyTransactionExpenseList = discrepancyTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.EXPENSE, startDate, endDate);
+
+        List<TransactionEntry> incomeTotalList = sortTransactionEntryList(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList);
+        List<TransactionEntry> expenseTotalList = sortTransactionEntryList(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList);
+
+        Map<TransactionType, List<TransactionEntry>> result = new HashMap<>();
+        result.put(TransactionType.INCOME, incomeTotalList);
+        result.put(TransactionType.EXPENSE, expenseTotalList);
+
+        return result;
+    }
+
+    private List<TransactionEntry> sortTransactionEntryList(List<TransactionEntry> transactionEntryList1, List<TransactionEntry> transactionEntryList2, List<TransactionEntry> transactionEntryList3) {
+        List<TransactionEntry> result = Stream.of(transactionEntryList1, transactionEntryList2, transactionEntryList3)
+                .flatMap(List::stream)
+                .sorted(
+                    Comparator.comparing(TransactionEntry::getAmount)
+                            .thenComparing(TransactionEntry::getTransactionDate)
+                            .thenComparing(TransactionEntry::getDescription)
+                            .reversed())
+                .collect(Collectors.toList());
+        return result;
     }
 
     /**

@@ -226,8 +226,7 @@ public class BankTransactionRepository {
                 "FROM bank_transactions " +
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND is_card_payment = FALSE " +
-                "ORDER BY amount, transaction_date DESC";
+                "AND is_card_payment = FALSE";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
@@ -240,8 +239,7 @@ public class BankTransactionRepository {
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
                 "AND (split_method IS NULL OR split_method = 'SINGLE') " +
-                "AND is_card_payment = FALSE " +
-                "ORDER BY amount, transaction_date DESC";
+                "AND is_card_payment = FALSE";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 

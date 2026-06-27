@@ -114,8 +114,7 @@ public class DiscrepancyTransactionRepository {
                 "card_payment_discrepancy_id, created_at, split_method " +
                 "FROM discrepancy_transactions " +
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
-                "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "ORDER BY amount, transaction_date DESC";
+                "AND transaction_date BETWEEN :startDate AND :endDate";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
@@ -127,8 +126,7 @@ public class DiscrepancyTransactionRepository {
                 "FROM discrepancy_transactions " +
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
-                "ORDER BY amount, transaction_date DESC";
+                "AND (split_method IS NULL OR split_method = 'SINGLE')";
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
