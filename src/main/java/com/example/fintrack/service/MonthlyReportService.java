@@ -5,6 +5,7 @@ import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -38,7 +39,7 @@ public class MonthlyReportService {
   public MonthlySummary getMonthlySummaryTotals(Long userId, YearMonth yearMonth){
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();
-    MonthlySummary monthlySummary = new MonthlySummary(0L, 0L, 0L);
+    MonthlySummary monthlySummary = new MonthlySummary(null, 0L, 0L, 0L);
 
     add(monthlySummary, bankTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
     add(monthlySummary, cardTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
@@ -57,15 +58,17 @@ public class MonthlyReportService {
     Map<Long, MonthlySummary> monthlySummaryMap = new HashMap<>();
 
     for (AssetCategory assetCategory : assetCategoryList) {
-      monthlySummaryMap.put(assetCategory.getId(), new MonthlySummary(0L, 0L, 0l));
+      monthlySummaryMap.put(assetCategory.getId(), new MonthlySummary(assetCategory, 0L, 0L, 0L));
     }
 
-    add(monthlySummaryMap, bankTransactionRepository.sumMonthlySummaryByAssetCategory(userId, startDate, endDate));
-    add(monthlySummaryMap, cardTransactionRepository.sumMonthlySummaryByAssetCategory(userId, startDate, endDate));
-    add(monthlySummaryMap, discrepancyTransactionRepository.sumMonthlySummaryByAssetCategory(userId, startDate, endDate));
-    add(monthlySummaryMap, splitTransactionRepository.sumMonthlySummaryByAssetCategoryFromBankSplits(userId, startDate, endDate));
-    add(monthlySummaryMap, splitTransactionRepository.sumMonthlySummaryByAssetCategoryFromCardSplits(userId, startDate, endDate));
-    add(monthlySummaryMap, splitTransactionRepository.sumMonthlySummaryByAssetCategoryFromDiscrepancySplits(userId, startDate, endDate));
+    Map<Long, AssetCategory> assetCategoryMap = assetCategoryList.stream().collect(Collectors.toMap(AssetCategory::getId, ac -> ac));
+
+    add(monthlySummaryMap, bankTransactionRepository.sumMonthlySummaryByAssetCategory(userId, startDate, endDate), assetCategoryMap, userId);
+    add(monthlySummaryMap, cardTransactionRepository.sumMonthlySummaryByAssetCategory(userId, startDate, endDate), assetCategoryMap, userId);
+    add(monthlySummaryMap, discrepancyTransactionRepository.sumMonthlySummaryByAssetCategory(userId, startDate, endDate), assetCategoryMap, userId);
+    add(monthlySummaryMap, splitTransactionRepository.sumMonthlySummaryByAssetCategoryFromBankSplits(userId, startDate, endDate), assetCategoryMap, userId);
+    add(monthlySummaryMap, splitTransactionRepository.sumMonthlySummaryByAssetCategoryFromCardSplits(userId, startDate, endDate), assetCategoryMap, userId);
+    add(monthlySummaryMap, splitTransactionRepository.sumMonthlySummaryByAssetCategoryFromDiscrepancySplits(userId, startDate, endDate), assetCategoryMap, userId);
 
     return monthlySummaryMap;
   }
@@ -73,7 +76,7 @@ public class MonthlyReportService {
   public MonthlySummary getMonthlySummaryUncategorized(Long userId, YearMonth yearMonth) {
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();
-    MonthlySummary monthlySummary = new MonthlySummary(0L, 0L, 0L);
+    MonthlySummary monthlySummary = new MonthlySummary(null, 0L, 0L, 0L);
 
     add(monthlySummary, bankTransactionRepository.sumMonthlySummaryBySplitMethodIsNull(userId, startDate, endDate));
     add(monthlySummary, cardTransactionRepository.sumMonthlySummaryBySplitMethodIsNull(userId, startDate, endDate));
@@ -88,19 +91,30 @@ public class MonthlyReportService {
     result.setTotalAmount(result.getTotalAmount() + addData.getTotalAmount());
   }
 
-  private void add(Map<Long, MonthlySummary> resultMap, Map<Long, MonthlySummary> addDataMap) {
+  private void add(Map<Long, MonthlySummary> resultMap, Map<Long, MonthlySummary> addDataMap, Map<Long, AssetCategory> assetCategoryMap, Long userId) {
     for (Map.Entry<Long, MonthlySummary> addData : addDataMap.entrySet()){
-      Long key = addData.getKey();
+      Long addDataKey = addData.getKey();
 
-      if (key == null){
+      if (addDataKey == null) {
         continue;
       }
 
-      if (!resultMap.containsKey(key)) {
-        resultMap.put(key, new MonthlySummary(0L, 0L, 0L));
+      AssetCategory assetCategory = assetCategoryMap.get(addDataKey);
+      
+      if (assetCategory == null) {
+        AssetCategory unknownAssetCategory = new AssetCategory();
+        unknownAssetCategory.setId(addDataKey);
+        unknownAssetCategory.setUserId(userId);
+        unknownAssetCategory.setCategoryName("削除済みカテゴリ " + unknownAssetCategory.getId());
+        assetCategoryMap.put(unknownAssetCategory.getId(), unknownAssetCategory);
+        assetCategory = unknownAssetCategory;
       }
 
-      MonthlySummary monthlySummary = resultMap.get(key);
+      if (!resultMap.containsKey(assetCategory.getId())) {
+        resultMap.put(assetCategory.getId(), new MonthlySummary(assetCategory, 0L, 0L, 0L));
+      }
+
+      MonthlySummary monthlySummary = resultMap.get(assetCategory.getId());
       monthlySummary.setIncomeAmount(monthlySummary.getIncomeAmount() + addData.getValue().getIncomeAmount());
       monthlySummary.setExpenseAmount(monthlySummary.getExpenseAmount() + addData.getValue().getExpenseAmount());
       monthlySummary.setTotalAmount(monthlySummary.getTotalAmount() + addData.getValue().getTotalAmount());
