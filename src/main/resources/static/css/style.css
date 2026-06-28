@@ -110,6 +110,50 @@ body {
     line-height: 1.2;
 }
 
+.amount-display-sm {
+    font-size: clamp(1.125rem, 3vw, 2.1875rem);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.monthly-summary-totals {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.monthly-summary-card > .card-header {
+    padding: 0.5rem 0.75rem 0;
+}
+
+.monthly-summary-card > .card-body {
+    padding: 0 0.75rem 0.5rem;
+}
+
+.monthly-summary-totals th,
+.monthly-summary-totals td {
+    padding: 0.5rem 0.5rem;
+    white-space: nowrap;
+}
+
+.monthly-summary-totals th:not(:first-child),
+.monthly-summary-totals td:not(:first-child) {
+    width: 25%;
+}
+
+.monthly-summary-totals thead th {
+    background-color: #f8f9fa;
+}
+
+.monthly-summary-totals th {
+    font-weight: 600;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.monthly-summary-totals td {
+    border: none;
+    vertical-align: middle;
+}
+
 .section-heading {
     font-size: 1.25rem;
     font-weight: 500;
@@ -145,9 +189,107 @@ body {
     .content {
         padding: 15px 10px;
     }
-    
+
     .main-container {
         padding: 0;
+    }
+
+    .monthly-summary-card > .card-header {
+        display: none;
+    }
+
+    .monthly-summary-card > .card-body {
+        padding: 0.75rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals,
+    .monthly-summary-card .monthly-summary-totals tbody {
+        display: block;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody tr {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.25rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td {
+        display: block;
+        width: auto !important;
+        padding: 0.35rem 0.125rem;
+        min-width: 0;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:first-child {
+        grid-column: 1 / -1;
+        white-space: normal;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:not(:first-child) {
+        text-align: center !important;
+        white-space: nowrap;
+    }
+
+    .monthly-summary-card .monthly-summary-totals .amount-display-sm {
+        font-size: clamp(0.75rem, calc((100vw - 4.5rem) / 26), 1rem);
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+
+    .monthly-summary-card .monthly-summary-totals .amount-display-sm span {
+        font-size: clamp(0.875rem, calc((100vw - 4.5rem) / 19), 1.3125rem);
+    }
+
+    .monthly-summary-card .monthly-summary-totals .amount-display-sm .bi {
+        font-size: 0.85em;
+        vertical-align: -0.05em;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(2)::before {
+        content: '収入';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(3)::before {
+        content: '支出';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(4)::before {
+        content: '合計';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-category-table th,
+    .monthly-category-table td {
+        padding: 0.5rem 0.35rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+
+    .monthly-transaction-table th,
+    .monthly-transaction-table td {
+        padding: 0.5rem 0.35rem;
+        font-size: 0.875rem;
+    }
+
+    .monthly-transaction-table .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
     }
 }
 

@@ -16,14 +16,41 @@
             <input type="month" class="form-control" id="paymentMonth" th:value="${targetYearMonth}" style="max-width: 200px;"
                 onchange="location.href='/monthly-report?targetYearMonth=' + this.value">
         </div>
-        
         <!-- 総資産 -->
-        <div class="card mb-4">
+        <div class="card monthly-summary-card mb-4">
+            <div class="card-header border-bottom-0">
+                <table class="table monthly-summary-totals mb-0">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="text-end">収入</th>
+                            <th class="text-end">支出</th>
+                            <th class="text-end">合計</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
             <div class="card-body">
-                <h3 class="section-heading card-title">総資産収支</h3>
-                <p class="amount-display text-primary mb-0" th:text="${'収入：' + #numbers.formatInteger(monthlySummaryTotals.incomeAmount, 0, 'COMMA')} + '円'">0円</p>
-                <p class="amount-display text-primary mb-0" th:text="${'支出：' + #numbers.formatInteger(monthlySummaryTotals.expenseAmount, 0, 'COMMA')} + '円'">0円</p>
-                <p class="amount-display text-primary mb-0" th:text="${'合計：' + #numbers.formatInteger(monthlySummaryTotals.totalAmount, 0, 'COMMA')} + '円'">0円</p>
+                <table class="table monthly-summary-totals mb-0">
+                    <tbody>
+                        <tr>
+                            <td><span class="section-heading">総資産収支</span></td>
+                            <td class="text-end text-success amount-display-sm">
+                                <i class="bi bi-arrow-up-circle" aria-label="収入" title="収入"></i>
+                                <span th:text="${#numbers.formatInteger(monthlySummaryTotals.incomeAmount, 0, 'COMMA')} + '円'">0円</span>
+                            </td>
+                            <td class="text-end text-danger amount-display-sm">
+                                <i class="bi bi-arrow-down-circle" aria-label="支出" title="支出"></i>
+                                <span th:text="${#numbers.formatInteger(monthlySummaryTotals.expenseAmount, 0, 'COMMA')} + '円'">0円</span>
+                            </td>
+                            <td class="text-end amount-display-sm"
+                                th:classappend="${monthlySummaryTotals.totalAmount < 0 ? 'text-danger' : (monthlySummaryTotals.totalAmount > 0 ? 'text-success' : '')}">
+                                <i class="bi bi-calculator" aria-label="合計" title="合計"></i>
+                                <span th:text="${#numbers.formatInteger(monthlySummaryTotals.totalAmount, 0, 'COMMA')} + '円'">0円</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         
@@ -33,7 +60,8 @@
                 <h3 class="section-heading mb-0">カテゴリ別収支</h3>
             </div>
             <div class="card-body">
-                <table class="table">
+                <div class="table-responsive">
+                <table class="table monthly-category-table mb-0">
                     <thead>
                         <tr>
                             <th>カテゴリ</th>
@@ -45,9 +73,11 @@
                     <tbody>
                         <tr th:each="entry : ${monthlySummaryByAssetCategory}">
                             <td th:text="${entry.value.assetCategory.categoryName}">カテゴリ名</td>
-                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
-                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
-                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value.totalAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end text-success" th:text="${#numbers.formatInteger(entry.value.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end text-danger" th:text="${#numbers.formatInteger(entry.value.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end"
+                                th:classappend="${entry.value.totalAmount < 0 ? 'text-danger' : (entry.value.totalAmount > 0 ? 'text-success' : '')}"
+                                th:text="${#numbers.formatInteger(entry.value.totalAmount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
                         <!-- 未分類の残高がある場合 -->
                         <tr th:if="${monthlySummaryUncategorized.incomeAmount != 0 OR monthlySummaryUncategorized.expenseAmount != 0 OR monthlySummaryUncategorized.totalAmount != 0}" class="table-warning">
@@ -56,9 +86,11 @@
                                     未分類
                                 </a>
                             </td>
-                            <td class="text-end" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
-                            <td class="text-end" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
-                            <td class="text-end" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.totalAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end text-success" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end text-danger" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end"
+                                th:classappend="${monthlySummaryUncategorized.totalAmount < 0 ? 'text-danger' : (monthlySummaryUncategorized.totalAmount > 0 ? 'text-success' : '')}"
+                                th:text="${#numbers.formatInteger(monthlySummaryUncategorized.totalAmount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
                         <!-- データがない場合 -->
                         <tr th:if="${#lists.isEmpty(transactionsByType.income) and #lists.isEmpty(transactionsByType.expense)}">
@@ -66,18 +98,19 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
         <!-- 収入一覧 -->
-        <h2 class="mb-4">収入一覧</h2>
+        <h3 class="section-heading mb-4">収入一覧</h3>
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped monthly-transaction-table">
                 <thead>
                     <tr>
                         <th>取引日</th>
                         <th>摘要</th>
                         <th class="text-end">金額</th>
-                        <th>取引区分</th>
+                        <th class="d-none d-md-table-cell">取引区分</th>
                         <th>分配ステータス</th>
                         <th></th>
                     </tr>
@@ -87,7 +120,7 @@
                         <td th:text="${income.transactionDate}">2024-01-01</td>
                         <td th:text="${income.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(income.amount, 0, 'COMMA')} + '円'">0円</td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <span th:if="${income.transactionSource == '銀行'}" class="badge bg-primary">
                                 <i class="bi bi-bank"></i> 銀行
                             </span>
@@ -126,17 +159,17 @@
             </table>
         </div>
         <!-- 支出一覧 -->
-        <h2 class="mb-4">支出一覧</h2>
+        <h3 class="section-heading mb-4">支出一覧</h3>
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped monthly-transaction-table">
                 <thead>
                     <tr>
                         <th>取引日</th>
                         <th>摘要</th>
                         <th class="text-end">金額</th>
-                        <th>取引区分</th>
+                        <th class="d-none d-lg-table-cell">取引区分</th>
                         <th>資産カテゴリ</th>
-                        <th>支出カテゴリ</th>
+                        <th class="d-none d-md-table-cell">支出カテゴリ</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -145,7 +178,7 @@
                         <td th:text="${expense.transactionDate}">2024-01-01</td>
                         <td th:text="${expense.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(expense.amount, 0, 'COMMA')} + '円'">0円</td>
-                        <td>
+                        <td class="d-none d-lg-table-cell">
                             <span th:if="${expense.transactionSource == '銀行'}" class="badge bg-primary">
                                 <i class="bi bi-bank"></i> 銀行
                             </span>
@@ -181,7 +214,7 @@
                             <!-- null: 未設定 -->
                             <span th:if="${expense.splitMethod == null}" class="text-muted">未設定</span>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <span th:if="${expense.expenseCategoryId != null}"
                                 th:text="${expenseCategoryMap.get(expense.expenseCategoryId)}">カテゴリ名</span>
                             <span th:unless="${expense.expenseCategoryId != null}" class="text-muted">未設定</span>
