@@ -212,7 +212,7 @@ public class TransactionService {
         return cardTransactionRepository.findById(id, userId);
     }
 
-    public Map<TransactionType, List<TransactionEntry>> getTransactionListByUserIdAndTransactionDate(Long userId, YearMonth yearMonth) {
+    public TransactionsByType getTransactionListByUserIdAndTransactionDate(Long userId, YearMonth yearMonth) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
@@ -223,12 +223,9 @@ public class TransactionService {
         List<TransactionEntry> cardTransactionExpenseList = cardTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.EXPENSE, startDate, endDate);
         List<TransactionEntry> discrepancyTransactionExpenseList = discrepancyTransactionRepository.findByUserIdAndTransactionDate(userId, TransactionType.EXPENSE, startDate, endDate);
 
-        List<TransactionEntry> incomeTotalList = sortTransactionEntryList(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList);
-        List<TransactionEntry> expenseTotalList = sortTransactionEntryList(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList);
-
-        Map<TransactionType, List<TransactionEntry>> result = new HashMap<>();
-        result.put(TransactionType.INCOME, incomeTotalList);
-        result.put(TransactionType.EXPENSE, expenseTotalList);
+        TransactionsByType result = new TransactionsByType();
+        result.setIncome(sortTransactionEntryList(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList));
+        result.setExpense(sortTransactionEntryList(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList));
 
         return result;
     }
