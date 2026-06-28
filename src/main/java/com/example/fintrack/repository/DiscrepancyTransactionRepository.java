@@ -130,6 +130,18 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsNull(Long userId, TransactionType transactionType,
+            LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
+                "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
+                "card_payment_discrepancy_id, created_at, split_method " +
+                "FROM discrepancy_transactions " +
+                "WHERE user_id = :userId AND transaction_type = :transactionType " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND split_method IS NULL";
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
+    }
+
     public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
