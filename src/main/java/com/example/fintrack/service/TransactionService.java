@@ -271,6 +271,24 @@ public class TransactionService {
         return result;
     }
 
+    public TransactionsByType getTransactionListByUserIdAndTransactionDateAndSplitMethodIsNull(Long userId, YearMonth yearMonth) {
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        List<TransactionEntry> bankTransactionIncomeList = bankTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsNull(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> cardTransactionIncomeList = cardTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsNull(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> discrepancyTransactionIncomeList = discrepancyTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsNull(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> bankTransactionExpenseList = bankTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsNull(userId, TransactionType.EXPENSE, startDate, endDate);
+        List<TransactionEntry> cardTransactionExpenseList = cardTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsNull(userId, TransactionType.EXPENSE, startDate, endDate);
+        List<TransactionEntry> discrepancyTransactionExpenseList = discrepancyTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsNull(userId, TransactionType.EXPENSE, startDate, endDate);
+
+        TransactionsByType result = new TransactionsByType();
+        result.setIncome(sortTransactionEntryList(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList));
+        result.setExpense(sortTransactionEntryList(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList));
+
+        return result;
+    }
+
     private List<TransactionEntry> sortTransactionEntryList(List<TransactionEntry> transactionEntryList1, List<TransactionEntry> transactionEntryList2, List<TransactionEntry> transactionEntryList3) {
         List<TransactionEntry> result = Stream.of(transactionEntryList1, transactionEntryList2, transactionEntryList3)
                 .flatMap(List::stream)
