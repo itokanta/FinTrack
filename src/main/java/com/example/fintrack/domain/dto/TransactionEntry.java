@@ -23,5 +23,6 @@ public class TransactionEntry {
   private Long assetCategoryId;
   private Long expenseCategoryId;
   private SplitMethod splitMethod;
+  private Long splitPatternId;
   private String transactionSource;
 }

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>月次収支レポート</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">月次収支レポート</h2>
+        </div>
+        <!-- 支払い月選択 -->
+        <div class="mb-4">
+            <label for="report-month" class="form-label">対象月</label>
+            <input type="month" class="form-control" id="paymentMonth" th:value="${targetYearMonth}" style="max-width: 200px;"
+                onchange="location.href='/monthly-report?targetYearMonth=' + this.value">
+        </div>
+        
+        <!-- 総資産 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">総資産収支</h5>
+                <h2 class="text-primary" th:text="${'収入：' + #numbers.formatInteger(monthlySummaryTotals.incomeAmount, 0, 'COMMA')} + '円'">0円</h2>
+                <h2 class="text-primary" th:text="${'支出：' + #numbers.formatInteger(monthlySummaryTotals.expenseAmount, 0, 'COMMA')} + '円'">0円</h2>
+                <h2 class="text-primary" th:text="${'合計：' + #numbers.formatInteger(monthlySummaryTotals.totalAmount, 0, 'COMMA')} + '円'">0円</h2>
+            </div>
+        </div>
+        
+        <!-- カテゴリ別収支 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">カテゴリ別収支</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th class="text-end">収入</th>
+                            <th class="text-end">支出</th>
+                            <th class="text-end">合計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="entry : ${monthlySummaryByAssetCategory}">
+                            <td th:text="${entry.value.assetCategory.categoryName}">カテゴリ名</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(entry.value.totalAmount, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                        <!-- 未分類の残高がある場合 -->
+                        <tr th:if="${monthlySummaryUncategorized.incomeAmount != 0 OR monthlySummaryUncategorized.expenseAmount != 0 OR monthlySummaryUncategorized.totalAmount != 0}" class="table-warning">
+                            <td>
+                                <a th:href="@{/assets/uncategorized}" class="text-decoration-none text-dark">
+                                    未分類
+                                </a>
+                            </td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(monthlySummaryUncategorized.totalAmount, 0, 'COMMA')} + '円'">0円</td>
+                        </tr>
+                        <!-- データがない場合 -->
+                        <tr th:if="${#lists.isEmpty(transactionsByType.income) and #lists.isEmpty(transactionsByType.expense)}">
+                            <td colspan="4" class="text-muted text-center">データがありません</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 収入一覧 -->
+        <h2 class="mb-4">収入一覧</h2>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>取引日</th>
+                        <th>摘要</th>
+                        <th class="text-end">金額</th>
+                        <th>取引区分</th>
+                        <th>分配ステータス</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="income : ${transactionsByType.income}">
+                        <td th:text="${income.transactionDate}">2024-01-01</td>
+                        <td th:text="${income.description}">摘要</td>
+                        <td class="text-end" th:text="${#numbers.formatInteger(income.amount, 0, 'COMMA')} + '円'">0円</td>
+                        <td>
+                            <span th:if="${income.transactionSource == '銀行'}" class="badge bg-primary">
+                                <i class="bi bi-bank"></i> 銀行
+                            </span>
+                            <span th:if="${income.transactionSource == 'デビットカード'}" class="badge bg-success">
+                                <i class="bi bi-credit-card"></i> デビット
+                            </span>
+                            <span th:if="${income.transactionSource == 'クレジットカード'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> クレジット
+                            </span>
+                            <span th:if="${income.transactionSource == '差異取引'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> 差異取引
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${income.splitMethod != null}">
+                                <span th:if="${income.splitMethod.name() == 'PATTERN'}" class="badge bg-success">
+                                    分配済み (パターン)
+                                </span>
+                                <span th:if="${income.splitMethod.name() == 'SINGLE'}" class="badge bg-success">
+                                    分配済み (単一)
+                                </span>
+                                <span th:if="${income.splitMethod.name() == 'MANUAL'}" class="badge bg-success">
+                                    分配済み (手動)
+                                </span>
+                            </span>
+                            <span th:unless="${income.splitMethod != null}" class="badge bg-warning">未分配</span>
+                        </td>
+                        <td>
+                            <a th:if="${income.transactionSource != '差異取引'}"
+                                th:href="@{/transactions/incomes/{id}(id=${income.bankTransactionId != null ? income.bankTransactionId : income.cardTransactionId},
+                                    type=${income.transactionSource == '銀行' ? 'bank' : 'card'})}"
+                                class="btn btn-sm btn-outline-primary">詳細</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- 支出一覧 -->
+        <h2 class="mb-4">支出一覧</h2>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>取引日</th>
+                        <th>摘要</th>
+                        <th class="text-end">金額</th>
+                        <th>取引区分</th>
+                        <th>資産カテゴリ</th>
+                        <th>支出カテゴリ</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="expense : ${transactionsByType.expense}">
+                        <td th:text="${expense.transactionDate}">2024-01-01</td>
+                        <td th:text="${expense.description}">摘要</td>
+                        <td class="text-end" th:text="${#numbers.formatInteger(expense.amount, 0, 'COMMA')} + '円'">0円</td>
+                        <td>
+                            <span th:if="${expense.transactionSource == '銀行'}" class="badge bg-primary">
+                                <i class="bi bi-bank"></i> 銀行
+                            </span>
+                            <span th:if="${expense.transactionSource == 'デビットカード'}" class="badge bg-success">
+                                <i class="bi bi-credit-card"></i> デビット
+                            </span>
+                            <span th:if="${expense.transactionSource == 'クレジットカード'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> クレジット
+                            </span>
+                            <span th:if="${expense.transactionSource == '差異取引'}" class="badge bg-warning text-dark">
+                                <i class="bi bi-credit-card-2-front"></i> 差異取引
+                            </span>
+                        </td>
+                        <td>
+                            <!-- SINGLE: 単一カテゴリ -->
+                            <span
+                                th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'SINGLE' and expense.assetCategoryId != null}"
+                                th:text="${monthlySummaryByAssetCategory.get(expense.assetCategoryId).assetCategory.categoryName}">カテゴリ名</span>
+        
+                            <!-- PATTERN: パターン分割 -->
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'PATTERN'}"
+                                class="badge bg-info">
+                                <i class="bi bi-pie-chart"></i> <span
+                                    th:text="${splitPatternMap.get(expense.splitPatternId)}">分割パターン名</span>
+                            </span>
+        
+                            <!-- MANUAL: 手動分割 -->
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'MANUAL'}"
+                                class="badge bg-secondary">
+                                <i class="bi bi-pencil"></i> 手動分割
+                            </span>
+        
+                            <!-- null: 未設定 -->
+                            <span th:if="${expense.splitMethod == null}" class="text-muted">未設定</span>
+                        </td>
+                        <td>
+                            <span th:if="${expense.expenseCategoryId != null}"
+                                th:text="${expenseCategoryMap.get(expense.expenseCategoryId)}">カテゴリ名</span>
+                            <span th:unless="${expense.expenseCategoryId != null}" class="text-muted">未設定</span>
+                        </td>
+                        <td>
+                            <a th:if="${expense.transactionSource != '差異取引'}"
+                                th:href="@{/transactions/expenses/{id}(id=${expense.bankTransactionId != null ? expense.bankTransactionId : expense.cardTransactionId},
+                                    type=${expense.transactionSource == '銀行' ? 'bank' : 'card'})}"
+                                class="btn btn-sm btn-outline-primary">詳細</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+

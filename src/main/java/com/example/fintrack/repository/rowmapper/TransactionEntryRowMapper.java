@@ -23,6 +23,8 @@ public class TransactionEntryRowMapper implements RowMapper<TransactionEntry> {
     Long expenseCategoryId = rs.getLong("expense_category_id");
     transactionEntry.setExpenseCategoryId(rs.wasNull() ? null : expenseCategoryId);
     String splitMethod = rs.getString("split_method");
+    Long splitPatternId = rs.getLong("split_pattern_id");
+    transactionEntry.setSplitPatternId(rs.wasNull() ? null : splitPatternId);
     transactionEntry.setSplitMethod(splitMethod == null ? null : SplitMethod.valueOf(splitMethod));
     return transactionEntry;
   }
