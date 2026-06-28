@@ -12,7 +12,7 @@
         <!-- 差異情報 -->
         <div class="card mb-4">
             <div class="card-header bg-warning">
-                <h5 class="mb-0">差異情報</h5>
+                <h3 class="section-heading mb-0">差異情報</h3>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -55,14 +55,14 @@
         
         <!-- 登録方法の説明 -->
         <div class="alert alert-info">
-            <h6><i class="bi bi-info-circle"></i> 差異を解決するには</h6>
+            <p class="alert-emphasis-sm mb-0"><i class="bi bi-info-circle"></i> 差異を解決するには</p>
             <p class="mb-0">以下のいずれかの方法で差異額を資産カテゴリに登録してください。登録後、該当月のカード取引が「引き落とし済み」に更新され、資産残高が調整されます。</p>
         </div>
         
         <!-- 1. 全額を1つのカテゴリに登録 -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-1-circle"></i> 全額を1つのカテゴリに登録</h5>
+                <h3 class="section-heading mb-0"><i class="bi bi-1-circle"></i> 全額を1つのカテゴリに登録</h3>
             </div>
             <div class="card-body">
                 <form th:action="@{/discrepancy-transactions/{id}/resolve-single(id=${discrepancy.id})}" method="post">
@@ -94,7 +94,7 @@
         <!-- 2. 手動で金額を指定して分割 -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-2-circle"></i> 金額を指定して分割</h5>
+                <h3 class="section-heading mb-0"><i class="bi bi-2-circle"></i> 金額を指定して分割</h3>
             </div>
             <div class="card-body">
                 <form th:action="@{/discrepancy-transactions/{id}/resolve-manual(id=${discrepancy.id})}" method="post" id="manualSplitForm">
@@ -204,7 +204,7 @@
         <!-- 3. 分割パターンで分配 -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-3-circle"></i> 分割パターンで分配</h5>
+                <h3 class="section-heading mb-0"><i class="bi bi-3-circle"></i> 分割パターンで分配</h3>
             </div>
             <div class="card-body">
                 <div th:if="${splitPatternGroupList == null or #lists.isEmpty(splitPatternGroupList)}" class="alert alert-secondary">

@@ -47,7 +47,7 @@
 
         <!-- 銀行CSV：取引一覧 -->
         <div th:if="${history.importType == 'BANK'}">
-            <h5 class="mb-3">新規登録された銀行取引</h5>
+            <h3 class="section-heading mb-3">新規登録された銀行取引</h3>
             <div th:if="${#lists.isEmpty(bankTransactionList)}" class="text-muted mb-4">
                 登録された取引はありません
             </div>
@@ -88,7 +88,7 @@
 
         <!-- カードCSV：新規登録取引 -->
         <div th:if="${history.importType == 'CARD'}">
-            <h5 class="mb-3">新規登録されたカード取引</h5>
+            <h3 class="section-heading mb-3">新規登録されたカード取引</h3>
             <div th:if="${#lists.isEmpty(cardTransactionList)}" class="text-muted mb-4">
                 新規登録された取引はありません
             </div>
@@ -127,7 +127,7 @@
 
         <!-- BANK / CARD 共通：更新されたカード取引 -->
         <div th:if="${cardTransactionUpdateDetailList != null}">
-            <h5 class="mb-3">更新されたカード取引</h5>
+            <h3 class="section-heading mb-3">更新されたカード取引</h3>
             <div th:if="${#lists.isEmpty(cardTransactionUpdateDetailList)}" class="text-muted mb-4">
                 更新された取引はありません
             </div>
@@ -192,7 +192,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger"></i> 削除確認</h5>
+                        <h3 class="section-heading modal-title mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> 削除確認</h3>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">

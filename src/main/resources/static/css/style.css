@@ -103,6 +103,43 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
+/* 見出しレベルと見た目を分離するユーティリティ */
+.amount-display {
+    font-size: calc(1.325rem + 0.9vw);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.section-heading {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.subsection-heading {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.content-heading {
+    font-size: calc(1.275rem + 0.3vw);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.alert-emphasis {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.alert-emphasis-sm {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
 /* レスポンシブ調整 */
 @media (max-width: 768px) {
     .content {

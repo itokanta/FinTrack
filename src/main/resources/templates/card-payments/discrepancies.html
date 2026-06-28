@@ -11,11 +11,11 @@
         
         <!-- 未解決の差異 -->
         <div th:if="${!#lists.isEmpty(unresolvedDiscrepancies)}" class="alert alert-warning">
-            <h5><i class="bi bi-exclamation-triangle"></i> 未解決の差異があります</h5>
+            <p class="alert-emphasis mb-0"><i class="bi bi-exclamation-triangle"></i> 未解決の差異があります</p>
             <p class="mb-0">銀行引き落とし額と家計簿上のカード利用額に差異があります。</p>
         </div>
         
-        <h4 class="mt-4">未解決の差異</h4>
+        <h3 class="content-heading mt-4">未解決の差異</h3>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -54,7 +54,7 @@
             </table>
         </div>
         
-        <h4 class="mt-5">すべての差異履歴</h4>
+        <h3 class="content-heading mt-5">すべての差異履歴</h3>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>

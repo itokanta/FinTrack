@@ -20,17 +20,17 @@
         <!-- 総資産 -->
         <div class="card mb-4">
             <div class="card-body">
-                <h5 class="card-title">総資産収支</h5>
-                <h2 class="text-primary" th:text="${'収入：' + #numbers.formatInteger(monthlySummaryTotals.incomeAmount, 0, 'COMMA')} + '円'">0円</h2>
-                <h2 class="text-primary" th:text="${'支出：' + #numbers.formatInteger(monthlySummaryTotals.expenseAmount, 0, 'COMMA')} + '円'">0円</h2>
-                <h2 class="text-primary" th:text="${'合計：' + #numbers.formatInteger(monthlySummaryTotals.totalAmount, 0, 'COMMA')} + '円'">0円</h2>
+                <h3 class="section-heading card-title">総資産収支</h3>
+                <p class="amount-display text-primary mb-0" th:text="${'収入：' + #numbers.formatInteger(monthlySummaryTotals.incomeAmount, 0, 'COMMA')} + '円'">0円</p>
+                <p class="amount-display text-primary mb-0" th:text="${'支出：' + #numbers.formatInteger(monthlySummaryTotals.expenseAmount, 0, 'COMMA')} + '円'">0円</p>
+                <p class="amount-display text-primary mb-0" th:text="${'合計：' + #numbers.formatInteger(monthlySummaryTotals.totalAmount, 0, 'COMMA')} + '円'">0円</p>
             </div>
         </div>
         
         <!-- カテゴリ別収支 -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">カテゴリ別収支</h5>
+                <h3 class="section-heading mb-0">カテゴリ別収支</h3>
             </div>
             <div class="card-body">
                 <table class="table">
