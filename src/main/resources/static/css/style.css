@@ -154,6 +154,61 @@ body {
     vertical-align: middle;
 }
 
+.monthly-transaction-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.monthly-transaction-table th,
+.monthly-transaction-table td {
+    vertical-align: middle;
+}
+
+.monthly-transaction-table th:nth-child(2),
+.monthly-transaction-table td:nth-child(2) {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.monthly-transaction-table-income th:nth-child(1),
+.monthly-transaction-table-income td:nth-child(1),
+.monthly-transaction-table-income th:nth-child(3),
+.monthly-transaction-table-income td:nth-child(3),
+.monthly-transaction-table-income th:nth-child(4),
+.monthly-transaction-table-income td:nth-child(4),
+.monthly-transaction-table-income th:nth-child(5),
+.monthly-transaction-table-income td:nth-child(5),
+.monthly-transaction-table-income th:nth-child(6),
+.monthly-transaction-table-income td:nth-child(6) {
+    width: 10%;
+}
+
+.monthly-transaction-table-income th:nth-child(2),
+.monthly-transaction-table-income td:nth-child(2) {
+    width: 50%;
+}
+
+.monthly-transaction-table-expense th:nth-child(1),
+.monthly-transaction-table-expense td:nth-child(1),
+.monthly-transaction-table-expense th:nth-child(3),
+.monthly-transaction-table-expense td:nth-child(3),
+.monthly-transaction-table-expense th:nth-child(4),
+.monthly-transaction-table-expense td:nth-child(4),
+.monthly-transaction-table-expense th:nth-child(5),
+.monthly-transaction-table-expense td:nth-child(5),
+.monthly-transaction-table-expense th:nth-child(6),
+.monthly-transaction-table-expense td:nth-child(6),
+.monthly-transaction-table-expense th:nth-child(7),
+.monthly-transaction-table-expense td:nth-child(7) {
+    width: 10%;
+}
+
+.monthly-transaction-table-expense th:nth-child(2),
+.monthly-transaction-table-expense td:nth-child(2) {
+    width: 40%;
+}
+
 .section-heading {
     font-size: 1.25rem;
     font-weight: 500;
@@ -280,7 +335,9 @@ body {
         font-size: 0.875rem;
         white-space: nowrap;
     }
+}
 
+@media (max-width: 767.98px) {
     .monthly-transaction-table th,
     .monthly-transaction-table td {
         padding: 0.5rem 0.35rem;
@@ -290,6 +347,111 @@ body {
     .monthly-transaction-table .btn-sm {
         padding: 0.2rem 0.4rem;
         font-size: 0.75rem;
+    }
+
+    .table-responsive:has(.monthly-transaction-table) {
+        overflow-x: visible;
+    }
+
+    .monthly-transaction-table {
+        table-layout: auto;
+    }
+
+    .monthly-transaction-table thead {
+        display: none;
+    }
+
+    .monthly-transaction-table,
+    .monthly-transaction-table tbody {
+        display: block;
+    }
+
+    .monthly-transaction-table tbody tr {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 0.2rem 0.5rem;
+        padding: 0.5rem 0.65rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+
+    .monthly-transaction-table tbody tr.monthly-transaction-row-link {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(13, 110, 253, 0.15);
+    }
+
+    .monthly-transaction-table tbody tr.monthly-transaction-row-link:active {
+        background-color: rgba(13, 110, 253, 0.08) !important;
+    }
+
+    .monthly-transaction-table.table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .monthly-transaction-table.table-striped > tbody > tr:nth-of-type(even) {
+        background-color: #fff;
+    }
+
+    .monthly-transaction-table.table-striped > tbody > tr > * {
+        --bs-table-bg-type: transparent;
+        --bs-table-accent-bg: transparent;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .monthly-transaction-table tbody tr td {
+        display: block;
+        width: auto !important;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+    }
+
+    .monthly-transaction-table-income td:nth-child(1),
+    .monthly-transaction-table-expense td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .monthly-transaction-table-income td:nth-child(3),
+    .monthly-transaction-table-expense td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .monthly-transaction-table-income td:nth-child(5),
+    .monthly-transaction-table-expense td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.8125rem;
+        font-weight: normal;
+    }
+
+    .monthly-transaction-table-income td:nth-child(5) .badge,
+    .monthly-transaction-table-expense td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .monthly-transaction-table-income td:nth-child(2),
+    .monthly-transaction-table-expense td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .monthly-transaction-table-income td:nth-child(6),
+    .monthly-transaction-table-expense td:nth-child(7) {
+        display: none !important;
     }
 }
 

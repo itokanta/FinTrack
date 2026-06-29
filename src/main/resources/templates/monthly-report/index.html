@@ -104,7 +104,7 @@
         <!-- 収入一覧 -->
         <h3 class="section-heading mb-4">収入一覧</h3>
         <div class="table-responsive">
-            <table class="table table-striped monthly-transaction-table">
+            <table class="table table-striped monthly-transaction-table monthly-transaction-table-income">
                 <thead>
                     <tr>
                         <th>取引日</th>
@@ -116,7 +116,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="income : ${transactionsByType.income}">
+                    <tr th:each="income : ${transactionsByType.income}"
+                        th:classappend="${income.transactionSource != '差異取引'} ? 'monthly-transaction-row-link' : ''"
+                        th:data-href="${income.transactionSource != '差異取引'} ? @{/transactions/incomes/{id}(id=${income.bankTransactionId != null ? income.bankTransactionId : income.cardTransactionId}, type=${income.transactionSource == '銀行' ? 'bank' : 'card'})} : null">
                         <td th:text="${income.transactionDate}">2024-01-01</td>
                         <td th:text="${income.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(income.amount, 0, 'COMMA')} + '円'">0円</td>
@@ -148,7 +150,7 @@
                             </span>
                             <span th:unless="${income.splitMethod != null}" class="badge bg-warning">未分配</span>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <a th:if="${income.transactionSource != '差異取引'}"
                                 th:href="@{/transactions/incomes/{id}(id=${income.bankTransactionId != null ? income.bankTransactionId : income.cardTransactionId},
                                     type=${income.transactionSource == '銀行' ? 'bank' : 'card'})}"
@@ -161,7 +163,7 @@
         <!-- 支出一覧 -->
         <h3 class="section-heading mb-4">支出一覧</h3>
         <div class="table-responsive">
-            <table class="table table-striped monthly-transaction-table">
+            <table class="table table-striped monthly-transaction-table monthly-transaction-table-expense">
                 <thead>
                     <tr>
                         <th>取引日</th>
@@ -174,7 +176,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="expense : ${transactionsByType.expense}">
+                    <tr th:each="expense : ${transactionsByType.expense}"
+                        th:classappend="${expense.transactionSource != '差異取引'} ? 'monthly-transaction-row-link' : ''"
+                        th:data-href="${expense.transactionSource != '差異取引'} ? @{/transactions/expenses/{id}(id=${expense.bankTransactionId != null ? expense.bankTransactionId : expense.cardTransactionId}, type=${expense.transactionSource == '銀行' ? 'bank' : 'card'})} : null">
                         <td th:text="${expense.transactionDate}">2024-01-01</td>
                         <td th:text="${expense.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(expense.amount, 0, 'COMMA')} + '円'">0円</td>
@@ -219,7 +223,7 @@
                                 th:text="${expenseCategoryMap.get(expense.expenseCategoryId)}">カテゴリ名</span>
                             <span th:unless="${expense.expenseCategoryId != null}" class="text-muted">未設定</span>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <a th:if="${expense.transactionSource != '差異取引'}"
                                 th:href="@{/transactions/expenses/{id}(id=${expense.bankTransactionId != null ? expense.bankTransactionId : expense.cardTransactionId},
                                     type=${expense.transactionSource == '銀行' ? 'bank' : 'card'})}"
@@ -229,6 +233,15 @@
                 </tbody>
             </table>
         </div>
+        <script>
+            document.querySelectorAll('.monthly-transaction-row-link').forEach(function (row) {
+                row.addEventListener('click', function () {
+                    if (window.matchMedia('(max-width: 767.98px)').matches && row.dataset.href) {
+                        window.location.href = row.dataset.href;
+                    }
+                });
+            });
+        </script>
     </div>
 </body>
 </html>
