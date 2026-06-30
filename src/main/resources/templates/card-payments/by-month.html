@@ -28,7 +28,7 @@
         
         <!-- カード取引一覧 -->
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped card-payments-by-month-table">
                 <thead>
                     <tr>
                         <th>利用日</th>
@@ -68,7 +68,7 @@
                             <span th:unless="${transaction.expenseCategoryId != null}" class="text-muted">未設定</span>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(cardTransactions)}">
+                    <tr th:if="${#lists.isEmpty(cardTransactions)}" class="card-payments-empty-row">
                         <td colspan="6" class="text-center text-muted">
                             この支払い月のカード取引はありません
                         </td>

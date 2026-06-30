@@ -363,6 +363,53 @@ body {
     }
 }
 
+.card-payments-by-month-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.card-payments-by-month-table th,
+.card-payments-by-month-table td {
+    vertical-align: middle;
+}
+
+.card-payments-by-month-table th:nth-child(1),
+.card-payments-by-month-table td:nth-child(1),
+.card-payments-by-month-table th:nth-child(3),
+.card-payments-by-month-table td:nth-child(3),
+.card-payments-by-month-table th:nth-child(4),
+.card-payments-by-month-table td:nth-child(4),
+.card-payments-by-month-table th:nth-child(6),
+.card-payments-by-month-table td:nth-child(6) {
+    width: 10%;
+}
+
+.card-payments-by-month-table th:nth-child(2),
+.card-payments-by-month-table td:nth-child(2) {
+    width: 45%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.card-payments-by-month-table th:nth-child(5),
+.card-payments-by-month-table td:nth-child(5) {
+    width: 15%;
+}
+
+@media (min-width: 768px) {
+    .card-payments-by-month-table td:nth-child(4) .badge,
+    .card-payments-by-month-table td:nth-child(5) .badge {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+}
+
 .section-heading {
     font-size: 1.25rem;
     font-weight: 500;
@@ -501,7 +548,9 @@ body {
     .csv-import-card-new-table th,
     .csv-import-card-new-table td,
     .csv-import-card-update-table th,
-    .csv-import-card-update-table td {
+    .csv-import-card-update-table td,
+    .card-payments-by-month-table th,
+    .card-payments-by-month-table td {
         padding: 0.5rem 0.35rem;
         font-size: 0.875rem;
     }
@@ -516,7 +565,8 @@ body {
     .table-responsive:has(.csv-import-history-table),
     .table-responsive:has(.csv-import-bank-table),
     .table-responsive:has(.csv-import-card-new-table),
-    .table-responsive:has(.csv-import-card-update-table) {
+    .table-responsive:has(.csv-import-card-update-table),
+    .table-responsive:has(.card-payments-by-month-table) {
         overflow-x: visible;
     }
 
@@ -524,7 +574,8 @@ body {
     .csv-import-history-table,
     .csv-import-bank-table,
     .csv-import-card-new-table,
-    .csv-import-card-update-table {
+    .csv-import-card-update-table,
+    .card-payments-by-month-table {
         table-layout: auto;
     }
 
@@ -532,7 +583,8 @@ body {
     .csv-import-history-table thead,
     .csv-import-bank-table thead,
     .csv-import-card-new-table thead,
-    .csv-import-card-update-table thead {
+    .csv-import-card-update-table thead,
+    .card-payments-by-month-table thead {
         display: none;
     }
 
@@ -545,7 +597,9 @@ body {
     .csv-import-card-new-table,
     .csv-import-card-new-table tbody,
     .csv-import-card-update-table,
-    .csv-import-card-update-table tbody {
+    .csv-import-card-update-table tbody,
+    .card-payments-by-month-table,
+    .card-payments-by-month-table tbody {
         display: block;
     }
 
@@ -553,7 +607,8 @@ body {
     .csv-import-history-table tbody tr,
     .csv-import-bank-table tbody tr,
     .csv-import-card-new-table tbody tr,
-    .csv-import-card-update-table tbody tr {
+    .csv-import-card-update-table tbody tr,
+    .card-payments-by-month-table tbody tr:not(.card-payments-empty-row) {
         display: grid;
         grid-template-columns: auto 1fr auto;
         gap: 0.2rem 0.5rem;
@@ -578,7 +633,8 @@ body {
     .csv-import-history-table.table-striped > tbody > tr:nth-of-type(odd),
     .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(odd),
     .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(odd),
-    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(odd) {
+    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(odd),
+    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(odd) {
         background-color: rgba(0, 0, 0, 0.05);
     }
 
@@ -586,7 +642,8 @@ body {
     .csv-import-history-table.table-striped > tbody > tr:nth-of-type(even),
     .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(even),
     .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(even),
-    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(even) {
+    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(even),
+    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(even) {
         background-color: #fff;
     }
 
@@ -594,7 +651,8 @@ body {
     .csv-import-history-table.table-striped > tbody > tr > *,
     .csv-import-bank-table.table-striped > tbody > tr > *,
     .csv-import-card-new-table.table-striped > tbody > tr > *,
-    .csv-import-card-update-table.table-striped > tbody > tr > * {
+    .csv-import-card-update-table.table-striped > tbody > tr > *,
+    .card-payments-by-month-table.table-striped > tbody > tr > * {
         --bs-table-bg-type: transparent;
         --bs-table-accent-bg: transparent;
         background-color: transparent !important;
@@ -605,7 +663,8 @@ body {
     .csv-import-history-table tbody tr td,
     .csv-import-bank-table tbody tr td,
     .csv-import-card-new-table tbody tr td,
-    .csv-import-card-update-table tbody tr td {
+    .csv-import-card-update-table tbody tr td,
+    .card-payments-by-month-table tbody tr td {
         display: block;
         width: auto !important;
         padding: 0;
@@ -788,6 +847,71 @@ body {
         font-size: 0.8125rem;
         text-align: right;
         min-width: 0;
+    }
+
+    .card-payments-by-month-table tfoot {
+        display: none;
+    }
+
+    .card-payments-by-month-table tbody tr.card-payments-empty-row {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .card-payments-by-month-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.75rem;
+    }
+
+    .card-payments-by-month-table td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.75rem;
+        font-weight: normal;
+    }
+
+    .card-payments-by-month-table td:nth-child(4) .badge,
+    .card-payments-by-month-table td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .card-payments-by-month-table td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .card-payments-by-month-table td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .card-payments-by-month-table td:nth-child(4) {
+        grid-column: 1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+    }
+
+    .card-payments-by-month-table td:nth-child(6) {
+        grid-column: 3;
+        grid-row: 3;
+        text-align: right;
+        font-size: 0.8125rem;
     }
 }
 
