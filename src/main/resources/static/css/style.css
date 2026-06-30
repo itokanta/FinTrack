@@ -209,6 +209,28 @@ body {
     width: 40%;
 }
 
+@media (min-width: 768px) {
+    .monthly-transaction-table-expense th:nth-child(5),
+    .monthly-transaction-table-expense td:nth-child(5),
+    .monthly-transaction-table-expense th:nth-child(6),
+    .monthly-transaction-table-expense td:nth-child(6) {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .monthly-transaction-table-expense td:nth-child(5) .badge,
+    .monthly-transaction-table-expense td:nth-child(6) .badge {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+}
+
 .section-heading {
     font-size: 1.25rem;
     font-weight: 500;

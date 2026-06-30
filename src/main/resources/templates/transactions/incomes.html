@@ -8,37 +8,35 @@
 <body>
     <div layout:fragment="content">
         <h2 class="mb-4">収入一覧</h2>
-        
+
         <!-- 月選択 -->
-        <div class="mb-3">
-            <a th:href="@{/transactions/incomes(month=${prevMonth})}" class="btn btn-outline-primary">
-                <i class="bi bi-chevron-left"></i> 前月
-            </a>
-            <span class="mx-3" th:text="${currentMonth}">2024-01</span>
-            <a th:href="@{/transactions/incomes(month=${nextMonth})}" class="btn btn-outline-primary">
-                次月 <i class="bi bi-chevron-right"></i>
-            </a>
+        <div class="mb-4">
+            <label for="report-month" class="form-label">対象月</label>
+            <input type="month" class="form-control" id="paymentMonth" th:value="${currentMonth}" style="max-width: 200px;"
+                onchange="location.href='/transactions/incomes?currentMonth=' + this.value">
         </div>
         
         <!-- 収入一覧 -->
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped monthly-transaction-table monthly-transaction-table-income">
                 <thead>
                     <tr>
                         <th>取引日</th>
                         <th>摘要</th>
                         <th class="text-end">金額</th>
-                        <th>取引区分</th>
+                        <th class="d-none d-md-table-cell">取引区分</th>
                         <th>分配ステータス</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="income : ${incomes}">
+                    <tr th:each="income : ${incomes}"
+                        class="monthly-transaction-row-link"
+                        th:data-href="@{/transactions/incomes/{id}(id=${income.transactionId}, type=${income.transactionSource == '銀行' ? 'bank' : 'card'})}">
                         <td th:text="${income.transactionDate}">2024-01-01</td>
                         <td th:text="${income.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(income.amount, 0, 'COMMA')} + '円'">0円</td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <span th:if="${income.transactionSource == '銀行'}" class="badge bg-primary">
                                 <i class="bi bi-bank"></i> 銀行
                             </span>
@@ -61,18 +59,25 @@
                                     分配済み (手動)
                                 </span>
                             </span>
-                            <span th:unless="${income.splitMethod != null}" 
-                                  class="badge bg-warning">未分配</span>
+                            <span th:unless="${income.splitMethod != null}" class="badge bg-warning">未分配</span>
                         </td>
-                        <td>
-                            <a th:href="@{/transactions/incomes/{id}(id=${income.transactionId}, type=${income.transactionSource == '銀行' ? 'bank' : 'card'})}" 
+                        <td class="d-none d-md-table-cell">
+                            <a th:href="@{/transactions/incomes/{id}(id=${income.transactionId}, type=${income.transactionSource == '銀行' ? 'bank' : 'card'})}"
                                class="btn btn-sm btn-outline-primary">詳細</a>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        <script>
+            document.querySelectorAll('.monthly-transaction-row-link').forEach(function (row) {
+                row.addEventListener('click', function () {
+                    if (window.matchMedia('(max-width: 767.98px)').matches && row.dataset.href) {
+                        window.location.href = row.dataset.href;
+                    }
+                });
+            });
+        </script>
     </div>
 </body>
 </html>
-

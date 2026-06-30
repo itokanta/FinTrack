@@ -55,15 +55,15 @@ public class TransactionController {
      */
     @GetMapping("/expenses")
     public String expenses(Authentication authentication,
-                          @RequestParam(required = false) String month,
+                          @RequestParam(required = false) String currentMonth,
                           @RequestParam(defaultValue = "0") int page,
                           Model model) {
         Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 月の指定がない場合は今月
         YearMonth yearMonth;
-        if (month != null) {
-            yearMonth = YearMonth.parse(month);
+        if (currentMonth != null) {
+            yearMonth = YearMonth.parse(currentMonth);
         } else {
             yearMonth = YearMonth.now();
         }
@@ -88,8 +88,6 @@ public class TransactionController {
         model.addAttribute("expenseCategoryMap", expenseCategoryMap);
         model.addAttribute("splitPatternMap", splitPatternMap);
         model.addAttribute("currentMonth", yearMonth);
-        model.addAttribute("prevMonth", yearMonth.minusMonths(1));
-        model.addAttribute("nextMonth", yearMonth.plusMonths(1));
         model.addAttribute("page", page);
         
         return "transactions/expenses";
@@ -100,15 +98,15 @@ public class TransactionController {
      */
     @GetMapping("/incomes")
     public String incomes(Authentication authentication,
-                         @RequestParam(required = false) String month,
+                         @RequestParam(required = false) String currentMonth,
                          @RequestParam(defaultValue = "0") int page,
                          Model model) {
         Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 月の指定がない場合は今月
         YearMonth yearMonth;
-        if (month != null) {
-            yearMonth = YearMonth.parse(month);
+        if (currentMonth != null) {
+            yearMonth = YearMonth.parse(currentMonth);
         } else {
             yearMonth = YearMonth.now();
         }
@@ -118,8 +116,6 @@ public class TransactionController {
         
         model.addAttribute("incomes", incomes);
         model.addAttribute("currentMonth", yearMonth);
-        model.addAttribute("prevMonth", yearMonth.minusMonths(1));
-        model.addAttribute("nextMonth", yearMonth.plusMonths(1));
         model.addAttribute("page", page);
         
         return "transactions/incomes";
