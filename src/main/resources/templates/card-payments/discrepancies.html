@@ -17,7 +17,7 @@
         
         <h3 class="content-heading mt-4">未解決の差異</h3>
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped card-payments-discrepancy-table card-payments-discrepancy-unresolved-table">
                 <thead>
                     <tr>
                         <th>支払い月</th>
@@ -29,7 +29,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="discrepancy : ${unresolvedDiscrepancies}">
+                    <tr th:each="discrepancy : ${unresolvedDiscrepancies}"
+                        class="monthly-transaction-row-link"
+                        th:data-href="@{/discrepancy-transactions/{id}/resolve(id=${discrepancy.id})}">
                         <td th:text="${discrepancy.paymentMonth}">2025-01</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(discrepancy.expectedAmount, 0, 'COMMA')} + '円'">0円</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(discrepancy.actualAmount, 0, 'COMMA')} + '円'">0円</td>
@@ -38,14 +40,14 @@
                                   th:text="${(discrepancy.differenceAmount > 0 ? '+' : '') + #numbers.formatInteger(discrepancy.differenceAmount, 0, 'COMMA')} + '円'">0円</span>
                         </td>
                         <td th:text="${#temporals.format(discrepancy.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 00:00</td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <a th:href="@{/discrepancy-transactions/{id}/resolve(id=${discrepancy.id})}" 
                                class="btn btn-sm btn-primary">
                                 <i class="bi bi-pencil-square"></i> 解決する
                             </a>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(unresolvedDiscrepancies)}">
+                    <tr th:if="${#lists.isEmpty(unresolvedDiscrepancies)}" class="card-payments-discrepancy-empty-row">
                         <td colspan="6" class="text-center text-muted">
                             <i class="bi bi-check-circle text-success"></i> 未解決の差異はありません
                         </td>
@@ -56,7 +58,7 @@
         
         <h3 class="content-heading mt-5">すべての差異履歴</h3>
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped card-payments-discrepancy-table card-payments-discrepancy-all-table">
                 <thead>
                     <tr>
                         <th>支払い月</th>
@@ -86,7 +88,7 @@
                         </td>
                         <td th:text="${#temporals.format(discrepancy.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 00:00</td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(allDiscrepancies)}">
+                    <tr th:if="${#lists.isEmpty(allDiscrepancies)}" class="card-payments-discrepancy-empty-row">
                         <td colspan="6" class="text-center text-muted">
                             差異の履歴はありません
                         </td>
@@ -94,6 +96,15 @@
                 </tbody>
             </table>
         </div>
+        <script>
+            document.querySelectorAll('.monthly-transaction-row-link').forEach(function (row) {
+                row.addEventListener('click', function () {
+                    if (window.matchMedia('(max-width: 767.98px)').matches && row.dataset.href) {
+                        window.location.href = row.dataset.href;
+                    }
+                });
+            });
+        </script>
     </div>
 </body>
 </html>

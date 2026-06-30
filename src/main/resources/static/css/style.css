@@ -550,13 +550,16 @@ body {
     .csv-import-card-update-table th,
     .csv-import-card-update-table td,
     .card-payments-by-month-table th,
-    .card-payments-by-month-table td {
+    .card-payments-by-month-table td,
+    .card-payments-discrepancy-table th,
+    .card-payments-discrepancy-table td {
         padding: 0.5rem 0.35rem;
         font-size: 0.875rem;
     }
 
     .monthly-transaction-table .btn-sm,
-    .csv-import-history-table .btn-sm {
+    .csv-import-history-table .btn-sm,
+    .card-payments-discrepancy-table .btn-sm {
         padding: 0.2rem 0.4rem;
         font-size: 0.75rem;
     }
@@ -566,7 +569,8 @@ body {
     .table-responsive:has(.csv-import-bank-table),
     .table-responsive:has(.csv-import-card-new-table),
     .table-responsive:has(.csv-import-card-update-table),
-    .table-responsive:has(.card-payments-by-month-table) {
+    .table-responsive:has(.card-payments-by-month-table),
+    .table-responsive:has(.card-payments-discrepancy-table) {
         overflow-x: visible;
     }
 
@@ -575,7 +579,8 @@ body {
     .csv-import-bank-table,
     .csv-import-card-new-table,
     .csv-import-card-update-table,
-    .card-payments-by-month-table {
+    .card-payments-by-month-table,
+    .card-payments-discrepancy-table {
         table-layout: auto;
     }
 
@@ -584,7 +589,8 @@ body {
     .csv-import-bank-table thead,
     .csv-import-card-new-table thead,
     .csv-import-card-update-table thead,
-    .card-payments-by-month-table thead {
+    .card-payments-by-month-table thead,
+    .card-payments-discrepancy-table thead {
         display: none;
     }
 
@@ -599,7 +605,9 @@ body {
     .csv-import-card-update-table,
     .csv-import-card-update-table tbody,
     .card-payments-by-month-table,
-    .card-payments-by-month-table tbody {
+    .card-payments-by-month-table tbody,
+    .card-payments-discrepancy-table,
+    .card-payments-discrepancy-table tbody {
         display: block;
     }
 
@@ -608,7 +616,8 @@ body {
     .csv-import-bank-table tbody tr,
     .csv-import-card-new-table tbody tr,
     .csv-import-card-update-table tbody tr,
-    .card-payments-by-month-table tbody tr:not(.card-payments-empty-row) {
+    .card-payments-by-month-table tbody tr:not(.card-payments-empty-row),
+    .card-payments-discrepancy-table tbody tr:not(.card-payments-discrepancy-empty-row) {
         display: grid;
         grid-template-columns: auto 1fr auto;
         gap: 0.2rem 0.5rem;
@@ -619,13 +628,15 @@ body {
     }
 
     .monthly-transaction-table tbody tr.monthly-transaction-row-link,
-    .csv-import-history-table tbody tr.monthly-transaction-row-link {
+    .csv-import-history-table tbody tr.monthly-transaction-row-link,
+    .card-payments-discrepancy-unresolved-table tbody tr.monthly-transaction-row-link {
         cursor: pointer;
         -webkit-tap-highlight-color: rgba(13, 110, 253, 0.15);
     }
 
     .monthly-transaction-table tbody tr.monthly-transaction-row-link:active,
-    .csv-import-history-table tbody tr.monthly-transaction-row-link:active {
+    .csv-import-history-table tbody tr.monthly-transaction-row-link:active,
+    .card-payments-discrepancy-unresolved-table tbody tr.monthly-transaction-row-link:active {
         background-color: rgba(13, 110, 253, 0.08) !important;
     }
 
@@ -634,7 +645,8 @@ body {
     .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(odd),
     .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(odd),
     .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(odd),
-    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(odd) {
+    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(odd),
+    .card-payments-discrepancy-table.table-striped > tbody > tr:nth-of-type(odd) {
         background-color: rgba(0, 0, 0, 0.05);
     }
 
@@ -643,7 +655,8 @@ body {
     .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(even),
     .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(even),
     .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(even),
-    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(even) {
+    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(even),
+    .card-payments-discrepancy-table.table-striped > tbody > tr:nth-of-type(even) {
         background-color: #fff;
     }
 
@@ -652,7 +665,8 @@ body {
     .csv-import-bank-table.table-striped > tbody > tr > *,
     .csv-import-card-new-table.table-striped > tbody > tr > *,
     .csv-import-card-update-table.table-striped > tbody > tr > *,
-    .card-payments-by-month-table.table-striped > tbody > tr > * {
+    .card-payments-by-month-table.table-striped > tbody > tr > *,
+    .card-payments-discrepancy-table.table-striped > tbody > tr > * {
         --bs-table-bg-type: transparent;
         --bs-table-accent-bg: transparent;
         background-color: transparent !important;
@@ -664,7 +678,8 @@ body {
     .csv-import-bank-table tbody tr td,
     .csv-import-card-new-table tbody tr td,
     .csv-import-card-update-table tbody tr td,
-    .card-payments-by-month-table tbody tr td {
+    .card-payments-by-month-table tbody tr td,
+    .card-payments-discrepancy-table tbody tr td {
         display: block;
         width: auto !important;
         padding: 0;
@@ -912,6 +927,97 @@ body {
         grid-row: 3;
         text-align: right;
         font-size: 0.8125rem;
+    }
+
+    .card-payments-discrepancy-table tbody tr.card-payments-discrepancy-empty-row {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(4) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(2) {
+        grid-column: 1;
+        grid-row: 2;
+        text-align: left !important;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(2)::before {
+        content: '家計簿上の金額';
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 2;
+        text-align: right !important;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(3)::before {
+        content: '実際の引落額';
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+        text-align: right;
+    }
+
+    .card-payments-discrepancy-unresolved-table td:nth-child(5) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    .card-payments-discrepancy-unresolved-table td:nth-child(6) {
+        display: none !important;
+    }
+
+    .card-payments-discrepancy-all-table td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .card-payments-discrepancy-all-table td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .card-payments-discrepancy-all-table td:nth-child(6) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.75rem;
+        color: #6c757d;
     }
 }
 
