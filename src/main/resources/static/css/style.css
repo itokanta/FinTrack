@@ -263,6 +263,106 @@ body {
     width: 21%;
 }
 
+.csv-import-bank-table,
+.csv-import-card-new-table,
+.csv-import-card-update-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.csv-import-bank-table th,
+.csv-import-bank-table td,
+.csv-import-card-new-table th,
+.csv-import-card-new-table td,
+.csv-import-card-update-table th,
+.csv-import-card-update-table td {
+    vertical-align: middle;
+}
+
+.csv-import-bank-table th:nth-child(1),
+.csv-import-bank-table td:nth-child(1),
+.csv-import-bank-table th:nth-child(3),
+.csv-import-bank-table td:nth-child(3),
+.csv-import-bank-table th:nth-child(4),
+.csv-import-bank-table td:nth-child(4),
+.csv-import-bank-table th:nth-child(5),
+.csv-import-bank-table td:nth-child(5) {
+    width: 10%;
+}
+
+.csv-import-bank-table th:nth-child(2),
+.csv-import-bank-table td:nth-child(2) {
+    width: 50%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.csv-import-card-new-table th:nth-child(1),
+.csv-import-card-new-table td:nth-child(1),
+.csv-import-card-new-table th:nth-child(3),
+.csv-import-card-new-table td:nth-child(3),
+.csv-import-card-new-table th:nth-child(4),
+.csv-import-card-new-table td:nth-child(4),
+.csv-import-card-new-table th:nth-child(5),
+.csv-import-card-new-table td:nth-child(5),
+.csv-import-card-new-table th:nth-child(6),
+.csv-import-card-new-table td:nth-child(6) {
+    width: 10%;
+}
+
+.csv-import-card-new-table th:nth-child(2),
+.csv-import-card-new-table td:nth-child(2) {
+    width: 50%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.csv-import-card-update-table th:nth-child(1),
+.csv-import-card-update-table td:nth-child(1),
+.csv-import-card-update-table th:nth-child(3),
+.csv-import-card-update-table td:nth-child(3),
+.csv-import-card-update-table th:nth-child(4),
+.csv-import-card-update-table td:nth-child(4),
+.csv-import-card-update-table th:nth-child(5),
+.csv-import-card-update-table td:nth-child(5),
+.csv-import-card-update-table th:nth-child(7),
+.csv-import-card-update-table td:nth-child(7) {
+    width: 10%;
+}
+
+.csv-import-card-update-table th:nth-child(6),
+.csv-import-card-update-table td:nth-child(6) {
+    width: 5%;
+    text-align: center;
+}
+
+.csv-import-card-update-table th:nth-child(2),
+.csv-import-card-update-table td:nth-child(2) {
+    width: 45%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+@media (min-width: 768px) {
+    .csv-import-bank-table td:nth-child(4) .badge,
+    .csv-import-bank-table td:nth-child(5) .badge,
+    .csv-import-card-new-table td:nth-child(4) .badge,
+    .csv-import-card-new-table td:nth-child(6) .badge,
+    .csv-import-card-update-table td:nth-child(5) .badge,
+    .csv-import-card-update-table td:nth-child(7) .badge {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+}
+
 .section-heading {
     font-size: 1.25rem;
     font-weight: 500;
@@ -395,7 +495,13 @@ body {
     .monthly-transaction-table th,
     .monthly-transaction-table td,
     .csv-import-history-table th,
-    .csv-import-history-table td {
+    .csv-import-history-table td,
+    .csv-import-bank-table th,
+    .csv-import-bank-table td,
+    .csv-import-card-new-table th,
+    .csv-import-card-new-table td,
+    .csv-import-card-update-table th,
+    .csv-import-card-update-table td {
         padding: 0.5rem 0.35rem;
         font-size: 0.875rem;
     }
@@ -407,29 +513,47 @@ body {
     }
 
     .table-responsive:has(.monthly-transaction-table),
-    .table-responsive:has(.csv-import-history-table) {
+    .table-responsive:has(.csv-import-history-table),
+    .table-responsive:has(.csv-import-bank-table),
+    .table-responsive:has(.csv-import-card-new-table),
+    .table-responsive:has(.csv-import-card-update-table) {
         overflow-x: visible;
     }
 
     .monthly-transaction-table,
-    .csv-import-history-table {
+    .csv-import-history-table,
+    .csv-import-bank-table,
+    .csv-import-card-new-table,
+    .csv-import-card-update-table {
         table-layout: auto;
     }
 
     .monthly-transaction-table thead,
-    .csv-import-history-table thead {
+    .csv-import-history-table thead,
+    .csv-import-bank-table thead,
+    .csv-import-card-new-table thead,
+    .csv-import-card-update-table thead {
         display: none;
     }
 
     .monthly-transaction-table,
     .monthly-transaction-table tbody,
     .csv-import-history-table,
-    .csv-import-history-table tbody {
+    .csv-import-history-table tbody,
+    .csv-import-bank-table,
+    .csv-import-bank-table tbody,
+    .csv-import-card-new-table,
+    .csv-import-card-new-table tbody,
+    .csv-import-card-update-table,
+    .csv-import-card-update-table tbody {
         display: block;
     }
 
     .monthly-transaction-table tbody tr,
-    .csv-import-history-table tbody tr {
+    .csv-import-history-table tbody tr,
+    .csv-import-bank-table tbody tr,
+    .csv-import-card-new-table tbody tr,
+    .csv-import-card-update-table tbody tr {
         display: grid;
         grid-template-columns: auto 1fr auto;
         gap: 0.2rem 0.5rem;
@@ -451,17 +575,26 @@ body {
     }
 
     .monthly-transaction-table.table-striped > tbody > tr:nth-of-type(odd),
-    .csv-import-history-table.table-striped > tbody > tr:nth-of-type(odd) {
+    .csv-import-history-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(odd) {
         background-color: rgba(0, 0, 0, 0.05);
     }
 
     .monthly-transaction-table.table-striped > tbody > tr:nth-of-type(even),
-    .csv-import-history-table.table-striped > tbody > tr:nth-of-type(even) {
+    .csv-import-history-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(even) {
         background-color: #fff;
     }
 
     .monthly-transaction-table.table-striped > tbody > tr > *,
-    .csv-import-history-table.table-striped > tbody > tr > * {
+    .csv-import-history-table.table-striped > tbody > tr > *,
+    .csv-import-bank-table.table-striped > tbody > tr > *,
+    .csv-import-card-new-table.table-striped > tbody > tr > *,
+    .csv-import-card-update-table.table-striped > tbody > tr > * {
         --bs-table-bg-type: transparent;
         --bs-table-accent-bg: transparent;
         background-color: transparent !important;
@@ -469,7 +602,10 @@ body {
     }
 
     .monthly-transaction-table tbody tr td,
-    .csv-import-history-table tbody tr td {
+    .csv-import-history-table tbody tr td,
+    .csv-import-bank-table tbody tr td,
+    .csv-import-card-new-table tbody tr td,
+    .csv-import-card-update-table tbody tr td {
         display: block;
         width: auto !important;
         padding: 0;
@@ -560,6 +696,98 @@ body {
 
     .csv-import-history-table td:nth-child(5) {
         display: none !important;
+    }
+
+    .csv-import-bank-table td:nth-child(1),
+    .csv-import-card-new-table td:nth-child(1),
+    .csv-import-card-update-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.75rem;
+    }
+
+    .csv-import-bank-table td:nth-child(4),
+    .csv-import-card-new-table td:nth-child(4),
+    .csv-import-card-update-table td:nth-child(4) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.8125rem;
+        font-weight: normal;
+    }
+
+    .csv-import-bank-table td:nth-child(4) .badge,
+    .csv-import-bank-table td:nth-child(5) .badge,
+    .csv-import-card-new-table td:nth-child(4) .badge,
+    .csv-import-card-new-table td:nth-child(6) .badge,
+    .csv-import-card-update-table td:nth-child(5) .badge,
+    .csv-import-card-update-table td:nth-child(7) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .csv-import-bank-table td:nth-child(3),
+    .csv-import-card-new-table td:nth-child(3),
+    .csv-import-card-update-table td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .csv-import-bank-table td:nth-child(2),
+    .csv-import-card-new-table td:nth-child(2),
+    .csv-import-card-update-table td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .csv-import-bank-table td:nth-child(5) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+    }
+
+    .csv-import-card-new-table td:nth-child(5) {
+        grid-column: 1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .csv-import-card-new-table td:nth-child(6) {
+        grid-column: 3;
+        grid-row: 3;
+        text-align: right;
+        font-size: 0.8125rem;
+    }
+
+    .csv-import-card-update-table td:nth-child(5) {
+        grid-column: 1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+        min-width: 0;
+    }
+
+    .csv-import-card-update-table td:nth-child(6) {
+        grid-column: 2;
+        grid-row: 3;
+        text-align: center;
+        align-self: center;
+    }
+
+    .csv-import-card-update-table td:nth-child(7) {
+        grid-column: 3;
+        grid-row: 3;
+        font-size: 0.8125rem;
+        text-align: right;
+        min-width: 0;
     }
 }
 

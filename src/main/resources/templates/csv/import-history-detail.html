@@ -52,7 +52,7 @@
                 登録された取引はありません
             </div>
             <div th:unless="${#lists.isEmpty(bankTransactionList)}" class="table-responsive mb-4">
-                <table class="table table-striped align-middle">
+                <table class="table table-striped align-middle csv-import-bank-table">
                     <thead>
                         <tr>
                             <th>取引日</th>
@@ -93,7 +93,7 @@
                 新規登録された取引はありません
             </div>
             <div th:unless="${#lists.isEmpty(cardTransactionList)}" class="table-responsive mb-4">
-                <table class="table table-striped align-middle">
+                <table class="table table-striped align-middle csv-import-card-new-table">
                     <thead>
                         <tr>
                             <th>取引日</th>
@@ -132,7 +132,7 @@
                 更新された取引はありません
             </div>
             <div th:unless="${#lists.isEmpty(cardTransactionUpdateDetailList)}" class="table-responsive mb-4">
-                <table class="table table-striped align-middle">
+                <table class="table table-striped align-middle csv-import-card-update-table">
                     <thead>
                         <tr>
                             <th>取引日</th>
