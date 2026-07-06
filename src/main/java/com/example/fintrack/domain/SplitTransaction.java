@@ -7,8 +7,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 分割済みの収支額を管理するドメインモデル
- * (旧: SplitIncome)
+ * 分割済みの収支額を管理するドメインモデル。
+ * （旧: SplitIncome）
+ *
+ * @author kanta ito
  */
 @Data
 @NoArgsConstructor

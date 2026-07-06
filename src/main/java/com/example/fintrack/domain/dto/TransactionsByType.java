@@ -6,6 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 収入・支出に分けた取引一覧をまとめる DTO。
+ *
+ * @author kanta ito
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

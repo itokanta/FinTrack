@@ -20,6 +20,11 @@ import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryEx
 import com.example.fintrack.repository.rowmapper.MonthlySummaryRowMapper;
 import com.example.fintrack.repository.rowmapper.TransactionEntryRowMapper;
 
+/**
+ * 差異解消用取引（discrepancy_transactions テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class DiscrepancyTransactionRepository {
 
@@ -67,6 +72,12 @@ public class DiscrepancyTransactionRepository {
         this.template = template;
     }
 
+    /**
+     * 差異解消用取引を新規登録する。
+     *
+     * @param discrepancyTransaction 登録する取引
+     * @return ID・作成日時が反映された取引
+     */
     public DiscrepancyTransaction save(DiscrepancyTransaction discrepancyTransaction) {
         String sql = "INSERT INTO discrepancy_transactions " +
                      "(description, amount, transaction_type, transaction_date, user_id, bank_transaction_id, " +
@@ -93,6 +104,13 @@ public class DiscrepancyTransactionRepository {
         return discrepancyTransaction;
     }
 
+    /**
+     * 銀行取引 ID のリストに紐づく差異解消用取引を取得する。
+     *
+     * @param bankTransactionIdList 銀行取引 ID のリスト
+     * @param userId ユーザー ID
+     * @return 差異解消用取引のリスト（リストが空なら空リスト）
+     */
     public List<DiscrepancyTransaction> findByBankTransactionIds(List<Long> bankTransactionIdList, Long userId) {
         if (bankTransactionIdList.isEmpty()) {
             return List.of();
@@ -108,6 +126,15 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 期間・取引種別で差異解消用取引を {@link TransactionEntry} として取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
                 "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
@@ -118,6 +145,15 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 期間・取引種別で、分割方法が SINGLE の差異解消用取引を取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
@@ -130,6 +166,15 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 期間・取引種別で、未分配（split_method が NULL）の差異解消用取引を取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsNull(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
@@ -142,6 +187,14 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 期間内の差異解消用取引の収支合計を集計する（未分配・SINGLE のみ）。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
@@ -153,6 +206,14 @@ public class DiscrepancyTransactionRepository {
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
+    /**
+     * 期間内の差異解消用取引を資産カテゴリ別に集計する（SINGLE のみ）。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 資産カテゴリ ID → 月次サマリの Map
+     */
     public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategory(Long userId, LocalDate startDate,
             LocalDate endDate) {
         String sql = "SELECT asset_category_id, " +
@@ -166,6 +227,14 @@ public class DiscrepancyTransactionRepository {
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
+    /**
+     * 期間内の未分配差異解消用取引の収支合計を集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumMonthlySummaryBySplitMethodIsNull(Long userId, LocalDate startDate,
             LocalDate endDate) {
         String sql = "SELECT " +

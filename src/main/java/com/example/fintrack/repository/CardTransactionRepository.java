@@ -24,6 +24,11 @@ import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryEx
 import com.example.fintrack.repository.rowmapper.MonthlySummaryRowMapper;
 import com.example.fintrack.repository.rowmapper.TransactionEntryRowMapper;
 
+/**
+ * カード取引（card_transactions テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class CardTransactionRepository {
 
@@ -87,6 +92,13 @@ public class CardTransactionRepository {
         this.template = template;
     }
     
+    /**
+     * ID でカード取引を検索する。
+     *
+     * @param id カード取引 ID
+     * @param userId ユーザー ID
+     * @return 見つかれば取引を含む Optional、なければ空
+     */
     public Optional<CardTransaction> findById(Long id, Long userId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " + 
                     "asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, card_type, " +
@@ -103,6 +115,12 @@ public class CardTransactionRepository {
         return Optional.of(transactions.get(0));
     }
     
+    /**
+     * フィンガープリントごとの登録件数を集計する（重複チェック用）。
+     *
+     * @param userId ユーザー ID
+     * @return フィンガープリント → 件数の Map
+     */
     public Map<String, Long> countByFingerprintGrouped(Long userId) {
         String sql = "SELECT fingerprint, COUNT(fingerprint) as count " +
                     "FROM card_transactions " +
@@ -122,7 +140,10 @@ public class CardTransactionRepository {
     }
     
     /**
-     * fingerprint全件を取得
+     * ユーザーのカード取引をすべて取得する。
+     *
+     * @param userId ユーザー ID
+     * @return カード取引のリスト（作成日時昇順）
      */
     public List<CardTransaction> findAllByUserId(Long userId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
@@ -136,6 +157,13 @@ public class CardTransactionRepository {
         return transactions;
     }
     
+    /**
+     * 未分配のカード取引を取引種別で取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @return カード取引のリスト（取引日降順）
+     */
     public List<CardTransaction> findBySplitPatternNullAndType(
             Long userId, TransactionType transactionType) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
@@ -147,6 +175,17 @@ public class CardTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
         
+    /**
+     * 期間・取引種別でカード取引をページング取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @param offset オフセット
+     * @param limit 取得件数上限
+     * @return カード取引のリスト（取引日降順）
+     */
     public List<CardTransaction> findByUserIdAndTransactionTypeAndTransactionDateBetween(
             Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate,
             int offset, int limit) {
@@ -166,6 +205,12 @@ public class CardTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
     
+    /**
+     * ユーザーが持つ摘要の重複なし一覧を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 摘要文字列のリスト（昇順）
+     */
     public List<String> findDistinctDescriptionsByUserId(Long userId) {
         String sql = "SELECT DISTINCT description FROM card_transactions " +
                     "WHERE user_id = :userId AND description IS NOT NULL " +
@@ -174,6 +219,11 @@ public class CardTransactionRepository {
         return template.queryForList(sql, params, String.class);
     }
 
+    /**
+     * カード取引を一括登録する。
+     *
+     * @param transactionList 登録する取引のリスト
+     */
     public void insert(List<CardTransaction> transactionList) {
         String sql = "INSERT INTO card_transactions " +
                 "(description, amount, transaction_type, transaction_date, fingerprint, user_id, asset_category_id, " +
@@ -206,6 +256,11 @@ public class CardTransactionRepository {
         template.batchUpdate(sql, params);
     }
     
+    /**
+     * 資産カテゴリ・支出カテゴリ・分割パターン・分割方法を更新する。
+     *
+     * @param transaction 更新内容を持つカード取引（id・userId 必須）
+     */
     public void updateAssetCategoryOrSplitPatternOrExpenseCategory(CardTransaction transaction) {
             String sql = "UPDATE card_transactions SET " +
                         "asset_category_id = :assetCategoryId, expense_category_id = :expenseCategoryId, " +
@@ -222,7 +277,11 @@ public class CardTransactionRepository {
     }
 
     /**
-     * 指定した支払い月のクレジットカード取引を取得（デビットは支払月・is_paid の扱いが異なるため除外）
+     * 指定支払月のクレジットカード取引を取得する（デビットは除外）。
+     *
+     * @param userId ユーザー ID
+     * @param paymentMonth 支払月（YYYY-MM 形式）
+     * @return カード取引のリスト（取引日降順）
      */
     public List<CardTransaction> findByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
@@ -237,7 +296,11 @@ public class CardTransactionRepository {
     }
 
     /**
-     * 指定した支払い月のカード取引合計金額を取得
+     * 指定支払月のクレジットカード支出合計を取得する。
+     *
+     * @param userId ユーザー ID
+     * @param paymentMonth 支払月（YYYY-MM 形式）
+     * @return 支出合計（該当なしなら 0）
      */
     public Long sumAmountByUserIdAndPaymentMonth(Long userId, String paymentMonth) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM card_transactions " +
@@ -249,7 +312,10 @@ public class CardTransactionRepository {
     }
 
     /**
-     * 指定した支払い月のカード取引を引き落とし済みに更新
+     * 指定支払月のクレジットカード取引を引き落とし済みに更新する。
+     *
+     * @param userId ユーザー ID
+     * @param paymentMonth 支払月（YYYY-MM 形式）
      */
     public void markAsPaidByPaymentMonth(Long userId, String paymentMonth) {
         String sql = "UPDATE card_transactions SET is_paid = TRUE, update_count = update_count + 1 " +
@@ -260,6 +326,11 @@ public class CardTransactionRepository {
         template.update(sql, params);
     }
 
+    /**
+     * クレジットカード取引の支払月を一括更新する。
+     *
+     * @param cardTransactionList 更新対象のカード取引リスト
+     */
     public void updatePaymentMonth(List<CardTransaction> cardTransactionList) {
         String sql = "UPDATE card_transactions SET payment_month = :paymentMonth, update_count = update_count + 1 " +
                 "WHERE id = :id AND user_id = :userId AND card_type = 'CREDIT'";
@@ -274,6 +345,13 @@ public class CardTransactionRepository {
         template.batchUpdate(sql, params);
     }
 
+    /**
+     * CSV インポート履歴 ID に紐づくカード取引一覧を取得する。
+     *
+     * @param userId ユーザー ID
+     * @param csvImportHistoryId CSV インポート履歴 ID
+     * @return カード取引のリスト（取引日降順）
+     */
     public List<CardTransaction> findByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
                 "asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, card_type, " +
@@ -288,6 +366,13 @@ public class CardTransactionRepository {
         return template.query(sql, param, ROW_MAPPER);
     }
 
+    /**
+     * ID のリストでカード取引を一括取得する。
+     *
+     * @param ids カード取引 ID のリスト
+     * @param userId ユーザー ID
+     * @return カード取引のリスト
+     */
     public List<CardTransaction> findByIds(List<Long> ids, Long userId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
                 "asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, card_type, " +
@@ -300,6 +385,11 @@ public class CardTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * カード取引の is_paid・payment_month を一括ロールバックする。
+     *
+     * @param cardTransactionList ロールバック後の値を持つカード取引リスト
+     */
     public void rollbackIsPaidAndPaymentMonth(List<CardTransaction> cardTransactionList) {
         String sql = "UPDATE card_transactions SET is_paid = :isPaid, payment_month = :paymentMonth " +
                 "WHERE id = :id AND user_id = :userId";
@@ -315,6 +405,12 @@ public class CardTransactionRepository {
         template.batchUpdate(sql, params);
     }
 
+    /**
+     * CSV インポート履歴に紐づくカード取引をすべて削除する。
+     *
+     * @param userId ユーザー ID
+     * @param csvImportHistoryId CSV インポート履歴 ID
+     */
     public void deleteByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
         String sql = "DELETE FROM card_transactions WHERE user_id = :userId AND csv_import_history_id = :csvImportHistoryId";
         MapSqlParameterSource param = new MapSqlParameterSource()
@@ -324,6 +420,13 @@ public class CardTransactionRepository {
         template.update(sql, param);
     }
 
+    /**
+     * 指定 CSV で更新されたカード取引と更新履歴をまとめて取得する。
+     *
+     * @param userId ユーザー ID
+     * @param csvImportHistoryId CSV インポート履歴 ID
+     * @return カード取引更新詳細のリスト
+     */
     public List<CardTransactionUpdateDetail> findUpdatedByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
         String sql =
             "SELECT " +
@@ -354,6 +457,15 @@ public class CardTransactionRepository {
         return template.query(sql, params, new CardTransactionUpdateDetailExtractor());
     }
 
+    /**
+     * 期間・取引種別でカード取引を {@link TransactionEntry} として取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDate(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
                 "asset_category_id, expense_category_id, split_pattern_id, split_method, transaction_source, card_type, " +
@@ -364,6 +476,15 @@ public class CardTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 期間・取引種別で、分割方法が SINGLE のカード取引を取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsSingle(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
@@ -376,6 +497,15 @@ public class CardTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 期間・取引種別で、未分配のカード取引を取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsNull(Long userId, TransactionType transactionType,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, fingerprint, user_id, " +
@@ -388,6 +518,14 @@ public class CardTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 期間内のカード取引の収支合計を集計する（未分配・SINGLE のみ）。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumAmountByUserIdAndTransactionDate(Long userId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
@@ -399,6 +537,14 @@ public class CardTransactionRepository {
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
+    /**
+     * 期間内のカード取引を資産カテゴリ別に集計する（SINGLE のみ）。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 資産カテゴリ ID → 月次サマリの Map
+     */
     public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategory(Long userId, LocalDate startDate,
             LocalDate endDate) {
         String sql = "SELECT asset_category_id, " +
@@ -412,6 +558,14 @@ public class CardTransactionRepository {
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
+    /**
+     * 期間内の未分配カード取引の収支合計を集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumMonthlySummaryBySplitMethodIsNull(Long userId, LocalDate startDate,
             LocalDate endDate) {
         String sql = "SELECT " +

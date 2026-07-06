@@ -20,6 +20,11 @@ import com.example.fintrack.repository.extractor.MonthlySummaryByAssetCategoryEx
 import com.example.fintrack.repository.rowmapper.MonthlySummaryRowMapper;
 import com.example.fintrack.repository.rowmapper.TransactionEntryRowMapper;
 
+/**
+ * 分割明細（split_transactions テーブル）の DB アクセス。月次集計・取引エントリ取得も担当。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class SplitTransactionRepository {
 
@@ -82,6 +87,13 @@ public class SplitTransactionRepository {
         this.template = template;
     }
 
+    /**
+     * 銀行取引 ID のリストに紐づく分割明細を取得する。
+     *
+     * @param bankTransactionIds 銀行取引 ID のリスト
+     * @param userId ユーザー ID
+     * @return 分割明細のリスト（リストが空なら空リスト）
+     */
     public List<SplitTransaction> findByBankTransactionIds(List<Long> bankTransactionIds, Long userId) {
         if (bankTransactionIds.isEmpty())
             return List.of();
@@ -95,6 +107,13 @@ public class SplitTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * カード取引 ID のリストに紐づく分割明細を取得する。
+     *
+     * @param cardTransactionIds カード取引 ID のリスト
+     * @param userId ユーザー ID
+     * @return 分割明細のリスト（リストが空なら空リスト）
+     */
     public List<SplitTransaction> findByCardTransactionIds(List<Long> cardTransactionIds, Long userId) {
         if (cardTransactionIds.isEmpty())
             return List.of();
@@ -108,6 +127,13 @@ public class SplitTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 差異解消用取引 ID のリストに紐づく分割明細を取得する。
+     *
+     * @param discrepancyTransactionIds 差異解消用取引 ID のリスト
+     * @param userId ユーザー ID
+     * @return 分割明細のリスト（リストが空なら空リスト）
+     */
     public List<SplitTransaction> findByDiscrepancyTransactionIds(List<Long> discrepancyTransactionIds, Long userId) {
         if (discrepancyTransactionIds.isEmpty()) {
             return List.of();
@@ -122,6 +148,13 @@ public class SplitTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 銀行取引 ID に紐づく分割明細を取得する。
+     *
+     * @param bankTransactionId 銀行取引 ID
+     * @param userId ユーザー ID
+     * @return 分割明細のリスト
+     */
     public List<SplitTransaction> findByBankTransactionId(Long bankTransactionId, Long userId) {
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
                 "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
@@ -133,6 +166,13 @@ public class SplitTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * カード取引 ID に紐づく分割明細を取得する。
+     *
+     * @param cardTransactionId カード取引 ID
+     * @param userId ユーザー ID
+     * @return 分割明細のリスト
+     */
     public List<SplitTransaction> findByCardTransactionId(Long cardTransactionId, Long userId) {
         String sql = "SELECT id, transaction_type, asset_category_id, split_pattern_id, split_method, amount, " +
                 "bank_transaction_id, card_transaction_id, discrepancy_transaction_id, created_at, updated_at, user_id " +
@@ -144,6 +184,11 @@ public class SplitTransactionRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 分割明細を一括登録する。
+     *
+     * @param splitTransactionList 登録する分割明細のリスト
+     */
     public void insert(List<SplitTransaction> splitTransactionList) {
         String sql = "INSERT INTO split_transactions " +
                 "(transaction_type, asset_category_id, split_pattern_id, " +
@@ -175,6 +220,14 @@ public class SplitTransactionRepository {
         template.batchUpdate(sql, batchParams);
     }
 
+    /**
+     * 銀行取引に紐づく手動・パターン分割の収支合計を集計する（カード引き落としは除外）。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumAmountFromBankSplits(Long userId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
@@ -188,6 +241,14 @@ public class SplitTransactionRepository {
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
+    /**
+     * カード取引に紐づく手動・パターン分割の収支合計を集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumAmountFromCardSplits(Long userId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, "+
@@ -200,6 +261,14 @@ public class SplitTransactionRepository {
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
+    /**
+     * 差異解消用取引に紐づく手動・パターン分割の収支合計を集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 月次収支サマリ
+     */
     public MonthlySummary sumAmountFromDiscrepancySplits(Long userId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN st.transaction_type = 'INCOME' THEN st.amount END), 0) AS income_amount, " +
@@ -212,6 +281,15 @@ public class SplitTransactionRepository {
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
+    /**
+     * 銀行取引の手動・パターン分割を期間・取引種別で {@link TransactionEntry} として取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateFromBankSplits(Long userId, TransactionType transactionType,
                     LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
@@ -226,6 +304,15 @@ public class SplitTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * カード取引の手動・パターン分割を期間・取引種別で {@link TransactionEntry} として取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateFromCardSplits(Long userId, TransactionType transactionType,
                     LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
@@ -239,6 +326,15 @@ public class SplitTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 差異解消用取引の手動・パターン分割を期間・取引種別で {@link TransactionEntry} として取得する。
+     *
+     * @param userId ユーザー ID
+     * @param transactionType 収入／支出
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 取引エントリのリスト
+     */
     public List<TransactionEntry> findByUserIdAndTransactionDateFromDiscrepancySplits(Long userId, TransactionType transactionType,
                     LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
@@ -252,6 +348,14 @@ public class SplitTransactionRepository {
         return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
+    /**
+     * 銀行取引の手動・パターン分割を資産カテゴリ別に集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 資産カテゴリ ID → 月次サマリの Map
+     */
     public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategoryFromBankSplits(Long userId, LocalDate startDate,
             LocalDate endDate) {
         String sql = "SELECT st.asset_category_id, " +
@@ -267,6 +371,14 @@ public class SplitTransactionRepository {
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
+    /**
+     * カード取引の手動・パターン分割を資産カテゴリ別に集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 資産カテゴリ ID → 月次サマリの Map
+     */
     public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategoryFromCardSplits(Long userId, LocalDate startDate,
             LocalDate endDate) {
         String sql = "SELECT st.asset_category_id, " +
@@ -281,6 +393,14 @@ public class SplitTransactionRepository {
         return template.query(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_BY_ASSET_CATEGORY_EXTRACTOR);
     }
 
+    /**
+     * 差異解消用取引の手動・パターン分割を資産カテゴリ別に集計する。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @return 資産カテゴリ ID → 月次サマリの Map
+     */
     public Map<Long, MonthlySummary> sumMonthlySummaryByAssetCategoryFromDiscrepancySplits(Long userId,
             LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT st.asset_category_id, " +

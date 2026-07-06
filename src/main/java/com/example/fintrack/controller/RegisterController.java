@@ -12,7 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.fintrack.service.UserService;
 
 /**
- * ユーザー登録コントローラー
+ * ユーザー登録画面と登録処理を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 public class RegisterController {
@@ -26,7 +28,10 @@ public class RegisterController {
     }
     
     /**
-     * ユーザー登録画面
+     * ユーザー登録画面を表示する。
+     *
+     * @param model ビューモデル
+     * @return ユーザー登録テンプレート名
      */
     @GetMapping("/register")
     public String registerForm(Model model) {
@@ -34,7 +39,13 @@ public class RegisterController {
     }
     
     /**
-     * ユーザー登録処理
+     * ユーザーを新規登録する。バリデーションエラー時は登録画面へ戻す。
+     *
+     * @param username ユーザー名
+     * @param password パスワード
+     * @param passwordConfirm パスワード（確認用）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return ログイン画面または登録画面へのリダイレクト先
      */
     @PostMapping("/register")
     public String register(@RequestParam String username,

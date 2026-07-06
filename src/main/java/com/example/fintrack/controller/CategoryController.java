@@ -21,7 +21,9 @@ import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.ExpenseCategoryService;
 
 /**
- * カテゴリ管理コントローラー
+ * 資産カテゴリと支出カテゴリの管理を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/categories")
@@ -41,7 +43,11 @@ public class CategoryController {
     }
 
     /**
-     * カテゴリ管理画面
+     * カテゴリ管理画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return カテゴリ管理テンプレート名
      */
     @GetMapping
     public String categories(Authentication authentication, Model model) {
@@ -57,7 +63,12 @@ public class CategoryController {
     }
     
     /**
-     * 資産カテゴリ追加
+     * 資産カテゴリを追加する。
+     *
+     * @param categoryName カテゴリ名
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return カテゴリ管理画面へのリダイレクト先
      */
     @PostMapping("/asset")
     public String addAssetCategory(@RequestParam String categoryName,
@@ -82,7 +93,12 @@ public class CategoryController {
     }
     
     /**
-     * 支出カテゴリ追加
+     * 支出カテゴリを追加する。
+     *
+     * @param categoryName カテゴリ名
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return カテゴリ管理画面へのリダイレクト先
      */
     @PostMapping("/expense")
     public String addExpenseCategory(@RequestParam String categoryName,
@@ -106,7 +122,12 @@ public class CategoryController {
     }
     
     /**
-     * 資産カテゴリ削除
+     * 資産カテゴリを削除する。残高がある場合は削除できない。
+     *
+     * @param id 資産カテゴリID
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return カテゴリ管理画面へのリダイレクト先
      */
     @PostMapping("/asset/{id}/delete")
     public String deleteAssetCategory(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
@@ -125,7 +146,12 @@ public class CategoryController {
     }
     
     /**
-     * 支出カテゴリ削除
+     * 支出カテゴリを削除する。
+     *
+     * @param id 支出カテゴリID
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return カテゴリ管理画面へのリダイレクト先
      */
     @PostMapping("/expense/{id}/delete")
     public String deleteExpenseCategory(@PathVariable Long id,

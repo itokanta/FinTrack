@@ -7,6 +7,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * クレジット / デビットカードの取引を表すドメインモデル。
+ * CSV インポートで登録される。
+ *
+ * @author kanta ito
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

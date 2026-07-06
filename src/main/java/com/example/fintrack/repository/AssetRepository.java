@@ -10,6 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 資産残高（assets テーブル）の DB アクセス。未払いクレジットの除外計算もここで行う。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class AssetRepository {
 
@@ -22,7 +27,11 @@ public class AssetRepository {
     }
     
     /**
-     * 資産カテゴリの残高を取得（複数レコードの合計）
+     * 資産カテゴリの残高を取得する（複数レコードの合計）。
+     *
+     * @param userId ユーザー ID
+     * @param categoryId 資産カテゴリ ID
+     * @return 残高合計（レコードがなければ 0）
      */
     public Long getBalanceByCategory(Long userId, Long categoryId) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM assets " +
@@ -34,7 +43,10 @@ public class AssetRepository {
     }
     
     /**
-     * 未分類の残高を取得（複数レコードの合計）
+     * 未分類（asset_category_id が NULL）の残高を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 未分類残高の合計
      */
     public Long getUncategorizedBalance(Long userId) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM assets " +
@@ -44,7 +56,10 @@ public class AssetRepository {
     }
     
     /**
-     * ユーザーの総資産を取得
+     * ユーザーの総資産残高を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 全カテゴリの残高合計
      */
     public Long getTotalBalance(Long userId) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM assets WHERE user_id = :userId";
@@ -53,7 +68,11 @@ public class AssetRepository {
     }
     
     /**
-     * 資産カテゴリの残高を更新（加算/減算）
+     * 資産カテゴリの残高に金額を加算（または減算）する。
+     *
+     * @param userId ユーザー ID
+     * @param assetCategoryId 資産カテゴリ ID（{@code null} のとき未分類）
+     * @param amount 加算する金額（減算は負数）
      */
     public void updateAmountByCategoryId(Long userId, Long assetCategoryId, Long amount) {
         if (assetCategoryId == null) {
@@ -77,7 +96,10 @@ public class AssetRepository {
     }
     
     /**
-     * 確定済み総資産を取得（未払いのクレジットカード取引を除外）
+     * 確定済み総資産を取得する。未払いクレジットカード取引分を差し引く。
+     *
+     * @param userId ユーザー ID
+     * @return 確定済みの総資産残高
      */
     public Long getConfirmedTotalBalance(Long userId) {
         String sql = "SELECT COALESCE(SUM(a.amount), 0) " +
@@ -103,7 +125,10 @@ public class AssetRepository {
     }
     
     /**
-     * カテゴリ別の確定済み残高を取得（当月と前月のクレジットカード取引を除外）
+     * カテゴリ別の確定済み残高を取得する。未払いクレジットをカテゴリごとに差し引く。
+     *
+     * @param userId ユーザー ID
+     * @return 資産カテゴリ → 確定済み残高の Map
      */
     public Map<AssetCategory, Long> getConfirmedBalanceByCategory(Long userId) {
         // 通常の残高をカテゴリ別に取得
@@ -147,7 +172,10 @@ public class AssetRepository {
     }
     
     /**
-     * 未分類の確定済み残高を取得（未払いのクレジットカード取引を除外）
+     * 未分類の確定済み残高を取得する。未払いの未分類クレジットを差し引く。
+     *
+     * @param userId ユーザー ID
+     * @return 確定済みの未分類残高
      */
     public Long getConfirmedUncategorizedBalance(Long userId) {
         Long normalUncategorized = getUncategorizedBalance(userId);
@@ -170,6 +198,11 @@ public class AssetRepository {
         return normalUncategorized - unpaidCreditUncategorized;
     }
 
+    /**
+     * 資産レコードを新規登録する。
+     *
+     * @param asset 登録する資産
+     */
     public void insert(Asset asset) {
         String sql = "INSERT INTO assets " +
                 "(user_id, asset_category_id, amount) " +
@@ -181,6 +214,12 @@ public class AssetRepository {
         template.update(sql, param);
     }
 
+    /**
+     * 指定資産カテゴリに紐づく資産レコードをすべて削除する。
+     *
+     * @param assetCategoryId 資産カテゴリ ID
+     * @param userId ユーザー ID
+     */
     public void deleteByAssetCategoryId(Long assetCategoryId, Long userId) {
         String sql = "DELETE FROM assets WHERE asset_category_id = :assetCategoryId AND user_id = :userId";
         MapSqlParameterSource param = new MapSqlParameterSource()

@@ -20,7 +20,9 @@ import com.example.fintrack.service.CsvImportService;
 
 
 /**
- * CSV取込コントローラー
+ * 銀行・カード取引のCSVインポートを扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/csv")
@@ -38,7 +40,10 @@ public class CsvImportController {
     }
 
     /**
-     * CSV取込画面
+     * CSVインポート画面を表示する。
+     *
+     * @param model ビューモデル
+     * @return CSVインポートテンプレート名
      */
     @GetMapping("/import")
     public String importForm(Model model) {
@@ -47,7 +52,14 @@ public class CsvImportController {
     }
     
     /**
-     * 銀行取引CSV取込
+     * 銀行取引CSVをインポートする。
+     *
+     * @param file アップロードされたCSVファイル
+     * @param bankType 金融機関種別
+     * @param hasHeader ヘッダー行の有無
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return CSVインポート画面へのリダイレクト先
      */
     @PostMapping("/import/bank")
     public String importBank(@RequestParam("file") MultipartFile file,
@@ -72,7 +84,14 @@ public class CsvImportController {
     }
     
     /**
-     * カード取引CSV取込
+     * カード取引CSVをインポートする。
+     *
+     * @param file アップロードされたCSVファイル
+     * @param bankType 金融機関種別
+     * @param hasHeader ヘッダー行の有無
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return CSVインポート画面へのリダイレクト先
      */
     @PostMapping("/import/card")
     public String importCard(@RequestParam("file") MultipartFile file,

@@ -2,7 +2,9 @@ package com.example.fintrack.domain;
 
 /**
  * CSV取込の更新履歴で記録する対象フィールド。
- * csv_import_update_histories.target_field と対応する。
+ * {@code csv_import_update_histories.target_field} と対応する。
+ *
+ * @author kanta ito
  */
 public enum CsvImportUpdateField {
 

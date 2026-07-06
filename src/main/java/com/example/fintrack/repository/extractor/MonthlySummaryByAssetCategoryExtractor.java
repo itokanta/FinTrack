@@ -10,8 +10,22 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 
 import com.example.fintrack.domain.dto.MonthlySummary;
 
+/**
+ * 資産カテゴリ別の月次収支を {@link Map} に集約する ResultSetExtractor。
+ *
+ * @author kanta ito
+ */
 public class MonthlySummaryByAssetCategoryExtractor implements ResultSetExtractor<Map<Long, MonthlySummary>>{
   
+  /**
+   * ResultSet を走査し、資産カテゴリ ID をキーとした月次サマリの Map を組み立てる。
+   * asset_category_id が NULL の行はスキップする。
+   *
+   * @param rs ResultSet
+   * @return 資産カテゴリ ID → 月次サマリの Map
+   * @throws SQLException JDBC エラー
+   * @throws DataAccessException データアクセスエラー
+   */
   @Override
   public Map<Long, MonthlySummary> extractData(ResultSet rs) throws SQLException, DataAccessException {
     Map<Long, MonthlySummary> monthlySummaryMap = new HashMap<>();

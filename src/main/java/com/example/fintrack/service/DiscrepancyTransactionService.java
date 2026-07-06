@@ -30,6 +30,11 @@ import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 import com.example.fintrack.repository.SplitPatternGroupRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
+/**
+ * カード引き落とし差異の解消と差異取引の登録を扱うサービス。
+ *
+ * @author kanta ito
+ */
 @Service
 public class DiscrepancyTransactionService {
 
@@ -59,11 +64,14 @@ public class DiscrepancyTransactionService {
   }
 
   /**
-   * 差異を単一カテゴリに登録して解決
-   * 
+   * 差異を単一カテゴリに登録して解決する。
+   *
    * @param discrepancyId   差異ID
-   * @param description     差異の説明
+   * @param description     差異取引の説明
    * @param assetCategoryId 資産カテゴリID
+   * @param userId          ユーザーID
+   * @throws IllegalArgumentException 差異が見つからない、または差異金額が0の場合
+   * @throws IllegalStateException    差異が既に解決済みの場合
    */
   @Transactional
   public void resolveDiscrepancySingle(Long discrepancyId, String description, Long assetCategoryId, Long userId) {
@@ -89,11 +97,14 @@ public class DiscrepancyTransactionService {
   }
 
   /**
-   * 差異を手動分割して解決
-   * 
+   * 差異を手動分割して解決する。
+   *
    * @param discrepancyId   差異ID
-   * @param description     差異の説明
-   * @param categoryAmounts カテゴリID → 金額のマップ
+   * @param description     差異取引の説明
+   * @param categoryAmounts 資産カテゴリIDと金額のマップ
+   * @param userId          ユーザーID
+   * @throws IllegalArgumentException 差異が見つからない、分割金額の合計が一致しない、または差異金額が0の場合
+   * @throws IllegalStateException    差異が既に解決済みの場合
    */
   @Transactional
   public void resolveDiscrepancyManual(Long discrepancyId, String description,
@@ -151,11 +162,14 @@ public class DiscrepancyTransactionService {
   }
 
   /**
-   * 差異を分割パターンで解決
-   * 
+   * 差異を分割パターンで解決する。
+   *
    * @param discrepancyId 差異ID
-   * @param description   差異の説明
+   * @param description   差異取引の説明
    * @param patternId     分割パターンID
+   * @param userId        ユーザーID
+   * @throws IllegalArgumentException 差異・パターンが見つからない、金額が合わない、または不明な分割タイプの場合
+   * @throws IllegalStateException    差異が既に解決済みの場合
    */
   @Transactional
   public void resolveDiscrepancyPattern(Long discrepancyId, String description, Long patternId, Long userId) {

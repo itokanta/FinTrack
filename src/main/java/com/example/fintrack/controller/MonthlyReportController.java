@@ -22,6 +22,11 @@ import com.example.fintrack.service.MonthlyReportService;
 import com.example.fintrack.service.SplitService;
 import com.example.fintrack.service.TransactionService;
 
+/**
+ * 月次レポート（収支サマリー・取引一覧）を扱うコントローラー。
+ *
+ * @author kanta ito
+ */
 @Controller
 @RequestMapping("/monthly-report")
 public class MonthlyReportController {
@@ -41,6 +46,14 @@ public class MonthlyReportController {
     this.splitService = splitService;
   }
 
+  /**
+   * 月次レポート画面を表示する。対象月の指定がなければ今月を表示する。
+   *
+   * @param authentication 認証情報
+   * @param model ビューモデル
+   * @param targetYearMonth 対象年月（yyyy-MM形式、省略可）
+   * @return 月次レポートテンプレート名
+   */
   @GetMapping
   public String assetsReport(Authentication authentication, Model model, @RequestParam(required = false) String targetYearMonth){
     Long userId = authenticationUserIdResolver.getUserId(authentication);

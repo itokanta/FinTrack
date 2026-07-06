@@ -17,6 +17,11 @@ import com.example.fintrack.repository.CardTransactionRepository;
 import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
+/**
+ * 月次の収支サマリーを集計するサービス。
+ *
+ * @author kanta ito
+ */
 @Service
 public class MonthlyReportService {
   private final BankTransactionRepository bankTransactionRepository;
@@ -36,6 +41,13 @@ public class MonthlyReportService {
     this.assetCategoryRepository = assetCategoryRepository;
   }
 
+  /**
+   * 指定月の収支合計サマリーを取得する（全ソースを集計）。
+   *
+   * @param userId    ユーザーID
+   * @param yearMonth 対象年月
+   * @return 収入・支出・合計を含むサマリー
+   */
   public MonthlySummary getMonthlySummaryTotals(Long userId, YearMonth yearMonth){
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();
@@ -51,6 +63,13 @@ public class MonthlyReportService {
     return monthlySummary;
   }
 
+  /**
+   * 指定月の収支サマリーを資産カテゴリ別に取得する。
+   *
+   * @param userId    ユーザーID
+   * @param yearMonth 対象年月
+   * @return 資産カテゴリIDをキー、サマリーを値とするマップ
+   */
   public Map<Long, MonthlySummary> getMonthlySummaryByAssetCategory(Long userId, YearMonth yearMonth) {
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();
@@ -73,6 +92,13 @@ public class MonthlyReportService {
     return monthlySummaryMap;
   }
 
+  /**
+   * 指定月の未分配取引の収支サマリーを取得する。
+   *
+   * @param userId    ユーザーID
+   * @param yearMonth 対象年月
+   * @return 未分類の収入・支出・合計を含むサマリー
+   */
   public MonthlySummary getMonthlySummaryUncategorized(Long userId, YearMonth yearMonth) {
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();

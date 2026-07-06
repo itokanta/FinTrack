@@ -12,6 +12,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Spring Security の設定。
+ * フォームログイン・BCrypt パスワード・静的リソースの公開などをまとめている。
+ *
+ * @author kanta ito
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -22,6 +28,13 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
     
+    /**
+     * HTTP リクエストの認可・ログイン・ログアウトを設定する。
+     *
+     * @param http HttpSecurity
+     * @return 構築済みの SecurityFilterChain
+     * @throws Exception 設定エラー
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -44,11 +57,21 @@ public class SecurityConfig {
         return http.build();
     }
     
+    /**
+     * パスワードのハッシュ化に使う BCrypt エンコーダー。
+     *
+     * @return PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
     
+    /**
+     * DB からユーザーを読み込む DaoAuthenticationProvider。
+     *
+     * @return 設定済みの DaoAuthenticationProvider
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
@@ -56,6 +79,13 @@ public class SecurityConfig {
         return authProvider;
     }
     
+    /**
+     * Spring Security の AuthenticationManager を公開する。
+     *
+     * @param config AuthenticationConfiguration
+     * @return AuthenticationManager
+     * @throws Exception 取得エラー
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

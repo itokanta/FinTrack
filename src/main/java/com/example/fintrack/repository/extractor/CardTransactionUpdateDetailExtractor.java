@@ -14,9 +14,22 @@ import java.util.Map;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
+/**
+ * カード取引と CSV 更新履歴を JOIN した結果を {@link CardTransactionUpdateDetail} のリストに組み立てる。
+ *
+ * @author kanta ito
+ */
 public class CardTransactionUpdateDetailExtractor
         implements ResultSetExtractor<List<CardTransactionUpdateDetail>> {
 
+    /**
+     * ResultSet を走査し、カード取引ごとに更新履歴をネストした詳細リストを返す。
+     *
+     * @param rs ResultSet
+     * @return カード取引更新詳細のリスト
+     * @throws SQLException JDBC エラー
+     * @throws DataAccessException データアクセスエラー
+     */
     @Override
     public List<CardTransactionUpdateDetail> extractData(ResultSet rs)
             throws SQLException, DataAccessException {

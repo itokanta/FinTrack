@@ -11,6 +11,11 @@ import org.springframework.stereotype.Repository;
 import com.example.fintrack.domain.ExpenseCategory;
 import org.springframework.jdbc.core.RowMapper;
 
+/**
+ * 支出カテゴリ（expense_categories テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class ExpenseCategoryRepository {
 
@@ -29,12 +34,24 @@ public class ExpenseCategoryRepository {
         this.template = template;
     }
 
+    /**
+     * ユーザーの支出カテゴリ一覧を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 支出カテゴリのリスト（ID 昇順）
+     */
     public List<ExpenseCategory> findByUserId(Long userId) {
         String sql = "SELECT id, user_id, category_name, created_at FROM expense_categories WHERE user_id = :userId ORDER BY id";
         MapSqlParameterSource params = new MapSqlParameterSource("userId", userId);
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 支出カテゴリを新規登録または更新する。
+     *
+     * @param category 保存する支出カテゴリ
+     * @return ID・作成日時が反映された支出カテゴリ
+     */
     public ExpenseCategory save(ExpenseCategory category) {
         if (category.getId() == null) {
             String sql = "INSERT INTO expense_categories (user_id, category_name) " +
@@ -57,6 +74,12 @@ public class ExpenseCategoryRepository {
         return category;
     }
 
+    /**
+     * 支出カテゴリを削除する。
+     *
+     * @param id 支出カテゴリ ID
+     * @param userId ユーザー ID
+     */
     public void deleteById(Long id, Long userId) {
         String sql = "DELETE FROM expense_categories WHERE id = :id AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()

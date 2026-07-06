@@ -9,8 +9,21 @@ import com.example.fintrack.domain.SplitMethod;
 import com.example.fintrack.domain.TransactionType;
 import com.example.fintrack.domain.dto.TransactionEntry;
 
+/**
+ * {@link TransactionEntry} 用の共通 RowMapper。取引元（銀行・カード等）の ID はマッピングしない。
+ *
+ * @author kanta ito
+ */
 public class TransactionEntryRowMapper implements RowMapper<TransactionEntry> {
 
+  /**
+   * ResultSet の1行を {@link TransactionEntry} に変換する。
+   *
+   * @param rs ResultSet
+   * @param rowNum 行番号（0始まり）
+   * @return マッピングした取引エントリ
+   * @throws SQLException JDBC エラー
+   */
   @Override
   public TransactionEntry mapRow(ResultSet rs, int rowNum) throws SQLException {
     TransactionEntry transactionEntry = new TransactionEntry();

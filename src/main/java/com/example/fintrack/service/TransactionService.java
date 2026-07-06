@@ -25,7 +25,9 @@ import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
 /**
- * 取引管理サービス
+ * 銀行・カード取引の検索・一覧取得を扱うサービス。
+ *
+ * @author kanta ito
  */
 @Service
 public class TransactionService {
@@ -45,16 +47,34 @@ public class TransactionService {
       this.splitTransactionRepository = splitTransactionRepository;
     }
 
+    /**
+     * ユーザーの銀行取引摘要（重複なし）を取得する。
+     *
+     * @param userId ユーザーID
+     * @return 摘要の一覧
+     */
     public List<String> findBankDistinctDescriptionsByUserId(Long userId) {
         return bankTransactionRepository.findDistinctDescriptionsByUserId(userId);
     }
 
+    /**
+     * ユーザーのカード取引摘要（重複なし）を取得する。
+     *
+     * @param userId ユーザーID
+     * @return 摘要の一覧
+     */
     public List<String> findCardDistinctDescriptionsByUserId(Long userId) {
         return cardTransactionRepository.findDistinctDescriptionsByUserId(userId);
     }
 
     /**
-     * 指定月の支出一覧を取得（銀行+カード）
+     * 指定月の支出一覧を取得する（銀行＋カード、カード引き落とし行は除外）。
+     *
+     * @param userId    ユーザーID
+     * @param yearMonth 対象年月
+     * @param page      ページ番号（現状未使用）
+     * @param size      ページサイズ（現状未使用）
+     * @return 取引の一覧（日付の新しい順）
      */
     public List<TransactionWithAsset> getExpensesByMonth(Long userId, YearMonth yearMonth, int page, int size) {
         LocalDate startDate = yearMonth.atDay(1);
@@ -93,8 +113,10 @@ public class TransactionService {
     }
 
     /**
-     * 未分類の支出一覧を取得（銀行+カード）
-     * split_pattern_idがNULLかつasset_category_idがNULLの取引のみ
+     * 未分類の支出一覧を取得する（銀行＋カード）。
+     *
+     * @param userId ユーザーID
+     * @return 未分類の支出取引一覧（日付の新しい順）
      */
     public List<TransactionWithAsset> getUncategorizedExpenses(Long userId) {
         List<TransactionWithAsset> result = new ArrayList<>();
@@ -128,7 +150,10 @@ public class TransactionService {
     }
 
     /**
-     * 未分類の収入一覧を取得（銀行+カード）
+     * 未分類の収入一覧を取得する（銀行＋カード）。
+     *
+     * @param userId ユーザーID
+     * @return 未分類の収入取引一覧（日付の新しい順）
      */
     public List<TransactionWithAsset> getUncategorizedIncomes(Long userId) {
         List<TransactionWithAsset> result = new ArrayList<>();
@@ -162,7 +187,13 @@ public class TransactionService {
     }
 
     /**
-     * 指定月の収入一覧を取得（銀行+カード）
+     * 指定月の収入一覧を取得する（銀行＋カード）。
+     *
+     * @param userId    ユーザーID
+     * @param yearMonth 対象年月
+     * @param page      ページ番号（現状未使用）
+     * @param size      ページサイズ（現状未使用）
+     * @return 取引の一覧（日付の新しい順）
      */
     public List<TransactionWithAsset> getIncomesByMonth(Long userId, YearMonth yearMonth, int page, int size) {
         LocalDate startDate = yearMonth.atDay(1);
@@ -199,19 +230,34 @@ public class TransactionService {
     }
 
     /**
-     * 銀行取引を取得
+     * 銀行取引をIDで取得する。
+     *
+     * @param id     取引ID
+     * @param userId ユーザーID
+     * @return 取引（なければ空）
      */
     public Optional<BankTransaction> getBankTransaction(Long id, Long userId) {
         return bankTransactionRepository.findById(id, userId);
     }
 
     /**
-     * カード取引を取得
+     * カード取引をIDで取得する。
+     *
+     * @param id     取引ID
+     * @param userId ユーザーID
+     * @return 取引（なければ空）
      */
     public Optional<CardTransaction> getCardTransaction(Long id, Long userId) {
         return cardTransactionRepository.findById(id, userId);
     }
 
+    /**
+     * 指定月の収入・支出取引をまとめて取得する（銀行・カード・差異取引を統合）。
+     *
+     * @param userId    ユーザーID
+     * @param yearMonth 対象年月
+     * @return 収入・支出それぞれの取引エントリ一覧
+     */
     public TransactionsByType getTransactionListByUserIdAndTransactionDate(Long userId, YearMonth yearMonth) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -230,6 +276,13 @@ public class TransactionService {
         return result;
     }
 
+    /**
+     * 指定月の取引を資産カテゴリ別に取得する（単一カテゴリ＋分割明細を含む）。
+     *
+     * @param userId    ユーザーID
+     * @param yearMonth 対象年月
+     * @return 資産カテゴリIDをキー、収入・支出一覧を値とするマップ
+     */
     public Map<Long, TransactionsByType> getTransactionListByUserIdAndTransactionDateAndSplitMethod(Long userId, YearMonth yearMonth) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -271,6 +324,13 @@ public class TransactionService {
         return result;
     }
 
+    /**
+     * 指定月の未分配取引（split_methodがnull）を収入・支出別に取得する。
+     *
+     * @param userId    ユーザーID
+     * @param yearMonth 対象年月
+     * @return 未分配の収入・支出取引エントリ一覧
+     */
     public TransactionsByType getTransactionListByUserIdAndTransactionDateAndSplitMethodIsNull(Long userId, YearMonth yearMonth) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -317,7 +377,9 @@ public class TransactionService {
     }
 
     /**
-     * 取引と資産をまとめたDTO
+     * 銀行・カード取引をまとめた表示用DTO。
+     *
+     * @author kanta ito
      */
     public static class TransactionWithAsset {
         private final BankTransaction bankTransaction;

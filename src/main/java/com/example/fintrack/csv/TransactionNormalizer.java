@@ -4,7 +4,9 @@ import com.example.fintrack.csv.dto.TransactionDTO;
 import org.springframework.stereotype.Component;
 
 /**
- * 取引データをアプリ内ルールに従って正規化する
+ * CSV から取り込んだ取引データを、アプリ内ルールに沿って正規化する。
+ *
+ * @author kanta ito
  */
 @Component
 public class TransactionNormalizer {

@@ -8,7 +8,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * 取引の重複判定用 fingerprint を生成する
+ * 取引の重複判定用 fingerprint（SHA-256）を生成する。
+ *
+ * @author kanta ito
  */
 @Service
 public class FingerprintService {

@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * CSV取込後の中間取引データを表現する DTO
+ * CSV 取込直後の中間取引データを表す DTO。
+ *
+ * @author kanta ito
  */
 @Data
 @NoArgsConstructor

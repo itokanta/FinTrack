@@ -43,7 +43,9 @@ import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 import com.example.fintrack.repository.UserRepository;
 
 /**
- * CSV取込処理全体の制御を行うサービス
+ * 銀行・カードのCSV取込処理全体を制御するサービス。
+ *
+ * @author kanta ito
  */
 @Service
 public class CsvImportService {
@@ -88,13 +90,16 @@ public class CsvImportService {
     }
 
     /**
-     * 銀行取引のCSVをインポート
-     * 
+     * 銀行取引のCSVをインポートする。
+     *
      * @param file      CSVファイル
      * @param bankType  金融機関種別
      * @param userId    ユーザーID
      * @param hasHeader ヘッダー行の有無
-     * @return インポートした件数
+     * @return 新規インポートした件数
+     * @throws IOException              CSVの読み込みに失敗した場合
+     * @throws IllegalArgumentException ユーザーが見つからない場合
+     * @throws IllegalStateException    カード引き落とし照合時に更新前取引が見つからない場合
      */
     @Transactional
     public int importBankTransactions(MultipartFile file, BankType bankType, Long userId, boolean hasHeader)
@@ -293,13 +298,15 @@ public class CsvImportService {
     }
 
     /**
-     * カード取引のCSVをインポート
-     * 
+     * カード取引のCSVをインポートする。支払い月の更新も行う。
+     *
      * @param file      CSVファイル
      * @param bankType  金融機関種別
      * @param userId    ユーザーID
      * @param hasHeader ヘッダー行の有無
-     * @return インポートした件数
+     * @return 新規インポート＋更新した件数
+     * @throws IOException              CSVの読み込みに失敗した場合
+     * @throws IllegalArgumentException ユーザーが見つからない場合
      */
     @Transactional
     public int importCardTransactions(MultipartFile file, BankType bankType, Long userId, boolean hasHeader)

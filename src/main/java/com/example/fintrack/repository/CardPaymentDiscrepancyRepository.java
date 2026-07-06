@@ -13,6 +13,11 @@ import org.springframework.stereotype.Repository;
 import com.example.fintrack.domain.CardPaymentDiscrepancy;
 import org.springframework.jdbc.core.RowMapper;
 
+/**
+ * カード引き落とし差異（card_payment_discrepancies テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class CardPaymentDiscrepancyRepository {
 
@@ -39,6 +44,13 @@ public class CardPaymentDiscrepancyRepository {
         this.template = template;
     }
 
+    /**
+     * ID でカード引き落とし差異を検索する。
+     *
+     * @param id 差異 ID
+     * @param userId ユーザー ID
+     * @return 見つかれば差異を含む Optional、なければ空
+     */
     public Optional<CardPaymentDiscrepancy> findById(Long id, Long userId) {
         String sql = "SELECT id, user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
                      "difference_amount, is_resolved, created_at, resolved_at " +
@@ -54,6 +66,12 @@ public class CardPaymentDiscrepancyRepository {
         return Optional.of(discrepancies.get(0));
     }
 
+    /**
+     * ユーザーのカード引き落とし差異一覧を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 差異のリスト（支払月・作成日時降順）
+     */
     public List<CardPaymentDiscrepancy> findByUserId(Long userId) {
         String sql = "SELECT id, user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
                      "difference_amount, is_resolved, created_at, resolved_at " +
@@ -62,6 +80,13 @@ public class CardPaymentDiscrepancyRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 解消済み／未解消で差異一覧を絞り込む。
+     *
+     * @param userId ユーザー ID
+     * @param isResolved 解消済みなら {@code true}
+     * @return 条件に合う差異のリスト
+     */
     public List<CardPaymentDiscrepancy> findByUserIdAndIsResolved(Long userId, Boolean isResolved) {
         String sql = "SELECT id, user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
                      "difference_amount, is_resolved, created_at, resolved_at " +
@@ -73,6 +98,12 @@ public class CardPaymentDiscrepancyRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * カード引き落とし差異を新規登録する。
+     *
+     * @param discrepancy 登録する差異（is_resolved は常に false で登録）
+     * @return ID・作成日時が反映された差異
+     */
     public CardPaymentDiscrepancy insert(CardPaymentDiscrepancy discrepancy) {
         String sql = "INSERT INTO card_payment_discrepancies " +
                         "(user_id, payment_month, bank_transaction_id, expected_amount, actual_amount, " +
@@ -92,6 +123,12 @@ public class CardPaymentDiscrepancyRepository {
         return discrepancy;
     }
 
+    /**
+     * 差異を解消済みに更新する。
+     *
+     * @param id 差異 ID
+     * @param userId ユーザー ID
+     */
     public void markAsResolved(Long id, Long userId) {
         String sql = "UPDATE card_payment_discrepancies SET " +
                      "is_resolved = TRUE, resolved_at = :resolvedAt " +
