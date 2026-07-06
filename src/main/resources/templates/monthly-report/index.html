@@ -92,10 +92,6 @@
                                 th:classappend="${monthlySummaryUncategorized.totalAmount < 0 ? 'text-danger' : (monthlySummaryUncategorized.totalAmount > 0 ? 'text-success' : '')}"
                                 th:text="${#numbers.formatInteger(monthlySummaryUncategorized.totalAmount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
-                        <!-- データがない場合 -->
-                        <tr th:if="${#lists.isEmpty(transactionsByType.income) and #lists.isEmpty(transactionsByType.expense)}">
-                            <td colspan="4" class="text-muted text-center">データがありません</td>
-                        </tr>
                     </tbody>
                 </table>
                 </div>
