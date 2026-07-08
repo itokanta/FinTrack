@@ -283,23 +283,23 @@ public class TransactionService {
      * @param yearMonth 対象年月
      * @return 資産カテゴリIDをキー、収入・支出一覧を値とするマップ
      */
-    public Map<Long, TransactionsByType> getTransactionListByUserIdAndTransactionDateAndSplitMethod(Long userId, YearMonth yearMonth) {
+    public Map<Long, TransactionsByType> getTransactionListByUserIdAndTransactionDateAndSplitMethod(Long userId, YearMonth yearMonth, Long assetCategoryId) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        List<TransactionEntry> bankTransactionIncomeList = bankTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.INCOME, startDate, endDate);
-        List<TransactionEntry> cardTransactionIncomeList = cardTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.INCOME, startDate, endDate);
-        List<TransactionEntry> discrepancyTransactionIncomeList = discrepancyTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.INCOME, startDate, endDate);
-        List<TransactionEntry> splitTransactionBankIncomeList = splitTransactionRepository.findByUserIdAndTransactionDateFromBankSplits(userId, TransactionType.INCOME, startDate, endDate);
-        List<TransactionEntry> splitTransactionCardIncomeList = splitTransactionRepository.findByUserIdAndTransactionDateFromCardSplits(userId, TransactionType.INCOME, startDate, endDate);
-        List<TransactionEntry> splitTransactionDiscrepancyIncomeList = splitTransactionRepository.findByUserIdAndTransactionDateFromDiscrepancySplits(userId, TransactionType.INCOME, startDate, endDate);
+        List<TransactionEntry> bankTransactionIncomeList = bankTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.INCOME, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> cardTransactionIncomeList = cardTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.INCOME, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> discrepancyTransactionIncomeList = discrepancyTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.INCOME, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> splitTransactionBankIncomeList = splitTransactionRepository.findByUserIdAndTransactionDateFromBankSplits(userId, TransactionType.INCOME, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> splitTransactionCardIncomeList = splitTransactionRepository.findByUserIdAndTransactionDateFromCardSplits(userId, TransactionType.INCOME, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> splitTransactionDiscrepancyIncomeList = splitTransactionRepository.findByUserIdAndTransactionDateFromDiscrepancySplits(userId, TransactionType.INCOME, startDate, endDate, assetCategoryId);
 
-        List<TransactionEntry> bankTransactionExpenseList = bankTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.EXPENSE, startDate, endDate);
-        List<TransactionEntry> cardTransactionExpenseList = cardTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.EXPENSE, startDate, endDate);
-        List<TransactionEntry> discrepancyTransactionExpenseList = discrepancyTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.EXPENSE, startDate, endDate);
-        List<TransactionEntry> splitTransactionBankExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromBankSplits(userId, TransactionType.EXPENSE, startDate, endDate);
-        List<TransactionEntry> splitTransactionCardExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromCardSplits(userId, TransactionType.EXPENSE, startDate, endDate);
-        List<TransactionEntry> splitTransactionDiscrepancyExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromDiscrepancySplits(userId, TransactionType.EXPENSE, startDate, endDate);
+        List<TransactionEntry> bankTransactionExpenseList = bankTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> cardTransactionExpenseList = cardTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> discrepancyTransactionExpenseList = discrepancyTransactionRepository.findByUserIdAndTransactionDateAndSplitMethodIsSingle(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> splitTransactionBankExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromBankSplits(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> splitTransactionCardExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromCardSplits(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
+        List<TransactionEntry> splitTransactionDiscrepancyExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromDiscrepancySplits(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
 
         Map<Long, List<TransactionEntry>> incomeTotalListByAssetCategoryId = sortTransactionAndMakeAssetCategoryMap(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList, splitTransactionBankIncomeList, splitTransactionCardIncomeList, splitTransactionDiscrepancyIncomeList);
         Map<Long, List<TransactionEntry>> expenseTotalListByAssetCategoryId = sortTransactionAndMakeAssetCategoryMap(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList, splitTransactionBankExpenseList, splitTransactionCardExpenseList, splitTransactionDiscrepancyExpenseList);

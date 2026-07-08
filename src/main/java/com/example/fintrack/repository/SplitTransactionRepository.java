@@ -364,7 +364,7 @@ public class SplitTransactionRepository {
      * @return 取引エントリのリスト
      */
     public List<TransactionEntry> findByUserIdAndTransactionDateFromBankSplits(Long userId, TransactionType transactionType,
-                    LocalDate startDate, LocalDate endDate) {
+                    LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
         String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
                 "st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id, bt.description, bt.transaction_date, bt.expense_category_id " +
                 "FROM split_transactions st " +
@@ -372,9 +372,10 @@ public class SplitTransactionRepository {
                 "WHERE st.user_id = :userId AND bt.user_id = :userId " +
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND st.asset_category_id = :assetCategoryId " +
                 "AND bt.transaction_date BETWEEN :startDate AND :endDate " +
                 "AND bt.is_card_payment = FALSE";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate, assetCategoryId), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
     /**
@@ -387,7 +388,7 @@ public class SplitTransactionRepository {
      * @return 取引エントリのリスト
      */
     public List<TransactionEntry> findByUserIdAndTransactionDateFromCardSplits(Long userId, TransactionType transactionType,
-                    LocalDate startDate, LocalDate endDate) {
+                    LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
         String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
                 "st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id, ct.description, ct.card_type, ct.transaction_date, ct.expense_category_id " +
                 "FROM split_transactions st " +
@@ -395,8 +396,9 @@ public class SplitTransactionRepository {
                 "WHERE st.user_id = :userId AND ct.user_id = :userId " +
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND st.asset_category_id = :assetCategoryId " +
                 "AND ct.transaction_date BETWEEN :startDate AND :endDate";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate, assetCategoryId), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
     /**
@@ -409,7 +411,7 @@ public class SplitTransactionRepository {
      * @return 取引エントリのリスト
      */
     public List<TransactionEntry> findByUserIdAndTransactionDateFromDiscrepancySplits(Long userId, TransactionType transactionType,
-                    LocalDate startDate, LocalDate endDate) {
+                    LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
         String sql = "SELECT st.id, st.transaction_type, st.asset_category_id, st.split_pattern_id, st.split_method, st.amount, st.bank_transaction_id, " +
                 "st.card_transaction_id, st.discrepancy_transaction_id, st.created_at, st.updated_at, st.user_id, dt.description, dt.transaction_date, dt.expense_category_id " +
                 "FROM split_transactions st " +
@@ -417,17 +419,18 @@ public class SplitTransactionRepository {
                 "WHERE st.user_id = :userId AND dt.user_id = :userId " +
                 "AND st.transaction_type = :transactionType " +
                 "AND st.split_method IN ('MANUAL', 'PATTERN') " +
+                "AND st.asset_category_id = :assetCategoryId " +
                 "AND dt.transaction_date BETWEEN :startDate AND :endDate";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
+        return template.query(sql, makeParam(userId, transactionType, startDate, endDate, assetCategoryId), TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
-    private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType,
-            LocalDate startDate, LocalDate endDate) {
+    private MapSqlParameterSource makeParam(Long userId, TransactionType transactionType, LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
         MapSqlParameterSource param = new MapSqlParameterSource()
                 .addValue("userId", userId)
                 .addValue("transactionType", transactionType.name())
                 .addValue("startDate", startDate)
-                .addValue("endDate", endDate);
+                .addValue("endDate", endDate)
+                .addValue("assetCategoryId", assetCategoryId);
         return param;
     }
 

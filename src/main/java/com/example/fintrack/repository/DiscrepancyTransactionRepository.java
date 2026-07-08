@@ -146,24 +146,28 @@ public class DiscrepancyTransactionRepository {
     }
 
     /**
-     * 期間・取引種別で、分割方法が SINGLE の差異解消用取引を取得する。
+     * 期間・取引種別で、分割方法が SINGLE かつ指定した資産カテゴリの差異解消用取引を取得する。
      *
      * @param userId ユーザー ID
      * @param transactionType 収入／支出
      * @param startDate 開始日（含む）
      * @param endDate 終了日（含む）
+     * @param assetCategoryId 資産カテゴリ ID
      * @return 取引エントリのリスト
      */
     public List<TransactionEntry> findByUserIdAndTransactionDateAndSplitMethodIsSingle(Long userId, TransactionType transactionType,
-            LocalDate startDate, LocalDate endDate) {
+            LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
         String sql = "SELECT id, description, amount, transaction_type, transaction_date, user_id, " +
                 "bank_transaction_id, asset_category_id, expense_category_id, split_pattern_id, " +
                 "card_payment_discrepancy_id, created_at, split_method " +
                 "FROM discrepancy_transactions " +
                 "WHERE user_id = :userId AND transaction_type = :transactionType " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND split_method = 'SINGLE'";
-        return template.query(sql, makeParam(userId, transactionType, startDate, endDate), TRANSACTION_ENTRY_ROW_MAPPER);
+                "AND split_method = 'SINGLE' " +
+                "AND asset_category_id = :assetCategoryId";
+        MapSqlParameterSource param = makeParam(userId, transactionType, startDate, endDate)
+                .addValue("assetCategoryId", assetCategoryId);
+        return template.query(sql, param, TRANSACTION_ENTRY_ROW_MAPPER);
     }
 
     /**
