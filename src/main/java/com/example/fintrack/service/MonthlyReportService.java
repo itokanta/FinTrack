@@ -56,9 +56,6 @@ public class MonthlyReportService {
     add(monthlySummary, bankTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
     add(monthlySummary, cardTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
     add(monthlySummary, discrepancyTransactionRepository.sumAmountByUserIdAndTransactionDate(userId, startDate, endDate));
-    add(monthlySummary, splitTransactionRepository.sumAmountFromBankSplits(userId, startDate, endDate));
-    add(monthlySummary, splitTransactionRepository.sumAmountFromCardSplits(userId, startDate, endDate));
-    add(monthlySummary, splitTransactionRepository.sumAmountFromDiscrepancySplits(userId, startDate, endDate));
 
     return monthlySummary;
   }

@@ -349,7 +349,7 @@ public class BankTransactionRepository {
     }
 
     /**
-     * 期間内の銀行取引の収支合計を集計する（未分配・SINGLE、カード引き落とし除外）。
+     * 期間内の銀行取引の収支合計を集計する（分割状態を問わず全件、カード引き落とし除外）。
      *
      * @param userId ユーザー ID
      * @param startDate 開始日（含む）
@@ -363,7 +363,6 @@ public class BankTransactionRepository {
                 "FROM bank_transactions " +
                 "WHERE user_id = :userId " +
                 "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND (split_method IS NULL OR split_method = 'SINGLE') " +
                 "AND is_card_payment = FALSE";
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }

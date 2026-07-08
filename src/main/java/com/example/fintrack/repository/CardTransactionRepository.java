@@ -519,7 +519,7 @@ public class CardTransactionRepository {
     }
 
     /**
-     * 期間内のカード取引の収支合計を集計する（未分配・SINGLE のみ）。
+     * 期間内のカード取引の収支合計を集計する（分割状態を問わず全件）。
      *
      * @param userId ユーザー ID
      * @param startDate 開始日（含む）
@@ -532,8 +532,7 @@ public class CardTransactionRepository {
                 "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
                 "FROM card_transactions " +
                 "WHERE user_id = :userId " +
-                "AND transaction_date BETWEEN :startDate AND :endDate " +
-                "AND (split_method IS NULL OR split_method = 'SINGLE')";
+                "AND transaction_date BETWEEN :startDate AND :endDate";
         return template.queryForObject(sql, makeParam(userId, startDate, endDate), MONTHLY_SUMMARY_ROW_MAPPER);
     }
 
