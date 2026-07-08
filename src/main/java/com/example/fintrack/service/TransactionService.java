@@ -283,7 +283,7 @@ public class TransactionService {
      * @param yearMonth 対象年月
      * @return 資産カテゴリIDをキー、収入・支出一覧を値とするマップ
      */
-    public Map<Long, TransactionsByType> getTransactionListByUserIdAndTransactionDateAndSplitMethod(Long userId, YearMonth yearMonth, Long assetCategoryId) {
+    public TransactionsByType getTransactionListByUserIdAndTransactionDateAndSplitMethod(Long userId, YearMonth yearMonth, Long assetCategoryId) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
@@ -301,26 +301,10 @@ public class TransactionService {
         List<TransactionEntry> splitTransactionCardExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromCardSplits(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
         List<TransactionEntry> splitTransactionDiscrepancyExpenseList = splitTransactionRepository.findByUserIdAndTransactionDateFromDiscrepancySplits(userId, TransactionType.EXPENSE, startDate, endDate, assetCategoryId);
 
-        Map<Long, List<TransactionEntry>> incomeTotalListByAssetCategoryId = sortTransactionAndMakeAssetCategoryMap(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList, splitTransactionBankIncomeList, splitTransactionCardIncomeList, splitTransactionDiscrepancyIncomeList);
-        Map<Long, List<TransactionEntry>> expenseTotalListByAssetCategoryId = sortTransactionAndMakeAssetCategoryMap(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList, splitTransactionBankExpenseList, splitTransactionCardExpenseList, splitTransactionDiscrepancyExpenseList);
+        TransactionsByType result = new TransactionsByType();
+        result.setIncome(sortTransactionEntryList(bankTransactionIncomeList, cardTransactionIncomeList, discrepancyTransactionIncomeList, splitTransactionBankIncomeList, splitTransactionCardIncomeList, splitTransactionDiscrepancyIncomeList));
+        result.setExpense(sortTransactionEntryList(bankTransactionExpenseList, cardTransactionExpenseList, discrepancyTransactionExpenseList, splitTransactionBankExpenseList, splitTransactionCardExpenseList, splitTransactionDiscrepancyExpenseList));
 
-        Map<Long, TransactionsByType> result = new HashMap<>();
-
-        for (Map.Entry<Long, List<TransactionEntry>> entry : incomeTotalListByAssetCategoryId.entrySet()) {
-            TransactionsByType transactionsByType = new TransactionsByType();
-            transactionsByType.setIncome(entry.getValue());
-            transactionsByType.setExpense(List.of());
-            result.put(entry.getKey(), transactionsByType);
-        }
-
-        for (Map.Entry<Long, List<TransactionEntry>> entry : expenseTotalListByAssetCategoryId.entrySet()) {
-            if (!result.containsKey(entry.getKey())) {
-                TransactionsByType transactionsByType = new TransactionsByType();
-                transactionsByType.setIncome(List.of());
-                result.put(entry.getKey(), transactionsByType);
-            } 
-            result.get(entry.getKey()).setExpense(entry.getValue());
-        }
         return result;
     }
 
@@ -361,10 +345,10 @@ public class TransactionService {
         return result;
     }
 
-    private Map<Long, List<TransactionEntry>> sortTransactionAndMakeAssetCategoryMap(List<TransactionEntry> transactionEntryList1, List<TransactionEntry> transactionEntryList2, List<TransactionEntry> transactionEntryList3,
+    private List<TransactionEntry> sortTransactionEntryList(List<TransactionEntry> transactionEntryList1, List<TransactionEntry> transactionEntryList2, List<TransactionEntry> transactionEntryList3,
                     List<TransactionEntry> transactionEntryList4, List<TransactionEntry> transactionEntryList5, List<TransactionEntry> transactionEntryList6
         ) {
-        List<TransactionEntry> transactionEntryList = Stream.of(transactionEntryList1, transactionEntryList2, transactionEntryList3, transactionEntryList4, transactionEntryList5, transactionEntryList6)
+        List<TransactionEntry> result = Stream.of(transactionEntryList1, transactionEntryList2, transactionEntryList3, transactionEntryList4, transactionEntryList5, transactionEntryList6)
                 .flatMap(List::stream)
                 .sorted(
                     Comparator.comparing(TransactionEntry::getAmount)
@@ -372,7 +356,6 @@ public class TransactionService {
                             .thenComparing(TransactionEntry::getDescription)
                             .reversed())
                 .collect(Collectors.toList());
-        Map<Long, List<TransactionEntry>> result = transactionEntryList.stream().collect(Collectors.groupingBy(TransactionEntry::getAssetCategoryId));
         return result;
     }
 
