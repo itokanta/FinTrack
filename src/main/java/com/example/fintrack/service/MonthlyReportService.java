@@ -108,6 +108,30 @@ public class MonthlyReportService {
     return monthlySummary;
   }
 
+  /**
+   * 指定月・指定資産カテゴリの収支合計サマリーを取得する。
+   * 銀行・カード・差異解消の SINGLE 取引と、各ソースの手動・パターン分割を集計する。
+   *
+   * @param userId          ユーザー ID
+   * @param yearMonth       対象年月
+   * @param assetCategoryId 資産カテゴリ ID
+   * @return 収入・支出・合計を含むサマリー
+   */
+  public MonthlySummary getMonthlySummaryByAssetCategoryId(Long userId, YearMonth yearMonth, Long assetCategoryId) {
+    LocalDate startDate = yearMonth.atDay(1);
+    LocalDate endDate = yearMonth.atEndOfMonth();
+    MonthlySummary monthlySummary = new MonthlySummary(null, 0L, 0L, 0L);
+
+    add(monthlySummary, bankTransactionRepository.sumSingleAmountByAssetCategoryId(userId, startDate, endDate, assetCategoryId));
+    add(monthlySummary, cardTransactionRepository.sumSingleAmountByAssetCategoryId(userId, startDate, endDate, assetCategoryId));
+    add(monthlySummary, discrepancyTransactionRepository.sumSingleAmountByAssetCategoryId(userId, startDate, endDate, assetCategoryId));
+    add(monthlySummary, splitTransactionRepository.sumAmountByAssetCategoryIdFromBankSplits(userId, assetCategoryId, startDate, endDate));
+    add(monthlySummary, splitTransactionRepository.sumAmountByAssetCategoryIdFromCardSplits(userId, assetCategoryId, startDate, endDate));
+    add(monthlySummary, splitTransactionRepository.sumAmountByAssetCategoryIdFromDiscrepancySplits(userId, assetCategoryId, startDate, endDate));
+
+    return monthlySummary;
+  }
+
   private void add(MonthlySummary result, MonthlySummary addData) {
     result.setIncomeAmount(result.getIncomeAmount() + addData.getIncomeAmount());
     result.setExpenseAmount(result.getExpenseAmount() + addData.getExpenseAmount());
