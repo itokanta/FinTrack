@@ -368,6 +368,30 @@ public class BankTransactionRepository {
     }
 
     /**
+     * 期間内の銀行取引のうち、分割方法が SINGLE かつ指定した資産カテゴリの収支合計を集計する（カード引き落とし除外）。
+     *
+     * @param userId ユーザー ID
+     * @param startDate 開始日（含む）
+     * @param endDate 終了日（含む）
+     * @param assetCategoryId 資産カテゴリ ID
+     * @return 月次収支サマリ
+     */
+    public MonthlySummary sumSingleAmountByAssetCategoryId(Long userId, LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
+        String sql = "SELECT " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
+                "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +
+                "FROM bank_transactions " +
+                "WHERE user_id = :userId " +
+                "AND transaction_date BETWEEN :startDate AND :endDate " +
+                "AND is_card_payment = FALSE " +
+                "AND split_method = 'SINGLE' " +
+                "AND asset_category_id = :assetCategoryId";
+        MapSqlParameterSource param = makeParam(userId, startDate, endDate)
+                .addValue("assetCategoryId", assetCategoryId);
+        return template.queryForObject(sql, param, MONTHLY_SUMMARY_ROW_MAPPER);
+    }
+
+    /**
      * 期間内の銀行取引を資産カテゴリ別に集計する（SINGLE、カード引き落とし除外）。
      *
      * @param userId ユーザー ID
