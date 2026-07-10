@@ -544,12 +544,12 @@ public class CardTransactionRepository {
      * 期間内のカード取引のうち、分割方法が SINGLE かつ指定した資産カテゴリの収支合計を集計する。
      *
      * @param userId ユーザー ID
+     * @param assetCategoryId 資産カテゴリ ID
      * @param startDate 開始日（含む）
      * @param endDate 終了日（含む）
-     * @param assetCategoryId 資産カテゴリ ID
      * @return 月次収支サマリ
      */
-    public MonthlySummary sumSingleAmountByAssetCategoryId(Long userId, LocalDate startDate, LocalDate endDate, Long assetCategoryId) {
+    public MonthlySummary sumSingleAmountByAssetCategoryId(Long userId, Long assetCategoryId, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'INCOME' THEN amount END), 0) AS income_amount, " +
                 "COALESCE(SUM(CASE WHEN transaction_type = 'EXPENSE' THEN amount END), 0) AS expense_amount " +

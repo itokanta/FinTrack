@@ -122,9 +122,9 @@ public class MonthlyReportService {
     LocalDate endDate = yearMonth.atEndOfMonth();
     MonthlySummary monthlySummary = new MonthlySummary(null, 0L, 0L, 0L);
 
-    add(monthlySummary, bankTransactionRepository.sumSingleAmountByAssetCategoryId(userId, startDate, endDate, assetCategoryId));
-    add(monthlySummary, cardTransactionRepository.sumSingleAmountByAssetCategoryId(userId, startDate, endDate, assetCategoryId));
-    add(monthlySummary, discrepancyTransactionRepository.sumSingleAmountByAssetCategoryId(userId, startDate, endDate, assetCategoryId));
+    add(monthlySummary, bankTransactionRepository.sumSingleAmountByAssetCategoryId(userId, assetCategoryId, startDate, endDate));
+    add(monthlySummary, cardTransactionRepository.sumSingleAmountByAssetCategoryId(userId, assetCategoryId, startDate, endDate));
+    add(monthlySummary, discrepancyTransactionRepository.sumSingleAmountByAssetCategoryId(userId, assetCategoryId, startDate, endDate));
     add(monthlySummary, splitTransactionRepository.sumAmountByAssetCategoryIdFromBankSplits(userId, assetCategoryId, startDate, endDate));
     add(monthlySummary, splitTransactionRepository.sumAmountByAssetCategoryIdFromCardSplits(userId, assetCategoryId, startDate, endDate));
     add(monthlySummary, splitTransactionRepository.sumAmountByAssetCategoryIdFromDiscrepancySplits(userId, assetCategoryId, startDate, endDate));

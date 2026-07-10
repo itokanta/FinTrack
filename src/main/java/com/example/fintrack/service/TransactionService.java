@@ -277,11 +277,12 @@ public class TransactionService {
     }
 
     /**
-     * 指定月の取引を資産カテゴリ別に取得する（単一カテゴリ＋分割明細を含む）。
+     * 指定月・指定資産カテゴリの取引を収入・支出別に取得する（SINGLE の取引＋手動・パターン分割明細を含む）。
      *
-     * @param userId    ユーザーID
-     * @param yearMonth 対象年月
-     * @return 資産カテゴリIDをキー、収入・支出一覧を値とするマップ
+     * @param userId          ユーザーID
+     * @param yearMonth       対象年月
+     * @param assetCategoryId 資産カテゴリ ID
+     * @return 収入・支出に分けた取引一覧
      */
     public TransactionsByType getTransactionListByUserIdAndTransactionDateAndSplitMethod(Long userId, YearMonth yearMonth, Long assetCategoryId) {
         LocalDate startDate = yearMonth.atDay(1);
