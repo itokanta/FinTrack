@@ -120,7 +120,8 @@ public class MonthlyReportService {
   public MonthlySummary getMonthlySummaryByAssetCategoryId(Long userId, YearMonth yearMonth, Long assetCategoryId) {
     LocalDate startDate = yearMonth.atDay(1);
     LocalDate endDate = yearMonth.atEndOfMonth();
-    MonthlySummary monthlySummary = new MonthlySummary(null, 0L, 0L, 0L);
+    AssetCategory assetCategory = assetCategoryRepository.findById(assetCategoryId, userId).orElseThrow(() -> new IllegalArgumentException("資産カテゴリが存在しません"));
+    MonthlySummary monthlySummary = new MonthlySummary(assetCategory, 0L, 0L, 0L);
 
     add(monthlySummary, bankTransactionRepository.sumSingleAmountByAssetCategoryId(userId, assetCategoryId, startDate, endDate));
     add(monthlySummary, cardTransactionRepository.sumSingleAmountByAssetCategoryId(userId, assetCategoryId, startDate, endDate));

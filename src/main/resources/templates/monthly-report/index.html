@@ -72,7 +72,13 @@
                     </thead>
                     <tbody>
                         <tr th:each="entry : ${monthlySummaryByAssetCategory}">
-                            <td th:text="${entry.value.assetCategory.categoryName}">カテゴリ名</td>
+                            <td>
+                                <a th:href="@{/monthly-report/{assetCategoryId}/{targetYearMonth}(assetCategoryId=${entry.key}, targetYearMonth=${targetYearMonth})}"
+                                    class="text-decoration-none text-dark"
+                                    th:text="${entry.value.assetCategory.categoryName}">
+                                    カテゴリ名
+                                </a>
+                            </td>
                             <td class="text-end text-success" th:text="${#numbers.formatInteger(entry.value.incomeAmount, 0, 'COMMA')} + '円'">0円</td>
                             <td class="text-end text-danger" th:text="${#numbers.formatInteger(entry.value.expenseAmount, 0, 'COMMA')} + '円'">0円</td>
                             <td class="text-end"

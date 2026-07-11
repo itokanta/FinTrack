@@ -154,6 +154,10 @@ body {
     vertical-align: middle;
 }
 
+.monthly-category-table td a.text-dark:hover {
+    color: var(--bs-primary) !important;
+}
+
 .monthly-transaction-table {
     table-layout: fixed;
     width: 100%;
