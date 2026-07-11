@@ -137,7 +137,7 @@ body {
 
 .monthly-summary-totals th:not(:first-child),
 .monthly-summary-totals td:not(:first-child) {
-    width: 25%;
+    width: 20%;
 }
 
 .monthly-summary-totals thead th {
@@ -497,44 +497,57 @@ body {
         padding: 0.75rem;
     }
 
-    .monthly-summary-card .monthly-summary-totals,
-    .monthly-summary-card .monthly-summary-totals tbody {
+    .monthly-summary-card .monthly-summary-totals {
         display: block;
     }
 
+    /* 2行目（金額）が画面に収まらない場合は tbody だけ横スクロールさせる */
+    .monthly-summary-card .monthly-summary-totals tbody {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 1行目: 総資産収支ラベル / 2行目: 収入・支出・合計・残高 の計2行表示 */
     .monthly-summary-card .monthly-summary-totals tbody tr {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.25rem;
+        grid-template-columns: repeat(4, minmax(max-content, 1fr));
+        gap: 0.25rem 0.75rem;
     }
 
     .monthly-summary-card .monthly-summary-totals tbody td {
         display: block;
         width: auto !important;
-        padding: 0.35rem 0.125rem;
+        padding: 0.35rem 0.5rem;
         min-width: 0;
     }
 
     .monthly-summary-card .monthly-summary-totals tbody td:first-child {
-        grid-column: 1 / -1;
-        white-space: normal;
+        grid-column: 1;
+        grid-row: 1;
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background-color: #fff;
+        white-space: nowrap;
+        padding-left: 0;
         padding-bottom: 0.5rem;
-        border-bottom: 1px solid #dee2e6;
     }
 
     .monthly-summary-card .monthly-summary-totals tbody td:not(:first-child) {
+        grid-row: 2;
         text-align: center !important;
         white-space: nowrap;
     }
 
     .monthly-summary-card .monthly-summary-totals .amount-display-sm {
-        font-size: clamp(0.75rem, calc((100vw - 4.5rem) / 26), 1rem);
+        font-size: clamp(0.75rem, calc((100vw - 4.5rem) / 30), 1.0625rem);
         line-height: 1.1;
         white-space: nowrap;
     }
 
     .monthly-summary-card .monthly-summary-totals .amount-display-sm span {
-        font-size: clamp(0.875rem, calc((100vw - 4.5rem) / 19), 1.3125rem);
+        font-size: clamp(0.8125rem, calc((100vw - 4.5rem) / 22), 1.375rem);
     }
 
     .monthly-summary-card .monthly-summary-totals .amount-display-sm .bi {
@@ -569,10 +582,19 @@ body {
         margin-bottom: 0.25rem;
     }
 
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(5)::before {
+        content: '残高';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
     .monthly-category-table th,
     .monthly-category-table td {
         padding: 0.5rem 0.35rem;
-        font-size: 0.875rem;
+        font-size: clamp(0.75rem, calc((100vw - 4.5rem) / 25), 1.3125rem);
         white-space: nowrap;
     }
 }

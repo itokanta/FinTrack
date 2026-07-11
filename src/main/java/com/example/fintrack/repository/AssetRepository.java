@@ -1,14 +1,16 @@
 package com.example.fintrack.repository;
 
-import com.example.fintrack.domain.Asset;
-import com.example.fintrack.domain.AssetCategory;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.example.fintrack.domain.Asset;
+import com.example.fintrack.domain.AssetCategory;
 
 /**
  * 資産残高（assets テーブル）の DB アクセス。未払いクレジットの除外計算もここで行う。
@@ -17,6 +19,18 @@ import java.util.Map;
  */
 @Repository
 public class AssetRepository {
+
+    private static final RowMapper<Asset> ROW_MAPPER = (rs, rowNum) -> {
+        Asset asset = new Asset();
+        asset.setId(rs.getLong("id"));
+        asset.setUserId(rs.getLong("user_id"));
+        long assetCategoryId = rs.getLong("asset_category_id");
+        asset.setAssetCategoryId(rs.wasNull() ? null : assetCategoryId);
+        asset.setAmount(rs.getLong("amount"));
+        asset.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        asset.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+        return asset;
+    };
 
     private final NamedParameterJdbcTemplate template;
     private final AssetCategoryRepository assetCategoryRepository;
@@ -65,6 +79,20 @@ public class AssetRepository {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM assets WHERE user_id = :userId";
         MapSqlParameterSource param = new MapSqlParameterSource().addValue("userId", userId);
         return template.queryForObject(sql, param, Long.class);
+    }
+
+    /**
+     * ユーザーの資産レコードを全件取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 資産レコードのリスト
+     */
+    public List<Asset> getAssetListByUserId(Long userId) {
+        String sql = "SELECT id, user_id, asset_category_id, amount, created_at, updated_at " +
+                    "FROM assets " +
+                    "WHERE user_id = :userId";
+        MapSqlParameterSource param = new MapSqlParameterSource().addValue("userId", userId);
+        return template.query(sql, param, ROW_MAPPER);
     }
     
     /**

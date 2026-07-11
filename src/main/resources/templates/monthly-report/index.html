@@ -26,6 +26,7 @@
                             <th class="text-end">収入</th>
                             <th class="text-end">支出</th>
                             <th class="text-end">合計</th>
+                            <th class="text-end">残高</th>
                         </tr>
                     </thead>
                 </table>
@@ -48,6 +49,11 @@
                                 <i class="bi bi-calculator" aria-label="合計" title="合計"></i>
                                 <span th:text="${#numbers.formatInteger(monthlySummaryTotals.totalAmount, 0, 'COMMA')} + '円'">0円</span>
                             </td>
+                            <td class="text-end amount-display-sm"
+                                th:classappend="${monthlySummaryTotals.assetAmount < 0 ? 'text-danger' : (monthlySummaryTotals.assetAmount > 0 ? 'text-success' : '')}">
+                                <i class="bi bi-wallet2" aria-label="残高" title="残高"></i>
+                                <span th:text="${#numbers.formatInteger(monthlySummaryTotals.assetAmount, 0, 'COMMA')} + '円'">0円</span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -68,6 +74,7 @@
                             <th class="text-end">収入</th>
                             <th class="text-end">支出</th>
                             <th class="text-end">合計</th>
+                            <th class="text-end">残高</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,9 +91,12 @@
                             <td class="text-end"
                                 th:classappend="${entry.value.totalAmount < 0 ? 'text-danger' : (entry.value.totalAmount > 0 ? 'text-success' : '')}"
                                 th:text="${#numbers.formatInteger(entry.value.totalAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end"
+                                th:classappend="${entry.value.assetAmount < 0 ? 'text-danger' : (entry.value.assetAmount > 0 ? 'text-success' : '')}"
+                                th:text="${#numbers.formatInteger(entry.value.assetAmount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
                         <!-- 未分類の残高がある場合 -->
-                        <tr th:if="${monthlySummaryUncategorized.incomeAmount != 0 OR monthlySummaryUncategorized.expenseAmount != 0 OR monthlySummaryUncategorized.totalAmount != 0}" class="table-warning">
+                        <tr th:if="${monthlySummaryUncategorized.incomeAmount != 0 OR monthlySummaryUncategorized.expenseAmount != 0 OR monthlySummaryUncategorized.totalAmount != 0 OR monthlySummaryUncategorized.assetAmount != 0}" class="table-warning">
                             <td>
                                 <a th:href="@{/assets/uncategorized}" class="text-decoration-none text-dark">
                                     未分類
@@ -97,6 +107,9 @@
                             <td class="text-end"
                                 th:classappend="${monthlySummaryUncategorized.totalAmount < 0 ? 'text-danger' : (monthlySummaryUncategorized.totalAmount > 0 ? 'text-success' : '')}"
                                 th:text="${#numbers.formatInteger(monthlySummaryUncategorized.totalAmount, 0, 'COMMA')} + '円'">0円</td>
+                            <td class="text-end"
+                                th:classappend="${monthlySummaryUncategorized.assetAmount < 0 ? 'text-danger' : (monthlySummaryUncategorized.assetAmount > 0 ? 'text-success' : '')}"
+                                th:text="${#numbers.formatInteger(monthlySummaryUncategorized.assetAmount, 0, 'COMMA')} + '円'">0円</td>
                         </tr>
                     </tbody>
                 </table>

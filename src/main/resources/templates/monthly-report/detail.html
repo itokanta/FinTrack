@@ -26,6 +26,7 @@
                             <th class="text-end">収入</th>
                             <th class="text-end">支出</th>
                             <th class="text-end">合計</th>
+                            <th class="text-end">残高</th>
                         </tr>
                     </thead>
                 </table>
@@ -47,6 +48,11 @@
                                 th:classappend="${monthlySummary.totalAmount < 0 ? 'text-danger' : (monthlySummary.totalAmount > 0 ? 'text-success' : '')}">
                                 <i class="bi bi-calculator" aria-label="合計" title="合計"></i>
                                 <span th:text="${#numbers.formatInteger(monthlySummary.totalAmount, 0, 'COMMA')} + '円'">0円</span>
+                            </td>
+                            <td class="text-end amount-display-sm"
+                                th:classappend="${monthlySummary.assetAmount < 0 ? 'text-danger' : (monthlySummary.assetAmount > 0 ? 'text-success' : '')}">
+                                <i class="bi bi-wallet2" aria-label="残高" title="残高"></i>
+                                <span th:text="${#numbers.formatInteger(monthlySummary.assetAmount, 0, 'COMMA')} + '円'">0円</span>
                             </td>
                         </tr>
                     </tbody>

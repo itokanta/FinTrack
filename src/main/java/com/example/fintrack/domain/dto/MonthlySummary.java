@@ -19,4 +19,5 @@ public class MonthlySummary {
   private Long incomeAmount;
   private Long expenseAmount;
   private Long totalAmount;
+  private Long assetAmount;
 }
