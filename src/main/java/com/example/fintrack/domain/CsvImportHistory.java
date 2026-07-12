@@ -5,6 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * CSV インポートの実行履歴を表すドメインモデル。
+ *
+ * @author kanta ito
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

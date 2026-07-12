@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,10 +45,14 @@ import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 import com.example.fintrack.repository.UserRepository;
 
 /**
- * CSV取込処理全体の制御を行うサービス
+ * 銀行・カードのCSV取込処理全体を制御するサービス。
+ *
+ * @author kanta ito
  */
 @Service
 public class CsvImportService {
+
+    private static final Logger log = LoggerFactory.getLogger(CsvImportService.class);
 
     private final CsvReader csvReader;
     private final CsvParserFactory csvParserFactory;
@@ -88,17 +94,22 @@ public class CsvImportService {
     }
 
     /**
-     * 銀行取引のCSVをインポート
-     * 
+     * 銀行取引のCSVをインポートする。
+     *
      * @param file      CSVファイル
      * @param bankType  金融機関種別
      * @param userId    ユーザーID
      * @param hasHeader ヘッダー行の有無
-     * @return インポートした件数
+     * @return 新規インポートした件数
+     * @throws IOException              CSVの読み込みに失敗した場合
+     * @throws IllegalArgumentException ユーザーが見つからない場合
+     * @throws IllegalStateException    カード引き落とし照合時に更新前取引が見つからない場合
      */
     @Transactional
     public int importBankTransactions(MultipartFile file, BankType bankType, Long userId, boolean hasHeader)
             throws IOException {
+
+        log.info("銀行CSV取込開始 type={} fileName={} hasHeader={}", bankType, file.getOriginalFilename(), hasHeader);
 
         // ユーザーの存在確認
         userRepository.findById(userId)
@@ -284,26 +295,33 @@ public class CsvImportService {
                 discrepancy.setDifferenceAmount(differenceAmount);
                 discrepancy.setIsResolved(false);
 
+                log.warn("カード引き落とし差異を検出 paymentMonth={} expected={} actual={} difference={}",
+                        paymentMonth, expectedAmount, actualAmount, differenceAmount);
                 discrepancyRepository.insert(discrepancy);
             }
         }
 
+        log.info("銀行CSV取込完了 type={} 取込件数={}", bankType, count);
         return count;
 
     }
 
     /**
-     * カード取引のCSVをインポート
-     * 
+     * カード取引のCSVをインポートする。支払い月の更新も行う。
+     *
      * @param file      CSVファイル
      * @param bankType  金融機関種別
      * @param userId    ユーザーID
      * @param hasHeader ヘッダー行の有無
-     * @return インポートした件数
+     * @return 新規インポート＋更新した件数
+     * @throws IOException              CSVの読み込みに失敗した場合
+     * @throws IllegalArgumentException ユーザーが見つからない場合
      */
     @Transactional
     public int importCardTransactions(MultipartFile file, BankType bankType, Long userId, boolean hasHeader)
             throws IOException {
+
+        log.info("カードCSV取込開始 type={} fileName={} hasHeader={}", bankType, file.getOriginalFilename(), hasHeader);
 
         // ユーザーの存在確認
         userRepository.findById(userId)
@@ -462,6 +480,7 @@ public class CsvImportService {
         csvImportUpdateHistoryRepository.insert(csvImportUpdateHistoryList);
         cardTransactionRepository.updatePaymentMonth(toUpdate);
 
+        log.info("カードCSV取込完了 type={} 新規={} 更新={}", bankType, toInsertCardTransactionList.size(), toUpdate.size());
         return toInsertCardTransactionList.size() + toUpdate.size();
     }
 

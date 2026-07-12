@@ -7,8 +7,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 分割済みの収支額を管理するドメインモデル
- * (旧: SplitIncome)
+ * 分割済みの収支額を管理するドメインモデル。
+ * （旧: SplitIncome）
+ *
+ * @author kanta ito
  */
 @Data
 @NoArgsConstructor
@@ -27,10 +29,5 @@ public class SplitTransaction {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userId;
-    
-    // JOIN時に使用
-    private AssetCategory assetCategory;
-    private BankTransaction bankTransaction;
-    private CardTransaction cardTransaction;
 }
 

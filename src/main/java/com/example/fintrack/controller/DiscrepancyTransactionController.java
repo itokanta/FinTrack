@@ -23,6 +23,11 @@ import com.example.fintrack.service.CardPaymentService;
 import com.example.fintrack.service.DiscrepancyTransactionService;
 import com.example.fintrack.service.SplitService;
 
+/**
+ * カード引き落とし差異の解決（単一・手動・パターン分割）を扱うコントローラー。
+ *
+ * @author kanta ito
+ */
 @Controller
 @RequestMapping("/discrepancy-transactions")
 public class DiscrepancyTransactionController {
@@ -46,7 +51,12 @@ public class DiscrepancyTransactionController {
   }
 
   /**
-   * 差異解決フォーム表示
+   * 差異解決フォーム画面を表示する。
+   *
+   * @param id 差異ID
+   * @param authentication 認証情報
+   * @param model ビューモデル
+   * @return 差異解決フォームテンプレート名
    */
   @GetMapping("/{id}/resolve")
   public String showResolveForm(@PathVariable Long id,
@@ -74,7 +84,14 @@ public class DiscrepancyTransactionController {
   }
 
   /**
-   * 差異を単一カテゴリに登録
+   * 差異を単一の資産カテゴリに登録して解決する。
+   *
+   * @param id 差異ID
+   * @param description 摘要
+   * @param categoryId 資産カテゴリID
+   * @param redirectAttributes リダイレクト先へのフラッシュ属性
+   * @param authentication 認証情報
+   * @return 差異一覧へのリダイレクト先
    */
   @PostMapping("/{id}/resolve-single")
   public String resolveDiscrepancySingle(@PathVariable Long id,
@@ -96,7 +113,14 @@ public class DiscrepancyTransactionController {
   }
 
   /**
-   * 差異を手動分割
+   * 差異を手動分割して解決する。分割金額が未入力の場合はフォームへ戻す。
+   *
+   * @param id 差異ID
+   * @param description 摘要
+   * @param params リクエストパラメータ（category_プレフィックス付きの金額）
+   * @param redirectAttributes リダイレクト先へのフラッシュ属性
+   * @param authentication 認証情報
+   * @return 差異一覧または解決フォームへのリダイレクト先
    */
   @PostMapping("/{id}/resolve-manual")
   public String resolveDiscrepancyManual(@PathVariable Long id,
@@ -131,7 +155,14 @@ public class DiscrepancyTransactionController {
   }
 
   /**
-   * 差異を分割パターンで解決
+   * 差異を分割パターンで解決する。
+   *
+   * @param id 差異ID
+   * @param description 摘要
+   * @param patternId 分割パターンID
+   * @param redirectAttributes リダイレクト先へのフラッシュ属性
+   * @param authentication 認証情報
+   * @return 差異一覧へのリダイレクト先
    */
   @PostMapping("/{id}/resolve-pattern")
   public String resolveDiscrepancyPattern(@PathVariable Long id,

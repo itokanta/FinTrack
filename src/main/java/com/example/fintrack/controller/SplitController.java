@@ -25,7 +25,9 @@ import com.example.fintrack.service.AssetCategoryService;
 import com.example.fintrack.service.SplitService;
 
 /**
- * 収支分割管理コントローラー
+ * 収支の分割パターン管理と取引への分配を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/split")
@@ -45,7 +47,11 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン一覧画面（収入）
+     * 収入用の分割パターン一覧画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 分割パターン一覧テンプレート名
      */
     @GetMapping("/income/patterns")
     public String incomePatterns(Authentication authentication, Model model) {
@@ -53,7 +59,11 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン一覧画面（支出）
+     * 支出用の分割パターン一覧画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 分割パターン一覧テンプレート名
      */
     @GetMapping("/expense/patterns")
     public String expensePatterns(Authentication authentication, Model model) {
@@ -61,7 +71,12 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン一覧画面（共通処理）
+     * 分割パターン一覧画面の共通処理。取引種別に応じたパターン一覧を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @param transactionType 取引種別
+     * @return 分割パターン一覧テンプレート名
      */
     private String patterns(Authentication authentication, Model model, TransactionType transactionType) {
         Long userId = authenticationUserIdResolver.getUserId(authentication);
@@ -75,7 +90,11 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン登録画面（収入）
+     * 収入用の分割パターン登録画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 分割パターン登録フォームテンプレート名
      */
     @GetMapping("/income/patterns/new")
     public String newIncomePattern(Authentication authentication, Model model) {
@@ -89,7 +108,11 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン登録画面（支出）
+     * 支出用の分割パターン登録画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 分割パターン登録フォームテンプレート名
      */
     @GetMapping("/expense/patterns/new")
     public String newExpensePattern(Authentication authentication, Model model) {
@@ -103,7 +126,14 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン登録（割合指定）
+     * 割合指定で分割パターンを登録する。
+     *
+     * @param authentication 認証情報
+     * @param transactionType 取引種別
+     * @param patternName パターン名
+     * @param params リクエストパラメータ（ratio_プレフィックス付きの割合）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return 分割パターン一覧へのリダイレクト先
      */
     @PostMapping("/patterns/ratio")
     public String createPatternByRatio(Authentication authentication,
@@ -147,7 +177,14 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン登録（金額指定）
+     * 金額指定で分割パターンを登録する。
+     *
+     * @param authentication 認証情報
+     * @param transactionType 取引種別
+     * @param patternName パターン名
+     * @param params リクエストパラメータ（amount_プレフィックス付きの金額）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return 分割パターン一覧へのリダイレクト先
      */
     @PostMapping("/patterns/amount")
     public String createPatternByAmount(Authentication authentication,
@@ -191,7 +228,13 @@ public class SplitController {
     }
 
     /**
-     * 分割パターン削除
+     * 分割パターンを削除する。
+     *
+     * @param id 分割パターンID
+     * @param transactionType 取引種別（リダイレクト先の判定用）
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return 分割パターン一覧へのリダイレクト先
      */
     @PostMapping("/patterns/{id}/delete")
     public String deletePattern(@PathVariable Long id,
@@ -212,7 +255,14 @@ public class SplitController {
     }
 
     /**
-     * 収入をパターンで分割
+     * 収入取引を分割パターンで分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（銀行取引の場合）
+     * @param cardTransactionId カード取引ID（カード取引の場合）
+     * @param patternId 分割パターンID
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 収入詳細画面へのリダイレクト先
      */
     @PostMapping("/income/split")
     public String splitIncome(@RequestParam(required = false) Long bankTransactionId,
@@ -235,7 +285,14 @@ public class SplitController {
     }
 
     /**
-     * 支出をパターンで分割
+     * 支出取引を分割パターンで分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（銀行取引の場合）
+     * @param cardTransactionId カード取引ID（カード取引の場合）
+     * @param patternId 分割パターンID
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 支出詳細画面へのリダイレクト先
      */
     @PostMapping("/expense/split")
     public String splitExpense(@RequestParam(required = false) Long bankTransactionId,
@@ -258,7 +315,14 @@ public class SplitController {
     }
 
     /**
-     * 収入を単一カテゴリに分配
+     * 収入取引を単一の資産カテゴリに分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（銀行取引の場合）
+     * @param cardTransactionId カード取引ID（カード取引の場合）
+     * @param categoryId 資産カテゴリID
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 収入詳細画面へのリダイレクト先
      */
     @PostMapping("/income/split-single")
     public String splitIncomeSingle(@RequestParam(required = false) Long bankTransactionId,
@@ -281,7 +345,14 @@ public class SplitController {
     }
 
     /**
-     * 支出を単一カテゴリに分配
+     * 支出取引を単一の資産カテゴリに分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（銀行取引の場合）
+     * @param cardTransactionId カード取引ID（カード取引の場合）
+     * @param categoryId 資産カテゴリID
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 支出詳細画面へのリダイレクト先
      */
     @PostMapping("/expense/split-single")
     public String splitExpenseSingle(@RequestParam(required = false) Long bankTransactionId,
@@ -304,7 +375,14 @@ public class SplitController {
     }
 
     /**
-     * 収入を手動で分割
+     * 収入取引を手動で分割分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（銀行取引の場合）
+     * @param cardTransactionId カード取引ID（カード取引の場合）
+     * @param params リクエストパラメータ（category_プレフィックス付きの金額）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 収入詳細画面へのリダイレクト先
      */
     @PostMapping("/income/split-manual")
     public String splitIncomeManual(@RequestParam(required = false) Long bankTransactionId,
@@ -346,7 +424,14 @@ public class SplitController {
     }
 
     /**
-     * 支出を手動で分割
+     * 支出取引を手動で分割分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（銀行取引の場合）
+     * @param cardTransactionId カード取引ID（カード取引の場合）
+     * @param params リクエストパラメータ（category_プレフィックス付きの金額）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 支出詳細画面へのリダイレクト先
      */
     @PostMapping("/expense/split-manual")
     public String splitExpenseManual(@RequestParam(required = false) Long bankTransactionId,

@@ -13,6 +13,11 @@ import com.example.fintrack.domain.AutoCategoryRule;
 import com.example.fintrack.domain.TransactionType;
 import org.springframework.jdbc.core.RowMapper;
 
+/**
+ * 自動カテゴリ割当ルール（auto_category_rules テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class AutoCategoryRuleRepository {
 
@@ -33,6 +38,13 @@ public class AutoCategoryRuleRepository {
         this.template = template;
     }
 
+    /**
+     * ID で自動カテゴリルールを検索する。
+     *
+     * @param id ルール ID
+     * @param userId ユーザー ID
+     * @return 見つかればルールを含む Optional、なければ空
+     */
     public Optional<AutoCategoryRule> findById(Long id, Long userId) {
         String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
                      "FROM auto_category_rules " +
@@ -47,6 +59,12 @@ public class AutoCategoryRuleRepository {
         return Optional.of(rules.get(0));
     }
 
+    /**
+     * ユーザーの自動カテゴリルール一覧を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return ルールのリスト（作成日時降順）
+     */
     public List<AutoCategoryRule> findByUserId(Long userId) {
         String sql = "SELECT id, user_id, asset_category_id, description_pattern, transaction_type, created_at " +
                      "FROM auto_category_rules WHERE user_id = :userId ORDER BY created_at DESC";
@@ -54,6 +72,12 @@ public class AutoCategoryRuleRepository {
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 自動カテゴリルールを新規登録または更新する。
+     *
+     * @param rule 保存するルール
+     * @return ID・作成日時が反映されたルール
+     */
     public AutoCategoryRule save(AutoCategoryRule rule) {
         if (rule.getId() == null) {
             String sql = "INSERT INTO auto_category_rules " +
@@ -84,6 +108,12 @@ public class AutoCategoryRuleRepository {
         return rule;
     }
 
+    /**
+     * 自動カテゴリルールを削除する。
+     *
+     * @param id ルール ID
+     * @param userId ユーザー ID
+     */
     public void deleteById(Long id, Long userId) {
         String sql = "DELETE FROM auto_category_rules WHERE id = :id AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()

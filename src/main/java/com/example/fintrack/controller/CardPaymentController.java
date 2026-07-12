@@ -17,7 +17,9 @@ import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.CardPaymentService;
 
 /**
- * カード支払い管理コントローラー
+ * カード支払い月別明細と銀行引き落とし差異を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/card-payments")
@@ -33,7 +35,12 @@ public class CardPaymentController {
     }
 
     /**
-     * 支払い月別カード明細
+     * 支払い月別のカード明細画面を表示する。月の指定がなければ今月を表示する。
+     *
+     * @param authentication 認証情報
+     * @param paymentMonth 支払い月（yyyy-MM形式、省略可）
+     * @param model ビューモデル
+     * @return 月別カード明細テンプレート名
      */
     @GetMapping("/by-month")
     public String byMonth(Authentication authentication,
@@ -61,7 +68,11 @@ public class CardPaymentController {
     }
     
     /**
-     * カード差異一覧画面
+     * カード引き落とし差異一覧画面を表示する。未解決と全件の両方を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 差異一覧テンプレート名
      */
     @GetMapping("/discrepancies")
     public String discrepancies(Authentication authentication, Model model) {

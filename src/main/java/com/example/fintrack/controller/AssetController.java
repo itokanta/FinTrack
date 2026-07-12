@@ -25,7 +25,9 @@ import com.example.fintrack.service.SplitService;
 import com.example.fintrack.service.TransactionService;
 
 /**
- * 資産管理コントローラー
+ * 資産一覧・未分類取引の分配を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/assets")
@@ -49,7 +51,11 @@ public class AssetController {
     }
 
     /**
-     * 資産一覧画面
+     * 資産一覧画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 資産一覧テンプレート名
      */
     @GetMapping
     public String assets(Authentication authentication, Model model) {
@@ -72,7 +78,11 @@ public class AssetController {
     }
     
     /**
-     * 確定済み資産画面（当月と前月のクレジットカード取引を除外）
+     * 確定済み資産画面を表示する。当月と前月のクレジットカード取引（引落済みでない取引）を除外した残高を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 確定済み資産テンプレート名
      */
     @GetMapping("/confirmed")
     public String confirmed(Authentication authentication, Model model) {
@@ -103,7 +113,12 @@ public class AssetController {
     }
     
     /**
-     * 未分類の取引一覧画面
+     * 未分類の取引一覧画面を表示する。
+     *
+     * @param transactionType 取引種別（収入または支出）
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 未分類取引一覧テンプレート名
      */
     @GetMapping("/uncategorized")
     public String uncategorized(
@@ -147,7 +162,13 @@ public class AssetController {
     }
     
     /**
-     * 未分類の収入を単一カテゴリに一括分配
+     * 未分類の収入を単一カテゴリに一括分配する。
+     *
+     * @param categoryId 分配先の資産カテゴリID
+     * @param transactionIds 分配対象の取引ID一覧（bank_またはcard_プレフィックス付き）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 未分類収入一覧へのリダイレクト先
      */
     @PostMapping("/uncategorized/bulk-split-single")
     public String bulkSplitSingle(@RequestParam Long categoryId,
@@ -190,7 +211,13 @@ public class AssetController {
     }
     
     /**
-     * 未分類の収入を分割パターンで一括分配
+     * 未分類の収入を分割パターンで一括分配する。
+     *
+     * @param patternId 適用する分割パターンID
+     * @param transactionIds 分配対象の取引ID一覧（bank_またはcard_プレフィックス付き）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 未分類収入一覧へのリダイレクト先
      */
     @PostMapping("/uncategorized/bulk-split-income")
     public String bulkSplitIncome(@RequestParam Long patternId,
@@ -233,7 +260,13 @@ public class AssetController {
     }
     
     /**
-     * 未分類の支出を単一カテゴリに一括分配
+     * 未分類の支出を単一カテゴリに一括分配する。
+     *
+     * @param categoryId 分配先の資産カテゴリID
+     * @param transactionIds 分配対象の取引ID一覧（bank_またはcard_プレフィックス付き）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 未分類支出一覧へのリダイレクト先
      */
     @PostMapping("/uncategorized/bulk-split-expense-single")
     public String bulkSplitExpenseSingle(@RequestParam Long categoryId,
@@ -276,7 +309,13 @@ public class AssetController {
     }
     
     /**
-     * 未分類の支出を分割パターンで一括分配
+     * 未分類の支出を分割パターンで一括分配する。
+     *
+     * @param patternId 適用する分割パターンID
+     * @param transactionIds 分配対象の取引ID一覧（bank_またはcard_プレフィックス付き）
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @param authentication 認証情報
+     * @return 未分類支出一覧へのリダイレクト先
      */
     @PostMapping("/uncategorized/bulk-split-expense")
     public String bulkSplitExpense(@RequestParam Long patternId,
@@ -318,6 +357,12 @@ public class AssetController {
         return redirectUncategorized(TransactionType.EXPENSE);
     }
     
+    /**
+     * 未分類取引一覧へのリダイレクトURLを生成する。
+     *
+     * @param transactionType 取引種別
+     * @return リダイレクト先URL
+     */
     private static String redirectUncategorized(TransactionType transactionType) {
         return "redirect:/assets/uncategorized?type=" + transactionType.name();
     }

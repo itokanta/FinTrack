@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 
 import com.example.fintrack.domain.SplitPattern;
 
+/**
+ * 分割パターン明細（split_patterns テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class SplitPatternRepository {
 
@@ -18,6 +23,11 @@ public class SplitPatternRepository {
         this.template = template;
     }
 
+    /**
+     * 分割パターン明細を一括登録する。
+     *
+     * @param splitPatternList 登録する明細のリスト
+     */
     public void insert(List<SplitPattern> splitPatternList) {
         String sql = "INSERT INTO split_patterns " +
                      "(pattern_id, user_id, asset_category_id, split_ratio, split_amount) " +

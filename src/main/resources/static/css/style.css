@@ -103,14 +103,1170 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
+/* 見出しレベルと見た目を分離するユーティリティ */
+.amount-display {
+    font-size: calc(1.325rem + 0.9vw);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.amount-display-sm {
+    font-size: clamp(1.125rem, 3vw, 2.1875rem);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.monthly-summary-totals {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.monthly-summary-card > .card-header {
+    padding: 0.5rem 0.75rem 0;
+}
+
+.monthly-summary-card > .card-body {
+    padding: 0 0.75rem 0.5rem;
+}
+
+.monthly-summary-totals th,
+.monthly-summary-totals td {
+    padding: 0.5rem 0.5rem;
+    white-space: nowrap;
+}
+
+.monthly-summary-totals th:not(:first-child),
+.monthly-summary-totals td:not(:first-child) {
+    width: 20%;
+}
+
+.monthly-summary-totals thead th {
+    background-color: #f8f9fa;
+}
+
+.monthly-summary-totals th {
+    font-weight: 600;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.monthly-summary-totals td {
+    border: none;
+    vertical-align: middle;
+}
+
+.monthly-category-table td a.text-dark:hover {
+    color: var(--bs-primary) !important;
+}
+
+.monthly-transaction-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.monthly-transaction-table th,
+.monthly-transaction-table td {
+    vertical-align: middle;
+}
+
+.monthly-transaction-table th:nth-child(2),
+.monthly-transaction-table td:nth-child(2) {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.monthly-transaction-table-income th:nth-child(1),
+.monthly-transaction-table-income td:nth-child(1),
+.monthly-transaction-table-income th:nth-child(3),
+.monthly-transaction-table-income td:nth-child(3),
+.monthly-transaction-table-income th:nth-child(4),
+.monthly-transaction-table-income td:nth-child(4),
+.monthly-transaction-table-income th:nth-child(5),
+.monthly-transaction-table-income td:nth-child(5),
+.monthly-transaction-table-income th:nth-child(6),
+.monthly-transaction-table-income td:nth-child(6) {
+    width: 10%;
+}
+
+.monthly-transaction-table-income th:nth-child(2),
+.monthly-transaction-table-income td:nth-child(2) {
+    width: 50%;
+}
+
+.monthly-transaction-table-expense th:nth-child(1),
+.monthly-transaction-table-expense td:nth-child(1),
+.monthly-transaction-table-expense th:nth-child(3),
+.monthly-transaction-table-expense td:nth-child(3),
+.monthly-transaction-table-expense th:nth-child(4),
+.monthly-transaction-table-expense td:nth-child(4),
+.monthly-transaction-table-expense th:nth-child(5),
+.monthly-transaction-table-expense td:nth-child(5),
+.monthly-transaction-table-expense th:nth-child(6),
+.monthly-transaction-table-expense td:nth-child(6),
+.monthly-transaction-table-expense th:nth-child(7),
+.monthly-transaction-table-expense td:nth-child(7) {
+    width: 10%;
+}
+
+.monthly-transaction-table-expense th:nth-child(2),
+.monthly-transaction-table-expense td:nth-child(2) {
+    width: 40%;
+}
+
+@media (min-width: 768px) {
+    .monthly-transaction-table-expense th:nth-child(5),
+    .monthly-transaction-table-expense td:nth-child(5),
+    .monthly-transaction-table-expense th:nth-child(6),
+    .monthly-transaction-table-expense td:nth-child(6) {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .monthly-transaction-table-expense td:nth-child(5) .badge,
+    .monthly-transaction-table-expense td:nth-child(6) .badge {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+}
+
+.uncategorized-transaction-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.uncategorized-transaction-table th,
+.uncategorized-transaction-table td {
+    vertical-align: middle;
+}
+
+.uncategorized-transaction-table th:nth-child(1),
+.uncategorized-transaction-table td:nth-child(1) {
+    width: 5%;
+    text-align: center;
+}
+
+.uncategorized-transaction-table th:nth-child(3),
+.uncategorized-transaction-table td:nth-child(3) {
+    width: 55%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.uncategorized-transaction-table th:nth-child(2),
+.uncategorized-transaction-table td:nth-child(2),
+.uncategorized-transaction-table th:nth-child(4),
+.uncategorized-transaction-table td:nth-child(4),
+.uncategorized-transaction-table th:nth-child(5),
+.uncategorized-transaction-table td:nth-child(5),
+.uncategorized-transaction-table th:nth-child(6),
+.uncategorized-transaction-table td:nth-child(6) {
+    width: 10%;
+}
+
+.csv-import-history-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.csv-import-history-table th,
+.csv-import-history-table td {
+    vertical-align: middle;
+}
+
+.csv-import-history-table th:nth-child(1),
+.csv-import-history-table td:nth-child(1),
+.csv-import-history-table th:nth-child(4),
+.csv-import-history-table td:nth-child(4),
+.csv-import-history-table th:nth-child(5),
+.csv-import-history-table td:nth-child(5) {
+    width: 13%;
+}
+
+.csv-import-history-table th:nth-child(2),
+.csv-import-history-table td:nth-child(2) {
+    width: 40%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.csv-import-history-table th:nth-child(3),
+.csv-import-history-table td:nth-child(3) {
+    width: 21%;
+}
+
+.csv-import-bank-table,
+.csv-import-card-new-table,
+.csv-import-card-update-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.csv-import-bank-table th,
+.csv-import-bank-table td,
+.csv-import-card-new-table th,
+.csv-import-card-new-table td,
+.csv-import-card-update-table th,
+.csv-import-card-update-table td {
+    vertical-align: middle;
+}
+
+.csv-import-bank-table th:nth-child(1),
+.csv-import-bank-table td:nth-child(1),
+.csv-import-bank-table th:nth-child(3),
+.csv-import-bank-table td:nth-child(3),
+.csv-import-bank-table th:nth-child(4),
+.csv-import-bank-table td:nth-child(4),
+.csv-import-bank-table th:nth-child(5),
+.csv-import-bank-table td:nth-child(5) {
+    width: 10%;
+}
+
+.csv-import-bank-table th:nth-child(2),
+.csv-import-bank-table td:nth-child(2) {
+    width: 50%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.csv-import-card-new-table th:nth-child(1),
+.csv-import-card-new-table td:nth-child(1),
+.csv-import-card-new-table th:nth-child(3),
+.csv-import-card-new-table td:nth-child(3),
+.csv-import-card-new-table th:nth-child(4),
+.csv-import-card-new-table td:nth-child(4),
+.csv-import-card-new-table th:nth-child(5),
+.csv-import-card-new-table td:nth-child(5),
+.csv-import-card-new-table th:nth-child(6),
+.csv-import-card-new-table td:nth-child(6) {
+    width: 10%;
+}
+
+.csv-import-card-new-table th:nth-child(2),
+.csv-import-card-new-table td:nth-child(2) {
+    width: 50%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.csv-import-card-update-table th:nth-child(1),
+.csv-import-card-update-table td:nth-child(1),
+.csv-import-card-update-table th:nth-child(3),
+.csv-import-card-update-table td:nth-child(3),
+.csv-import-card-update-table th:nth-child(4),
+.csv-import-card-update-table td:nth-child(4),
+.csv-import-card-update-table th:nth-child(5),
+.csv-import-card-update-table td:nth-child(5),
+.csv-import-card-update-table th:nth-child(7),
+.csv-import-card-update-table td:nth-child(7) {
+    width: 10%;
+}
+
+.csv-import-card-update-table th:nth-child(6),
+.csv-import-card-update-table td:nth-child(6) {
+    width: 5%;
+    text-align: center;
+}
+
+.csv-import-card-update-table th:nth-child(2),
+.csv-import-card-update-table td:nth-child(2) {
+    width: 45%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+@media (min-width: 768px) {
+    .csv-import-bank-table td:nth-child(4) .badge,
+    .csv-import-bank-table td:nth-child(5) .badge,
+    .csv-import-card-new-table td:nth-child(4) .badge,
+    .csv-import-card-new-table td:nth-child(6) .badge,
+    .csv-import-card-update-table td:nth-child(5) .badge,
+    .csv-import-card-update-table td:nth-child(7) .badge {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+}
+
+.card-payments-by-month-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.card-payments-by-month-table th,
+.card-payments-by-month-table td {
+    vertical-align: middle;
+}
+
+.card-payments-by-month-table th:nth-child(1),
+.card-payments-by-month-table td:nth-child(1),
+.card-payments-by-month-table th:nth-child(3),
+.card-payments-by-month-table td:nth-child(3),
+.card-payments-by-month-table th:nth-child(4),
+.card-payments-by-month-table td:nth-child(4),
+.card-payments-by-month-table th:nth-child(6),
+.card-payments-by-month-table td:nth-child(6) {
+    width: 10%;
+}
+
+.card-payments-by-month-table th:nth-child(2),
+.card-payments-by-month-table td:nth-child(2) {
+    width: 45%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.card-payments-by-month-table th:nth-child(5),
+.card-payments-by-month-table td:nth-child(5) {
+    width: 15%;
+}
+
+@media (min-width: 768px) {
+    .card-payments-by-month-table td:nth-child(4) .badge,
+    .card-payments-by-month-table td:nth-child(5) .badge {
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+}
+
+.section-heading {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.subsection-heading {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.content-heading {
+    font-size: calc(1.275rem + 0.3vw);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.alert-emphasis {
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.alert-emphasis-sm {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
 /* レスポンシブ調整 */
 @media (max-width: 768px) {
     .content {
         padding: 15px 10px;
     }
-    
+
     .main-container {
         padding: 0;
+    }
+
+    .monthly-summary-card > .card-header {
+        display: none;
+    }
+
+    .monthly-summary-card > .card-body {
+        padding: 0.75rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals {
+        display: block;
+    }
+
+    /* 2行目（金額）が画面に収まらない場合は tbody だけ横スクロールさせる */
+    .monthly-summary-card .monthly-summary-totals tbody {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 1行目: 総資産収支ラベル / 2行目: 収入・支出・合計・残高 の計2行表示 */
+    .monthly-summary-card .monthly-summary-totals tbody tr {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(max-content, 1fr));
+        gap: 0.25rem 0.75rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td {
+        display: block;
+        width: auto !important;
+        padding: 0.35rem 0.5rem;
+        min-width: 0;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:first-child {
+        grid-column: 1;
+        grid-row: 1;
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background-color: #fff;
+        white-space: nowrap;
+        padding-left: 0;
+        padding-bottom: 0.5rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:not(:first-child) {
+        grid-row: 2;
+        text-align: center !important;
+        white-space: nowrap;
+    }
+
+    .monthly-summary-card .monthly-summary-totals .amount-display-sm {
+        font-size: clamp(0.75rem, calc((100vw - 4.5rem) / 30), 1.0625rem);
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+
+    .monthly-summary-card .monthly-summary-totals .amount-display-sm span {
+        font-size: clamp(0.8125rem, calc((100vw - 4.5rem) / 22), 1.375rem);
+    }
+
+    .monthly-summary-card .monthly-summary-totals .amount-display-sm .bi {
+        font-size: 0.85em;
+        vertical-align: -0.05em;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(2)::before {
+        content: '収入';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(3)::before {
+        content: '支出';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(4)::before {
+        content: '合計';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-summary-card .monthly-summary-totals tbody td:nth-child(5)::before {
+        content: '残高';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .monthly-category-table th,
+    .monthly-category-table td {
+        padding: 0.5rem 0.35rem;
+        font-size: clamp(0.75rem, calc((100vw - 4.5rem) / 25), 1.3125rem);
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .monthly-transaction-table th,
+    .monthly-transaction-table td,
+    .csv-import-history-table th,
+    .csv-import-history-table td,
+    .csv-import-bank-table th,
+    .csv-import-bank-table td,
+    .csv-import-card-new-table th,
+    .csv-import-card-new-table td,
+    .csv-import-card-update-table th,
+    .csv-import-card-update-table td,
+    .card-payments-by-month-table th,
+    .card-payments-by-month-table td,
+    .card-payments-discrepancy-table th,
+    .card-payments-discrepancy-table td,
+    .split-pattern-table th,
+    .split-pattern-table td {
+        padding: 0.5rem 0.35rem;
+        font-size: 0.875rem;
+    }
+
+    .monthly-transaction-table .btn-sm,
+    .csv-import-history-table .btn-sm,
+    .card-payments-discrepancy-table .btn-sm,
+    .split-pattern-table .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    .table-responsive:has(.monthly-transaction-table),
+    .table-responsive:has(.csv-import-history-table),
+    .table-responsive:has(.csv-import-bank-table),
+    .table-responsive:has(.csv-import-card-new-table),
+    .table-responsive:has(.csv-import-card-update-table),
+    .table-responsive:has(.card-payments-by-month-table),
+    .table-responsive:has(.card-payments-discrepancy-table),
+    .table-responsive:has(.split-pattern-table) {
+        overflow-x: visible;
+    }
+
+    .monthly-transaction-table,
+    .csv-import-history-table,
+    .csv-import-bank-table,
+    .csv-import-card-new-table,
+    .csv-import-card-update-table,
+    .card-payments-by-month-table,
+    .card-payments-discrepancy-table,
+    .split-pattern-table {
+        table-layout: auto;
+    }
+
+    .monthly-transaction-table thead,
+    .csv-import-history-table thead,
+    .csv-import-bank-table thead,
+    .csv-import-card-new-table thead,
+    .csv-import-card-update-table thead,
+    .card-payments-by-month-table thead,
+    .card-payments-discrepancy-table thead,
+    .split-pattern-table thead {
+        display: none;
+    }
+
+    .monthly-transaction-table,
+    .monthly-transaction-table tbody,
+    .csv-import-history-table,
+    .csv-import-history-table tbody,
+    .csv-import-bank-table,
+    .csv-import-bank-table tbody,
+    .csv-import-card-new-table,
+    .csv-import-card-new-table tbody,
+    .csv-import-card-update-table,
+    .csv-import-card-update-table tbody,
+    .card-payments-by-month-table,
+    .card-payments-by-month-table tbody,
+    .card-payments-discrepancy-table,
+    .card-payments-discrepancy-table tbody,
+    .split-pattern-table,
+    .split-pattern-table tbody {
+        display: block;
+    }
+
+    .monthly-transaction-table tbody tr,
+    .csv-import-history-table tbody tr,
+    .csv-import-bank-table tbody tr,
+    .csv-import-card-new-table tbody tr,
+    .csv-import-card-update-table tbody tr,
+    .card-payments-by-month-table tbody tr:not(.card-payments-empty-row),
+    .card-payments-discrepancy-table tbody tr:not(.card-payments-discrepancy-empty-row),
+    .split-pattern-table tbody tr:not(.split-pattern-empty-row) {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 0.2rem 0.5rem;
+        padding: 0.5rem 0.65rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+
+    .monthly-transaction-table tbody tr.monthly-transaction-row-link,
+    .csv-import-history-table tbody tr.monthly-transaction-row-link,
+    .card-payments-discrepancy-unresolved-table tbody tr.monthly-transaction-row-link {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(13, 110, 253, 0.15);
+    }
+
+    .monthly-transaction-table tbody tr.monthly-transaction-row-link:active,
+    .csv-import-history-table tbody tr.monthly-transaction-row-link:active,
+    .card-payments-discrepancy-unresolved-table tbody tr.monthly-transaction-row-link:active {
+        background-color: rgba(13, 110, 253, 0.08) !important;
+    }
+
+    .monthly-transaction-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-history-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(odd),
+    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(odd),
+    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(odd),
+    .card-payments-discrepancy-table.table-striped > tbody > tr:nth-of-type(odd),
+    .split-pattern-table.table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .monthly-transaction-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-history-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-bank-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-card-new-table.table-striped > tbody > tr:nth-of-type(even),
+    .csv-import-card-update-table.table-striped > tbody > tr:nth-of-type(even),
+    .card-payments-by-month-table.table-striped > tbody > tr:nth-of-type(even),
+    .card-payments-discrepancy-table.table-striped > tbody > tr:nth-of-type(even),
+    .split-pattern-table.table-striped > tbody > tr:nth-of-type(even) {
+        background-color: #fff;
+    }
+
+    .monthly-transaction-table.table-striped > tbody > tr > *,
+    .csv-import-history-table.table-striped > tbody > tr > *,
+    .csv-import-bank-table.table-striped > tbody > tr > *,
+    .csv-import-card-new-table.table-striped > tbody > tr > *,
+    .csv-import-card-update-table.table-striped > tbody > tr > *,
+    .card-payments-by-month-table.table-striped > tbody > tr > *,
+    .card-payments-discrepancy-table.table-striped > tbody > tr > *,
+    .split-pattern-table.table-striped > tbody > tr > * {
+        --bs-table-bg-type: transparent;
+        --bs-table-accent-bg: transparent;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .monthly-transaction-table tbody tr td,
+    .csv-import-history-table tbody tr td,
+    .csv-import-bank-table tbody tr td,
+    .csv-import-card-new-table tbody tr td,
+    .csv-import-card-update-table tbody tr td,
+    .card-payments-by-month-table tbody tr td,
+    .card-payments-discrepancy-table tbody tr td,
+    .split-pattern-table tbody tr td {
+        display: block;
+        width: auto !important;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+    }
+
+    .monthly-transaction-table-income td:nth-child(1),
+    .monthly-transaction-table-expense td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .monthly-transaction-table-income td:nth-child(3),
+    .monthly-transaction-table-expense td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .monthly-transaction-table-income td:nth-child(5),
+    .monthly-transaction-table-expense td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.8125rem;
+        font-weight: normal;
+    }
+
+    .monthly-transaction-table-income td:nth-child(5) .badge,
+    .monthly-transaction-table-expense td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .monthly-transaction-table-income td:nth-child(2),
+    .monthly-transaction-table-expense td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .monthly-transaction-table-income td:nth-child(6),
+    .monthly-transaction-table-expense td:nth-child(7) {
+        display: none !important;
+    }
+
+    .csv-import-history-table td:nth-child(3) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.75rem;
+    }
+
+    .csv-import-history-table td:nth-child(1) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+    }
+
+    .csv-import-history-table td:nth-child(1) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .csv-import-history-table td:nth-child(4) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .csv-import-history-table td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .csv-import-history-table td:nth-child(5) {
+        display: none !important;
+    }
+
+    .csv-import-bank-table td:nth-child(1),
+    .csv-import-card-new-table td:nth-child(1),
+    .csv-import-card-update-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.75rem;
+    }
+
+    .csv-import-bank-table td:nth-child(4),
+    .csv-import-card-new-table td:nth-child(4),
+    .csv-import-card-update-table td:nth-child(4) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.8125rem;
+        font-weight: normal;
+    }
+
+    .csv-import-bank-table td:nth-child(4) .badge,
+    .csv-import-bank-table td:nth-child(5) .badge,
+    .csv-import-card-new-table td:nth-child(4) .badge,
+    .csv-import-card-new-table td:nth-child(6) .badge,
+    .csv-import-card-update-table td:nth-child(5) .badge,
+    .csv-import-card-update-table td:nth-child(7) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .csv-import-bank-table td:nth-child(3),
+    .csv-import-card-new-table td:nth-child(3),
+    .csv-import-card-update-table td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .csv-import-bank-table td:nth-child(2),
+    .csv-import-card-new-table td:nth-child(2),
+    .csv-import-card-update-table td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .csv-import-bank-table td:nth-child(5) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+    }
+
+    .csv-import-card-new-table td:nth-child(5) {
+        grid-column: 1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .csv-import-card-new-table td:nth-child(6) {
+        grid-column: 3;
+        grid-row: 3;
+        text-align: right;
+        font-size: 0.8125rem;
+    }
+
+    .csv-import-card-update-table td:nth-child(5) {
+        grid-column: 1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+        min-width: 0;
+    }
+
+    .csv-import-card-update-table td:nth-child(6) {
+        grid-column: 2;
+        grid-row: 3;
+        text-align: center;
+        align-self: center;
+    }
+
+    .csv-import-card-update-table td:nth-child(7) {
+        grid-column: 3;
+        grid-row: 3;
+        font-size: 0.8125rem;
+        text-align: right;
+        min-width: 0;
+    }
+
+    .card-payments-by-month-table tfoot {
+        display: none;
+    }
+
+    .card-payments-by-month-table tbody tr.card-payments-empty-row {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .card-payments-by-month-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.75rem;
+    }
+
+    .card-payments-by-month-table td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.75rem;
+        font-weight: normal;
+    }
+
+    .card-payments-by-month-table td:nth-child(4) .badge,
+    .card-payments-by-month-table td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .card-payments-by-month-table td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .card-payments-by-month-table td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .card-payments-by-month-table td:nth-child(4) {
+        grid-column: 1;
+        grid-row: 3;
+        font-size: 0.8125rem;
+    }
+
+    .card-payments-by-month-table td:nth-child(6) {
+        grid-column: 3;
+        grid-row: 3;
+        text-align: right;
+        font-size: 0.8125rem;
+    }
+
+    .card-payments-discrepancy-table tbody tr.card-payments-discrepancy-empty-row {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(4) {
+        grid-column: 3;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(2) {
+        grid-column: 1;
+        grid-row: 2;
+        text-align: left !important;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(2)::before {
+        content: '家計簿上の金額';
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(3) {
+        grid-column: 3;
+        grid-row: 2;
+        text-align: right !important;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+    }
+
+    .card-payments-discrepancy-table td:nth-child(3)::before {
+        content: '実際の引落額';
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+        text-align: right;
+    }
+
+    .card-payments-discrepancy-unresolved-table td:nth-child(5) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    .card-payments-discrepancy-unresolved-table td:nth-child(6) {
+        display: none !important;
+    }
+
+    .card-payments-discrepancy-all-table td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .card-payments-discrepancy-all-table td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .card-payments-discrepancy-all-table td:nth-child(6) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    .split-pattern-table tbody tr.split-pattern-empty-row {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    .split-pattern-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1;
+        font-weight: 600;
+        min-width: 0;
+    }
+
+    .split-pattern-table td:nth-child(2) {
+        grid-column: 3;
+        grid-row: 1;
+        align-self: center;
+        text-align: right;
+    }
+
+    .split-pattern-table td:nth-child(2) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .split-pattern-table td:nth-child(3) {
+        grid-column: 1 / 3;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+        min-width: 0;
+        align-self: start;
+    }
+
+    .split-pattern-table td:nth-child(3) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .split-pattern-table td:nth-child(4) {
+        grid-column: 3;
+        grid-row: 2;
+        text-align: right;
+        align-self: end;
+    }
+
+    .uncategorized-transaction-table th,
+    .uncategorized-transaction-table td {
+        padding: 0.5rem 0.35rem;
+        font-size: 0.875rem;
+    }
+
+    .table-responsive:has(.uncategorized-transaction-table) {
+        overflow-x: visible;
+    }
+
+    .uncategorized-transaction-table {
+        table-layout: auto;
+    }
+
+    .uncategorized-transaction-table thead {
+        display: none;
+    }
+
+    .uncategorized-transaction-table,
+    .uncategorized-transaction-table tbody {
+        display: block;
+    }
+
+    .uncategorized-transaction-table tbody tr:not(.uncategorized-empty-row) {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto;
+        gap: 0.2rem 0.5rem;
+        padding: 0.5rem 0.65rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+
+    .uncategorized-transaction-table tbody tr.monthly-transaction-row-link {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(13, 110, 253, 0.15);
+    }
+
+    .uncategorized-transaction-table tbody tr.monthly-transaction-row-link:active {
+        background-color: rgba(13, 110, 253, 0.08) !important;
+    }
+
+    .uncategorized-transaction-table.table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .uncategorized-transaction-table.table-striped > tbody > tr:nth-of-type(even) {
+        background-color: #fff;
+    }
+
+    .uncategorized-transaction-table.table-striped > tbody > tr > * {
+        --bs-table-bg-type: transparent;
+        --bs-table-accent-bg: transparent;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .uncategorized-transaction-table tbody tr td {
+        display: block;
+        width: auto !important;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+    }
+
+    .uncategorized-transaction-table td:nth-child(1) {
+        grid-column: 1;
+        grid-row: 1 / 3;
+        align-self: center;
+        text-align: center;
+    }
+
+    .uncategorized-transaction-table td:nth-child(2) {
+        grid-column: 2;
+        grid-row: 1;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .uncategorized-transaction-table td:nth-child(5) {
+        grid-column: 3;
+        grid-row: 1;
+        display: inline-block !important;
+        align-self: center;
+        min-width: 0;
+        font-size: 0.8125rem;
+        font-weight: normal;
+        width: auto !important;
+        vertical-align: middle;
+    }
+
+    .uncategorized-transaction-table td:nth-child(4) {
+        grid-column: 4;
+        grid-row: 1;
+        text-align: right !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .uncategorized-transaction-table td:nth-child(5) .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .uncategorized-transaction-table td:nth-child(3) {
+        grid-column: 2 / -1;
+        grid-row: 2;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+    }
+
+    .uncategorized-transaction-table td:nth-child(6) {
+        display: none !important;
+    }
+
+    .uncategorized-transaction-table tbody tr.uncategorized-empty-row {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        color: #6c757d;
     }
 }
 

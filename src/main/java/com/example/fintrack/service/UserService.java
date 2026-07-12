@@ -1,5 +1,7 @@
 package com.example.fintrack.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,9 +11,16 @@ import com.example.fintrack.domain.User;
 import com.example.fintrack.repository.AssetRepository;
 import com.example.fintrack.repository.UserRepository;
 
+/**
+ * ユーザー登録とユーザー情報の取得を扱うサービス。
+ *
+ * @author kanta ito
+ */
 @Service
 public class UserService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AssetRepository assetRepository;
@@ -24,7 +33,11 @@ public class UserService {
     }
     
     /**
-     * 新規ユーザーを登録
+     * 新規ユーザーを登録する。未分類資産（残高0）も一緒に作る。
+     *
+     * @param username    ユーザー名
+     * @param rawPassword 平文パスワード（BCryptでハッシュ化して保存）
+     * @throws IllegalArgumentException ユーザー名が既に使われている場合
      */
     @Transactional
     public void createUser(String username, String rawPassword) {
@@ -42,8 +55,17 @@ public class UserService {
         asset.setAmount(0L);
         asset.setUserId(createdUser.getId());
         assetRepository.insert(asset);
+
+        log.info("新規ユーザー登録 userId={}", createdUser.getId());
     }
 
+    /**
+     * ユーザー名からユーザーIDを取得する。
+     *
+     * @param username ユーザー名
+     * @return ユーザーID
+     * @throws IllegalStateException ユーザーが見つからない場合
+     */
     public Long findUserIdByUsername(String username){
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("ユーザーが見つかりません"))

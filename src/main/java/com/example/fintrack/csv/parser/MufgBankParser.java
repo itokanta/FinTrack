@@ -8,16 +8,27 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * 三菱UFJ銀行のCSVパーサー
- * 
- * CSVフォーマット（Shift-JIS）:
+ * 三菱 UFJ 銀行の CSV パーサー。
+ *
+ * <p>CSV フォーマット（Shift-JIS）:
+ * <pre>
  * "日付","摘要","摘要内容","支払い金額","預かり金額","差引残高","メモ","未資金化区分","入出金区分"
  * "2025/12/7","振込入金","ヒシヤ　ツノハシ",,"192,800","302,982","","","振込支払済"
+ * </pre>
+ *
+ * @author kanta ito
  */
 public class MufgBankParser implements CsvParser {
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/M/d");
     
+    /**
+     * 三菱 UFJ 銀行の 1 行を {@link TransactionDTO} に変換する。
+     *
+     * @param record パース済みの CSV 行
+     * @return 変換後の取引 DTO
+     * @throws IllegalArgumentException 支払い・預かり金額が両方空のとき
+     */
     @Override
     public TransactionDTO parse(CSVRecord record) {
         TransactionDTO dto = new TransactionDTO();

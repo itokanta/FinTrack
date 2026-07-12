@@ -17,15 +17,27 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/assets}">
-                                <i class="bi bi-wallet2"></i> 資産管理
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="assetsDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-piggy-bank"></i> 資産
                             </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/assets}">
+                                        <i class="bi bi-wallet2"></i> 資産管理
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" th:href="@{/monthly-report}">
+                                        <i class="bi bi-bar-chart-line"></i> 収支レポート
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="transactionsDropdown" role="button" 
                                data-bs-toggle="dropdown">
-                                <i class="bi bi-list-ul"></i> 収支管理
+                                <i class="bi bi-list-ul"></i> 月次取引一覧
                             </a>
                             <ul class="dropdown-menu">
                                 <li>

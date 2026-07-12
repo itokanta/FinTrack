@@ -8,8 +8,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 収支の分割パターンを管理するドメインモデル
- * (旧: IncomeSplitPattern)
+ * 収支の分割パターン明細を管理するドメインモデル。
+ * （旧: IncomeSplitPattern）
+ *
+ * @author kanta ito
  */
 @Data
 @NoArgsConstructor

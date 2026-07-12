@@ -10,36 +10,34 @@
         <h2 class="mb-4">支出一覧</h2>
         
         <!-- 月選択 -->
-        <div class="mb-3">
-            <a th:href="@{/transactions/expenses(month=${prevMonth})}" class="btn btn-outline-primary">
-                <i class="bi bi-chevron-left"></i> 前月
-            </a>
-            <span class="mx-3" th:text="${currentMonth}">2024-01</span>
-            <a th:href="@{/transactions/expenses(month=${nextMonth})}" class="btn btn-outline-primary">
-                次月 <i class="bi bi-chevron-right"></i>
-            </a>
+        <div class="mb-4">
+            <label for="report-month" class="form-label">対象月</label>
+            <input type="month" class="form-control" id="paymentMonth" th:value="${currentMonth}" style="max-width: 200px;"
+                onchange="location.href='/transactions/expenses?currentMonth=' + this.value">
         </div>
         
         <!-- 支出一覧 -->
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped monthly-transaction-table monthly-transaction-table-expense">
                 <thead>
                     <tr>
                         <th>取引日</th>
                         <th>摘要</th>
                         <th class="text-end">金額</th>
-                        <th>取引区分</th>
+                        <th class="d-none d-lg-table-cell">取引区分</th>
                         <th>資産カテゴリ</th>
-                        <th>支出カテゴリ</th>
+                        <th class="d-none d-md-table-cell">支出カテゴリ</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="expense : ${expenses}">
+                    <tr th:each="expense : ${expenses}"
+                        class="monthly-transaction-row-link"
+                        th:data-href="@{/transactions/expenses/{id}(id=${expense.transactionId}, type=${expense.transactionSource == '銀行' ? 'bank' : 'card'})}">
                         <td th:text="${expense.transactionDate}">2024-01-01</td>
                         <td th:text="${expense.description}">摘要</td>
                         <td class="text-end" th:text="${#numbers.formatInteger(expense.amount, 0, 'COMMA')} + '円'">0円</td>
-                        <td>
+                        <td class="d-none d-lg-table-cell">
                             <span th:if="${expense.transactionSource == '銀行'}" class="badge bg-primary">
                                 <i class="bi bi-bank"></i> 銀行
                             </span>
@@ -52,40 +50,46 @@
                         </td>
                         <td>
                             <!-- SINGLE: 単一カテゴリ -->
-                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'SINGLE' and expense.assetCategoryId != null}" 
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'SINGLE' and expense.assetCategoryId != null}"
                                   th:text="${assetCategoryMap.get(expense.assetCategoryId)}">カテゴリ名</span>
                             
                             <!-- PATTERN: パターン分割 -->
-                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'PATTERN'}" 
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'PATTERN'}"
                                   class="badge bg-info">
                                 <i class="bi bi-pie-chart"></i> <span th:text="${splitPatternMap.get(expense.splitPatternId)}">分割パターン名</span>
                             </span>
                             
                             <!-- MANUAL: 手動分割 -->
-                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'MANUAL'}" 
+                            <span th:if="${expense.splitMethod != null and expense.splitMethod.name() == 'MANUAL'}"
                                   class="badge bg-secondary">
                                 <i class="bi bi-pencil"></i> 手動分割
                             </span>
                             
                             <!-- null: 未設定 -->
-                            <span th:if="${expense.splitMethod == null}" 
-                                  class="text-muted">未設定</span>
+                            <span th:if="${expense.splitMethod == null}" class="text-muted">未設定</span>
                         </td>
-                        <td>
-                            <span th:if="${expense.expenseCategoryId != null}" 
+                        <td class="d-none d-md-table-cell">
+                            <span th:if="${expense.expenseCategoryId != null}"
                                   th:text="${expenseCategoryMap.get(expense.expenseCategoryId)}">カテゴリ名</span>
-                            <span th:unless="${expense.expenseCategoryId != null}" 
-                                  class="text-muted">未設定</span>
+                            <span th:unless="${expense.expenseCategoryId != null}" class="text-muted">未設定</span>
                         </td>
-                        <td>
-                            <a th:href="@{/transactions/expenses/{id}(id=${expense.transactionId}, type=${expense.transactionSource == '銀行' ? 'bank' : 'card'})}" 
+                        <td class="d-none d-md-table-cell">
+                            <a th:href="@{/transactions/expenses/{id}(id=${expense.transactionId}, type=${expense.transactionSource == '銀行' ? 'bank' : 'card'})}"
                                class="btn btn-sm btn-outline-primary">詳細</a>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        <script>
+            document.querySelectorAll('.monthly-transaction-row-link').forEach(function (row) {
+                row.addEventListener('click', function () {
+                    if (window.matchMedia('(max-width: 767.98px)').matches && row.dataset.href) {
+                        window.location.href = row.dataset.href;
+                    }
+                });
+            });
+        </script>
     </div>
 </body>
 </html>
-

@@ -4,13 +4,18 @@ import com.example.fintrack.csv.parser.*;
 import org.springframework.stereotype.Component;
 
 /**
- * CSVパーサーのファクトリークラス
+ * 金融機関種別に応じた CSV パーサーを返すファクトリー。
+ *
+ * @author kanta ito
  */
 @Component
 public class CsvParserFactory {
     
     /**
-     * 金融機関種別に応じたパーサーを取得
+     * 金融機関種別に応じたパーサーを取得する。
+     *
+     * @param bankType 金融機関種別
+     * @return 対応する {@link CsvParser} 実装
      */
     public CsvParser getParser(BankType bankType) {
         return switch (bankType) {

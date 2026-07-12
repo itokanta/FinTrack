@@ -5,6 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * CSV 再インポート時のフィールド更新履歴を表すドメインモデル。
+ *
+ * @author kanta ito
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

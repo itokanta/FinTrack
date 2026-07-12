@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +28,16 @@ import com.example.fintrack.repository.CsvImportUpdateHistoryRepository;
 import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
+/**
+ * CSVインポート履歴の参照と、インポート取り消しを扱うサービス。
+ *
+ * @author kanta ito
+ */
 @Service
 public class CsvImportHistoryService {
+
+  private static final Logger log = LoggerFactory.getLogger(CsvImportHistoryService.class);
+
   private final CsvImportHistoryRepository csvImportHistoryRepository;
   private final CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository;
   private final CardTransactionRepository cardTransactionRepository;
@@ -50,28 +60,70 @@ public class CsvImportHistoryService {
     this.discrepancyTransactionRepository = discrepancyTransactionRepository;
   }
 
+  /**
+   * 指定インポート履歴に紐づくカード取引一覧を取得する。
+   *
+   * @param userId             ユーザーID
+   * @param csvImportHistoryId CSVインポート履歴ID
+   * @return カード取引の一覧
+   */
   public List<CardTransaction> getCardTransactionHistory(Long userId, Long csvImportHistoryId){
     return cardTransactionRepository.findByCsvImportHistoryId(userId, csvImportHistoryId);
   }
 
+  /**
+   * 指定インポート履歴に紐づく銀行取引一覧を取得する。
+   *
+   * @param userId             ユーザーID
+   * @param csvImportHistoryId CSVインポート履歴ID
+   * @return 銀行取引の一覧
+   */
   public List<BankTransaction> getBankTransactionHistory(Long userId, Long csvImportHistoryId){
     return bankTransactionRepository.findByCsvImportHistoryId(userId, csvImportHistoryId);
   }
 
+  /**
+   * CSVインポート履歴をIDで取得する。
+   *
+   * @param Id     インポート履歴ID
+   * @param userId ユーザーID
+   * @return インポート履歴
+   */
   public CsvImportHistory findById(Long Id, Long userId){
     return csvImportHistoryRepository.findById(Id, userId);
   }
 
+  /**
+   * ユーザーのCSVインポート履歴をすべて取得する。
+   *
+   * @param userId ユーザーID
+   * @return インポート履歴の一覧
+   */
   public List<CsvImportHistory> findAllByUserId(Long userId) {
     return csvImportHistoryRepository.findAllByUserId(userId);
   }
 
+  /**
+   * 指定インポート履歴で更新されたカード取引の詳細を取得する。
+   *
+   * @param userId             ユーザーID
+   * @param csvImportHistoryId CSVインポート履歴ID
+   * @return 更新詳細の一覧
+   */
   public List<CardTransactionUpdateDetail> findUpdatedByCsvImportHistoryId(Long userId, Long csvImportHistoryId) {
     return cardTransactionRepository.findUpdatedByCsvImportHistoryId(userId, csvImportHistoryId);
   }
 
+  /**
+   * CSVインポートを取り消す。取引削除と資産残高の巻き戻し、カード更新履歴の復元を行う。
+   *
+   * @param userId             ユーザーID
+   * @param csvImportHistoryId 取り消すインポート履歴ID
+   * @throws IllegalStateException ロールバック対象の取引が見つからない場合
+   */
   @Transactional
   public void deleteCsvImport(Long userId, Long csvImportHistoryId) {
+    log.info("CSV取込取消開始 csvImportHistoryId={}", csvImportHistoryId);
     Map<Long, List<CsvImportUpdateHistory>> updateHistoryMapByCardTransactionId = csvImportUpdateHistoryRepository.findByCardTransactionIdInTargetCsv(userId, csvImportHistoryId);
 
     if(!updateHistoryMapByCardTransactionId.isEmpty()){
@@ -274,6 +326,8 @@ public class CsvImportHistoryService {
     }
 
     csvImportHistoryRepository.deleteById(csvImportHistoryId, userId);
+    log.info("CSV取込取消完了 csvImportHistoryId={} 削除カード取引={} 削除銀行取引={}",
+        csvImportHistoryId, deleteCardTransactionList.size(), deleteBankTransactionList.size());
   }
 
   private Long splitTransactionAmountRollback(List<SplitTransaction> spListTransactionList, Map<Long, Long> assetAmountUpdateMap){

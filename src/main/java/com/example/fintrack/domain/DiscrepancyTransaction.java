@@ -7,6 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * カード引き落とし差異の解消用に作る調整取引を表すドメインモデル。
+ *
+ * @author kanta ito
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
