@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,8 @@ import com.example.fintrack.repository.SplitTransactionRepository;
  */
 @Service
 public class DiscrepancyTransactionService {
+
+  private static final Logger log = LoggerFactory.getLogger(DiscrepancyTransactionService.class);
 
   private final DiscrepancyTransactionRepository discrepancyTransactionRepository;
   private final CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository;
@@ -94,6 +98,8 @@ public class DiscrepancyTransactionService {
 
     // 4. 後処理
     finalizeDiscrepancyResolution(discrepancy);
+
+    log.info("差異解消(SINGLE) discrepancyId={} categoryId={}", discrepancyId, assetCategoryId);
   }
 
   /**
@@ -159,6 +165,8 @@ public class DiscrepancyTransactionService {
 
     // 5. 後処理
     finalizeDiscrepancyResolution(discrepancy);
+
+    log.info("差異解消(MANUAL) discrepancyId={} 明細数={}", discrepancyId, splitTransactionList.size());
   }
 
   /**
@@ -270,6 +278,8 @@ public class DiscrepancyTransactionService {
 
     // 6. 後処理
     finalizeDiscrepancyResolution(discrepancy);
+
+    log.info("差異解消(PATTERN) discrepancyId={} patternId={}", discrepancyId, patternId);
   }
 
   // ========== プライベートヘルパーメソッド ==========

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,9 @@ import com.example.fintrack.repository.SplitTransactionRepository;
  */
 @Service
 public class CsvImportHistoryService {
+
+  private static final Logger log = LoggerFactory.getLogger(CsvImportHistoryService.class);
+
   private final CsvImportHistoryRepository csvImportHistoryRepository;
   private final CsvImportUpdateHistoryRepository csvImportUpdateHistoryRepository;
   private final CardTransactionRepository cardTransactionRepository;
@@ -118,6 +123,7 @@ public class CsvImportHistoryService {
    */
   @Transactional
   public void deleteCsvImport(Long userId, Long csvImportHistoryId) {
+    log.info("CSV取込取消開始 csvImportHistoryId={}", csvImportHistoryId);
     Map<Long, List<CsvImportUpdateHistory>> updateHistoryMapByCardTransactionId = csvImportUpdateHistoryRepository.findByCardTransactionIdInTargetCsv(userId, csvImportHistoryId);
 
     if(!updateHistoryMapByCardTransactionId.isEmpty()){
@@ -320,6 +326,8 @@ public class CsvImportHistoryService {
     }
 
     csvImportHistoryRepository.deleteById(csvImportHistoryId, userId);
+    log.info("CSV取込取消完了 csvImportHistoryId={} 削除カード取引={} 削除銀行取引={}",
+        csvImportHistoryId, deleteCardTransactionList.size(), deleteBankTransactionList.size());
   }
 
   private Long splitTransactionAmountRollback(List<SplitTransaction> spListTransactionList, Map<Long, Long> assetAmountUpdateMap){

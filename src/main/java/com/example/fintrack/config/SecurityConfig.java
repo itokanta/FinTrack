@@ -1,10 +1,15 @@
 package com.example.fintrack.config;
 
 import com.example.fintrack.service.CustomUserDetailsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
+import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,7 +26,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final CustomUserDetailsService userDetailsService;
     
     public SecurityConfig(CustomUserDetailsService userDetailsService) {
@@ -89,6 +96,26 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    /**
+     * ログイン成功を記録する。
+     *
+     * @param event 認証成功イベント
+     */
+    @EventListener
+    public void onLoginSuccess(InteractiveAuthenticationSuccessEvent event) {
+        log.info("ログイン成功");
+    }
+
+    /**
+     * ログイン失敗を記録する（資格情報不正・ユーザー不明など）。
+     *
+     * @param event 認証失敗イベント
+     */
+    @EventListener
+    public void onLoginFailure(AbstractAuthenticationFailureEvent event) {
+        log.warn("ログイン失敗 reason={}", event.getException().getClass().getSimpleName());
     }
 }
 

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +33,9 @@ import com.example.fintrack.repository.SplitTransactionRepository;
  */
 @Service
 public class SplitService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(SplitService.class);
+
     private final SplitPatternGroupRepository splitPatternGroupRepository;
     private final SplitPatternRepository splitPatternRepository;
     private final SplitTransactionRepository splitTransactionRepository;
@@ -105,6 +109,7 @@ public class SplitService {
         if (updated == 0) {
             throw new IllegalArgumentException("分割パターンが見つかりません");
         }
+        log.info("分割パターン削除 patternId={}", patternId);
     }
     
     /**
@@ -155,6 +160,7 @@ public class SplitService {
         }
 
         splitPatternRepository.insert(splitPatternList);
+        log.info("分割パターン作成(RATIO) patternId={} name={} カテゴリ数={}", patternId, patternName, splitPatternList.size());
     }
     
     /**
@@ -205,6 +211,7 @@ public class SplitService {
             throw new IllegalArgumentException("有効な分割金額が1件以上必要です");
         }
         splitPatternRepository.insert(splitPatternList);
+        log.info("分割パターン作成(AMOUNT) patternId={} name={} カテゴリ数={}", patternId, patternName, splitPatternList.size());
     }
     
     /**
@@ -363,6 +370,9 @@ public class SplitService {
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
+
+        log.info("パターン分割 type={} bankTxId={} cardTxId={} patternId={} 明細数={}",
+                transactionType, bankTransactionId, cardTransactionId, patternId, splits.size());
     }
     
     private SplitTransaction createSplitTransaction(SplitPattern pattern, long splitAmount, 
@@ -525,6 +535,9 @@ public class SplitService {
             assetRepository.updateAmountByCategoryId(userId, null, totalAmount);
             assetRepository.updateAmountByCategoryId(userId, categoryId, -totalAmount);
         }
+
+        log.info("単一カテゴリ分配 type={} bankTxId={} cardTxId={} categoryId={}",
+                transactionType, bankTransactionId, cardTransactionId, categoryId);
     }
     
     /**
@@ -597,6 +610,9 @@ public class SplitService {
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
+
+        log.info("手動分割 type={} bankTxId={} cardTxId={} 明細数={}",
+                transactionType, bankTransactionId, cardTransactionId, splits.size());
     }
     
     /**

@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +51,8 @@ import com.example.fintrack.repository.UserRepository;
  */
 @Service
 public class CsvImportService {
+
+    private static final Logger log = LoggerFactory.getLogger(CsvImportService.class);
 
     private final CsvReader csvReader;
     private final CsvParserFactory csvParserFactory;
@@ -104,6 +108,8 @@ public class CsvImportService {
     @Transactional
     public int importBankTransactions(MultipartFile file, BankType bankType, Long userId, boolean hasHeader)
             throws IOException {
+
+        log.info("銀行CSV取込開始 type={} fileName={} hasHeader={}", bankType, file.getOriginalFilename(), hasHeader);
 
         // ユーザーの存在確認
         userRepository.findById(userId)
@@ -289,10 +295,13 @@ public class CsvImportService {
                 discrepancy.setDifferenceAmount(differenceAmount);
                 discrepancy.setIsResolved(false);
 
+                log.warn("カード引き落とし差異を検出 paymentMonth={} expected={} actual={} difference={}",
+                        paymentMonth, expectedAmount, actualAmount, differenceAmount);
                 discrepancyRepository.insert(discrepancy);
             }
         }
 
+        log.info("銀行CSV取込完了 type={} 取込件数={}", bankType, count);
         return count;
 
     }
@@ -311,6 +320,8 @@ public class CsvImportService {
     @Transactional
     public int importCardTransactions(MultipartFile file, BankType bankType, Long userId, boolean hasHeader)
             throws IOException {
+
+        log.info("カードCSV取込開始 type={} fileName={} hasHeader={}", bankType, file.getOriginalFilename(), hasHeader);
 
         // ユーザーの存在確認
         userRepository.findById(userId)
@@ -469,6 +480,7 @@ public class CsvImportService {
         csvImportUpdateHistoryRepository.insert(csvImportUpdateHistoryList);
         cardTransactionRepository.updatePaymentMonth(toUpdate);
 
+        log.info("カードCSV取込完了 type={} 新規={} 更新={}", bankType, toInsertCardTransactionList.size(), toUpdate.size());
         return toInsertCardTransactionList.size() + toUpdate.size();
     }
 
