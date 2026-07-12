@@ -30,7 +30,9 @@ import com.example.fintrack.service.AutoCategoryRuleService;
 import com.example.fintrack.service.TransactionService;
 
 /**
- * 自動カテゴリルール管理コントローラー
+ * 自動カテゴリルールの一覧・作成・編集・削除を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/auto-category-rules")
@@ -53,7 +55,11 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * 自動カテゴリルール一覧
+     * 自動カテゴリルール一覧画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return ルール一覧テンプレート名
      */
     @GetMapping
     public String index(Authentication authentication, Model model) {
@@ -76,7 +82,11 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * 新規ルール作成画面
+     * 新規ルール作成画面を表示する。
+     *
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return ルール作成フォームテンプレート名
      */
     @GetMapping("/new")
     public String newRule(Authentication authentication, Model model) {
@@ -92,7 +102,13 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * ルール編集画面
+     * ルール編集画面を表示する。ルールが見つからない場合は一覧へリダイレクトする。
+     *
+     * @param id ルールID
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return ルール編集フォームテンプレート名、または一覧へのリダイレクト先
      */
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Long id,
@@ -121,7 +137,15 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * ルール保存
+     * ルールを新規作成または更新する。
+     *
+     * @param id ルールID（更新時のみ指定）
+     * @param assetCategoryId 割り当て先の資産カテゴリID
+     * @param descriptionPattern 摘要のマッチパターン
+     * @param transactionType 取引種別
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return ルール一覧へのリダイレクト先
      */
     @PostMapping
     public String save(@RequestParam(required = false) Long id,
@@ -163,7 +187,12 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * ルール削除
+     * ルールを削除する。
+     *
+     * @param id ルールID
+     * @param authentication 認証情報
+     * @param redirectAttributes リダイレクト先へのフラッシュ属性
+     * @return ルール一覧へのリダイレクト先
      */
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id,
@@ -183,7 +212,11 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * 摘要検索（過去の取引履歴から）
+     * 過去の銀行・カード取引から摘要候補を検索する。最大20件まで返す。
+     *
+     * @param query 検索キーワード
+     * @param authentication 認証情報
+     * @return 摘要候補の一覧
      */
     @GetMapping("/search-descriptions")
     @ResponseBody
@@ -216,7 +249,9 @@ public class AutoCategoryRuleController {
     }
 
     /**
-     * 摘要候補のDTO
+     * 摘要候補を表すDTO。
+     *
+     * @author kanta ito
      */
     public static class DescriptionSuggestion {
         private String description;
@@ -235,6 +270,12 @@ public class AutoCategoryRuleController {
             return source;
         }
 
+        /**
+         * 摘要テキストが同じかどうかで等価性を判定する。
+         *
+         * @param o 比較対象
+         * @return 等しい場合は {@code true}
+         */
         @Override
         public boolean equals(Object o) {
             if (this == o)
@@ -245,6 +286,11 @@ public class AutoCategoryRuleController {
             return Objects.equals(description, that.description);
         }
 
+        /**
+         * 摘要テキストに基づくハッシュコードを返す。
+         *
+         * @return ハッシュコード
+         */
         @Override
         public int hashCode() {
             return Objects.hash(description);

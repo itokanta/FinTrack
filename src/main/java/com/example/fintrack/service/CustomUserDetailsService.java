@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 
 /**
- * Spring Security用のユーザー詳細サービス
+ * Spring Security のログイン認証用にユーザー情報を読み込むサービス。
+ *
+ * @author kanta ito
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -21,6 +23,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
     
+    /**
+     * ログイン時にユーザー名から認証情報を読み込む。
+     *
+     * @param username ユーザー名
+     * @return Spring Security用のUserDetails
+     * @throws UsernameNotFoundException ユーザーが見つからない場合
+     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,8 +32,15 @@ import com.example.fintrack.repository.DiscrepancyTransactionRepository;
 import com.example.fintrack.repository.SplitPatternGroupRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
+/**
+ * カード引き落とし差異の解消と差異取引の登録を扱うサービス。
+ *
+ * @author kanta ito
+ */
 @Service
 public class DiscrepancyTransactionService {
+
+  private static final Logger log = LoggerFactory.getLogger(DiscrepancyTransactionService.class);
 
   private final DiscrepancyTransactionRepository discrepancyTransactionRepository;
   private final CardPaymentDiscrepancyRepository cardPaymentDiscrepancyRepository;
@@ -59,11 +68,14 @@ public class DiscrepancyTransactionService {
   }
 
   /**
-   * 差異を単一カテゴリに登録して解決
-   * 
+   * 差異を単一カテゴリに登録して解決する。
+   *
    * @param discrepancyId   差異ID
-   * @param description     差異の説明
+   * @param description     差異取引の説明
    * @param assetCategoryId 資産カテゴリID
+   * @param userId          ユーザーID
+   * @throws IllegalArgumentException 差異が見つからない、または差異金額が0の場合
+   * @throws IllegalStateException    差異が既に解決済みの場合
    */
   @Transactional
   public void resolveDiscrepancySingle(Long discrepancyId, String description, Long assetCategoryId, Long userId) {
@@ -86,14 +98,19 @@ public class DiscrepancyTransactionService {
 
     // 4. 後処理
     finalizeDiscrepancyResolution(discrepancy);
+
+    log.info("差異解消(SINGLE) discrepancyId={} categoryId={}", discrepancyId, assetCategoryId);
   }
 
   /**
-   * 差異を手動分割して解決
-   * 
+   * 差異を手動分割して解決する。
+   *
    * @param discrepancyId   差異ID
-   * @param description     差異の説明
-   * @param categoryAmounts カテゴリID → 金額のマップ
+   * @param description     差異取引の説明
+   * @param categoryAmounts 資産カテゴリIDと金額のマップ
+   * @param userId          ユーザーID
+   * @throws IllegalArgumentException 差異が見つからない、分割金額の合計が一致しない、または差異金額が0の場合
+   * @throws IllegalStateException    差異が既に解決済みの場合
    */
   @Transactional
   public void resolveDiscrepancyManual(Long discrepancyId, String description,
@@ -148,14 +165,19 @@ public class DiscrepancyTransactionService {
 
     // 5. 後処理
     finalizeDiscrepancyResolution(discrepancy);
+
+    log.info("差異解消(MANUAL) discrepancyId={} 明細数={}", discrepancyId, splitTransactionList.size());
   }
 
   /**
-   * 差異を分割パターンで解決
-   * 
+   * 差異を分割パターンで解決する。
+   *
    * @param discrepancyId 差異ID
-   * @param description   差異の説明
+   * @param description   差異取引の説明
    * @param patternId     分割パターンID
+   * @param userId        ユーザーID
+   * @throws IllegalArgumentException 差異・パターンが見つからない、金額が合わない、または不明な分割タイプの場合
+   * @throws IllegalStateException    差異が既に解決済みの場合
    */
   @Transactional
   public void resolveDiscrepancyPattern(Long discrepancyId, String description, Long patternId, Long userId) {
@@ -256,6 +278,8 @@ public class DiscrepancyTransactionService {
 
     // 6. 後処理
     finalizeDiscrepancyResolution(discrepancy);
+
+    log.info("差異解消(PATTERN) discrepancyId={} patternId={}", discrepancyId, patternId);
   }
 
   // ========== プライベートヘルパーメソッド ==========

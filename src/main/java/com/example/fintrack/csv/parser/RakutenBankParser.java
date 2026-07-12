@@ -8,16 +8,27 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * 楽天銀行のCSVパーサー
- * 
- * CSVフォーマット（Shift-JIS）:
+ * 楽天銀行の CSV パーサー。
+ *
+ * <p>CSV フォーマット（Shift-JIS）:
+ * <pre>
  * 取引日,入出金(円),残高(円),入出金内容
  * 20251201,-1625,23986,VISAデビット A0113457
+ * </pre>
+ *
+ * @author kanta ito
  */
 public class RakutenBankParser implements CsvParser {
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
     
+    /**
+     * 楽天銀行の 1 行を {@link TransactionDTO} に変換する。
+     * VISA デビット行は除外して {@code null} を返す。
+     *
+     * @param record パース済みの CSV 行
+     * @return 変換後の取引 DTO。スキップ対象の行は {@code null}
+     */
     @Override
     public TransactionDTO parse(CSVRecord record) {
         // 摘要を取得

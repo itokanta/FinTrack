@@ -1,7 +1,9 @@
 package com.example.fintrack.domain;
 
 /**
- * 収入の分割方法を表すEnum
+ * 取引の分割方法を表す Enum。
+ *
+ * @author kanta ito
  */
 public enum SplitMethod {
     /**

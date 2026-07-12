@@ -7,6 +7,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 分割パターンのグループ（名前・種別）を表すドメインモデル。
+ * 詳細行は {@link SplitPattern} のリストとして持つ。
+ *
+ * @author kanta ito
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

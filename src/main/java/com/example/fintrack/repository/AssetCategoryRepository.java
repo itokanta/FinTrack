@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 資産カテゴリ（asset_categories テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class AssetCategoryRepository {
 
@@ -27,6 +32,13 @@ public class AssetCategoryRepository {
         this.template = template;
     }
 
+    /**
+     * ID で資産カテゴリを検索する。
+     *
+     * @param id 資産カテゴリ ID
+     * @param userId ユーザー ID
+     * @return 見つかればカテゴリを含む Optional、なければ空
+     */
     public Optional<AssetCategory> findById(Long id, Long userId) {
         String sql = "SELECT id, user_id, category_name, created_at FROM asset_categories "
                 + "WHERE id = :id AND user_id = :userId";
@@ -40,12 +52,24 @@ public class AssetCategoryRepository {
         return Optional.of(categories.get(0));
     }
 
+    /**
+     * ユーザーの資産カテゴリ一覧を取得する。
+     *
+     * @param userId ユーザー ID
+     * @return 資産カテゴリのリスト（ID 昇順）
+     */
     public List<AssetCategory> findByUserId(Long userId) {
         String sql = "SELECT id, user_id, category_name, created_at FROM asset_categories WHERE user_id = :userId ORDER BY id";
         MapSqlParameterSource params = new MapSqlParameterSource("userId", userId);
         return template.query(sql, params, ROW_MAPPER);
     }
 
+    /**
+     * 資産カテゴリを新規登録する。
+     *
+     * @param category 登録する資産カテゴリ
+     * @return 採番された ID
+     */
     public Long insert(AssetCategory category) {
         String sql = "INSERT INTO asset_categories (user_id, category_name) " +
                      "VALUES (:userId, :categoryName) " +
@@ -56,6 +80,12 @@ public class AssetCategoryRepository {
         return template.queryForObject(sql, params, Long.class);
     }
 
+    /**
+     * 資産カテゴリを削除する。
+     *
+     * @param id 資産カテゴリ ID
+     * @param userId ユーザー ID
+     */
     public void deleteById(Long id, Long userId) {
         String sql = "DELETE FROM asset_categories WHERE id = :id AND user_id = :userId";
         MapSqlParameterSource params = new MapSqlParameterSource()

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +27,15 @@ import com.example.fintrack.repository.SplitPatternRepository;
 import com.example.fintrack.repository.SplitTransactionRepository;
 
 /**
- * 収支分割管理サービス（収入・支出統合版）
+ * 収支の分割パターン管理と、取引への分配処理をまとめて扱うサービス。
+ *
+ * @author kanta ito
  */
 @Service
 public class SplitService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(SplitService.class);
+
     private final SplitPatternGroupRepository splitPatternGroupRepository;
     private final SplitPatternRepository splitPatternRepository;
     private final SplitTransactionRepository splitTransactionRepository;
@@ -52,12 +58,23 @@ public class SplitService {
     }
 
     /**
-     * ユーザーの分割パターンを取得
+     * ユーザーの分割パターン一覧を取得する。
+     *
+     * @param userId          ユーザーID
+     * @param transactionType 収入か支出か
+     * @return 分割パターングループの一覧
      */
     public List<SplitPatternGroup> getSplitPatternGroupList(Long userId, TransactionType transactionType) {
         return splitPatternGroupRepository.findByUserIdAndTransactionType(userId, transactionType);
     }
 
+    /**
+     * 分割パターンIDと名前の対応マップを作る（削除済みパターンも含む）。
+     *
+     * @param userId          ユーザーID
+     * @param transactionType 収入か支出か
+     * @return パターンIDをキー、パターン名を値とするマップ
+     */
     public Map<Long, String> getPatternNameMap(Long userId, TransactionType transactionType) {
         List<SplitPatternGroup> splitPatternList = splitPatternGroupRepository.findByUserIdAndTransactionTypeInDeleted(userId, transactionType);
         Map<Long, String> patternNameMap = new HashMap<>();
@@ -68,12 +85,23 @@ public class SplitService {
         return patternNameMap;
     }
 
+    /**
+     * 分割パターンと明細行・資産カテゴリをまとめて取得する。
+     *
+     * @param userId          ユーザーID
+     * @param transactionType 収入か支出か
+     * @return 明細付きの分割パターングループ一覧
+     */
     public List<SplitPatternGroup> getPatternGroupWithSplitPatternList(Long userId, TransactionType transactionType) {
         return splitPatternGroupRepository.findWithSplitPatternAndAssetCategoryByUserIdAndTransactionType(userId, transactionType);
     }
     
     /**
-     * 分割パターンを削除
+     * 分割パターンを論理削除する。
+     *
+     * @param patternId 削除対象のパターンID
+     * @param userId    ユーザーID
+     * @throws IllegalArgumentException パターンが見つからない場合
      */
     @Transactional
     public void deletePattern(Long patternId, Long userId) {
@@ -81,10 +109,17 @@ public class SplitService {
         if (updated == 0) {
             throw new IllegalArgumentException("分割パターンが見つかりません");
         }
+        log.info("分割パターン削除 patternId={}", patternId);
     }
     
     /**
-     * 新しい分割パターンを作成（割合指定）
+     * 割合指定で新しい分割パターンを作成する。
+     *
+     * @param userId          ユーザーID
+     * @param transactionType 収入か支出か
+     * @param patternName     パターン名
+     * @param categoryRatios  資産カテゴリIDと割合（%）のマップ
+     * @throws IllegalArgumentException 割合の合計が100%でない、またはカテゴリが無効な場合
      */
     @Transactional
     public void createSplitPatternByRatio(Long userId, TransactionType transactionType, String patternName, 
@@ -125,10 +160,17 @@ public class SplitService {
         }
 
         splitPatternRepository.insert(splitPatternList);
+        log.info("分割パターン作成(RATIO) patternId={} name={} カテゴリ数={}", patternId, patternName, splitPatternList.size());
     }
     
     /**
-     * 新しい分割パターンを作成（金額指定）
+     * 金額指定で新しい分割パターンを作成する。
+     *
+     * @param userId           ユーザーID
+     * @param transactionType  収入か支出か
+     * @param patternName      パターン名
+     * @param categoryAmounts  資産カテゴリIDと金額のマップ
+     * @throws IllegalArgumentException 有効な金額が1件もない、またはカテゴリが無効な場合
      */
     @Transactional
     public void createSplitPatternByAmount(Long userId, TransactionType transactionType, String patternName, 
@@ -169,10 +211,17 @@ public class SplitService {
             throw new IllegalArgumentException("有効な分割金額が1件以上必要です");
         }
         splitPatternRepository.insert(splitPatternList);
+        log.info("分割パターン作成(AMOUNT) patternId={} name={} カテゴリ数={}", patternId, patternName, splitPatternList.size());
     }
     
     /**
-     * 収入をパターンで分割
+     * 収入取引を分割パターンで分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param patternId         適用する分割パターンID
+     * @param userId            ユーザーID
+     * @throws IllegalArgumentException 取引・パターンが見つからない、または金額が合わない場合
      */
     @Transactional
     public void splitIncome(Long bankTransactionId, Long cardTransactionId, Long patternId, Long userId) {
@@ -180,7 +229,13 @@ public class SplitService {
     }
 
     /**
-     * 収入をパターンで一括分割
+     * 複数の収入取引を同じ分割パターンで一括分配する。
+     *
+     * @param bankTransactionIdList 銀行取引IDの一覧
+     * @param cardTransactionIdList カード取引IDの一覧
+     * @param patternId             適用する分割パターンID
+     * @param userId                ユーザーID
+     * @throws IllegalArgumentException 取引・パターンが見つからない、または金額が合わない場合
      */
     @Transactional
     public void splitIncomeAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
@@ -194,7 +249,13 @@ public class SplitService {
     }
     
     /**
-     * 支出をパターンで分割
+     * 支出取引を分割パターンで分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param patternId         適用する分割パターンID
+     * @param userId            ユーザーID
+     * @throws IllegalArgumentException 取引・パターンが見つからない、または金額が合わない場合
      */
     @Transactional
     public void splitExpense(Long bankTransactionId, Long cardTransactionId, Long patternId, Long userId) {
@@ -202,7 +263,13 @@ public class SplitService {
     }
 
     /**
-     * 支出をパターンで一括分割
+     * 複数の支出取引を同じ分割パターンで一括分配する。
+     *
+     * @param bankTransactionIdList 銀行取引IDの一覧
+     * @param cardTransactionIdList カード取引IDの一覧
+     * @param patternId             適用する分割パターンID
+     * @param userId                ユーザーID
+     * @throws IllegalArgumentException 取引・パターンが見つからない、または金額が合わない場合
      */
     @Transactional
     public void splitExpenseAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
@@ -303,6 +370,9 @@ public class SplitService {
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
+
+        log.info("パターン分割 type={} bankTxId={} cardTxId={} patternId={} 明細数={}",
+                transactionType, bankTransactionId, cardTransactionId, patternId, splits.size());
     }
     
     private SplitTransaction createSplitTransaction(SplitPattern pattern, long splitAmount, 
@@ -322,7 +392,13 @@ public class SplitService {
     }
     
     /**
-     * 収入を手動で金額指定して分割
+     * 収入取引を手動で金額指定して分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param categoryAmounts   資産カテゴリIDと金額のマップ
+     * @param userId            ユーザーID
+     * @throws IllegalArgumentException 取引が見つからない、または分割金額の合計が一致しない場合
      */
     @Transactional
     public void splitIncomeManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts, Long userId) {
@@ -330,7 +406,13 @@ public class SplitService {
     }
     
     /**
-     * 支出を手動で金額指定して分割
+     * 支出取引を手動で金額指定して分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param categoryAmounts   資産カテゴリIDと金額のマップ
+     * @param userId            ユーザーID
+     * @throws IllegalArgumentException 取引が見つからない、または分割金額の合計が一致しない場合
      */
     @Transactional
     public void splitExpenseManual(Long bankTransactionId, Long cardTransactionId, Map<Long, Long> categoryAmounts, Long userId) {
@@ -338,7 +420,13 @@ public class SplitService {
     }
     
     /**
-     * 収入を単一カテゴリに分配
+     * 収入取引を単一の資産カテゴリに全額分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param categoryId        分配先の資産カテゴリID
+     * @param userId            ユーザーID
+     * @throws IllegalArgumentException 取引またはカテゴリが見つからない場合
      */
     @Transactional
     public void splitIncomeSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, Long userId) {
@@ -346,7 +434,13 @@ public class SplitService {
     }
 
     /**
-     * 収入を単一カテゴリに一括分配
+     * 複数の収入取引を同じ資産カテゴリに一括で全額分配する。
+     *
+     * @param bankTransactionIdList 銀行取引IDの一覧
+     * @param cardTransactionIdList カード取引IDの一覧
+     * @param categoryId            分配先の資産カテゴリID
+     * @param userId                ユーザーID
+     * @throws IllegalArgumentException 取引またはカテゴリが見つからない場合
      */
     @Transactional
     public void splitIncomeSingleAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList, Long categoryId, Long userId) {
@@ -360,7 +454,13 @@ public class SplitService {
     }
     
     /**
-     * 支出を単一カテゴリに分配
+     * 支出取引を単一の資産カテゴリに全額分配する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param categoryId        分配先の資産カテゴリID
+     * @param userId            ユーザーID
+     * @throws IllegalArgumentException 取引またはカテゴリが見つからない場合
      */
     @Transactional
     public void splitExpenseSingle(Long bankTransactionId, Long cardTransactionId, Long categoryId, Long userId) {
@@ -368,7 +468,13 @@ public class SplitService {
     }
 
     /**
-     * 支出を単一カテゴリに一括分配
+     * 複数の支出取引を同じ資産カテゴリに一括で全額分配する。
+     *
+     * @param bankTransactionIdList 銀行取引IDの一覧
+     * @param cardTransactionIdList カード取引IDの一覧
+     * @param categoryId            分配先の資産カテゴリID
+     * @param userId                ユーザーID
+     * @throws IllegalArgumentException 取引またはカテゴリが見つからない場合
      */
     @Transactional
     public void splitExpenseSingleAll(List<Long> bankTransactionIdList, List<Long> cardTransactionIdList,
@@ -429,6 +535,9 @@ public class SplitService {
             assetRepository.updateAmountByCategoryId(userId, null, totalAmount);
             assetRepository.updateAmountByCategoryId(userId, categoryId, -totalAmount);
         }
+
+        log.info("単一カテゴリ分配 type={} bankTxId={} cardTxId={} categoryId={}",
+                transactionType, bankTransactionId, cardTransactionId, categoryId);
     }
     
     /**
@@ -501,10 +610,18 @@ public class SplitService {
         
         // 残高を更新
         updateBalances(userId, splits, transactionType, totalAmount);
+
+        log.info("手動分割 type={} bankTxId={} cardTxId={} 明細数={}",
+                transactionType, bankTransactionId, cardTransactionId, splits.size());
     }
     
     /**
-     * 取引の分割状況を取得
+     * 指定取引に紐づく分割明細を取得する。
+     *
+     * @param bankTransactionId 銀行取引ID（カード取引の場合はnull）
+     * @param cardTransactionId カード取引ID（銀行取引の場合はnull）
+     * @param userId            ユーザーID
+     * @return 分割明細の一覧（取引ID未指定の場合は空リスト）
      */
     public List<SplitTransaction> getSplitTransactionsByTransaction(Long bankTransactionId, Long cardTransactionId, Long userId) {
         if (bankTransactionId != null) {

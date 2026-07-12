@@ -1,7 +1,10 @@
 package com.example.fintrack.csv;
 
 /**
- * 金融機関種別
+ * 対応している金融機関の種別。
+ * スキップ行数など、パーサー側の前提もここで持つ。
+ *
+ * @author kanta ito
  */
 public enum BankType {
     RAKUTEN_BANK("楽天銀行", 0),

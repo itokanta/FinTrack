@@ -28,7 +28,9 @@ import com.example.fintrack.service.TransactionService;
 import com.example.fintrack.service.TransactionService.TransactionWithAsset;
 
 /**
- * 取引管理コントローラー
+ * 収入・支出取引の一覧と詳細表示を扱うコントローラー。
+ *
+ * @author kanta ito
  */
 @Controller
 @RequestMapping("/transactions")
@@ -51,19 +53,25 @@ public class TransactionController {
     }
 
     /**
-     * 支出一覧
+     * 支出一覧画面を表示する。月の指定がなければ今月を表示する。
+     *
+     * @param authentication 認証情報
+     * @param currentMonth 対象月（yyyy-MM形式、省略可）
+     * @param page ページ番号（0始まり）
+     * @param model ビューモデル
+     * @return 支出一覧テンプレート名
      */
     @GetMapping("/expenses")
     public String expenses(Authentication authentication,
-                          @RequestParam(required = false) String month,
+                          @RequestParam(required = false) String currentMonth,
                           @RequestParam(defaultValue = "0") int page,
                           Model model) {
         Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 月の指定がない場合は今月
         YearMonth yearMonth;
-        if (month != null) {
-            yearMonth = YearMonth.parse(month);
+        if (currentMonth != null) {
+            yearMonth = YearMonth.parse(currentMonth);
         } else {
             yearMonth = YearMonth.now();
         }
@@ -88,27 +96,31 @@ public class TransactionController {
         model.addAttribute("expenseCategoryMap", expenseCategoryMap);
         model.addAttribute("splitPatternMap", splitPatternMap);
         model.addAttribute("currentMonth", yearMonth);
-        model.addAttribute("prevMonth", yearMonth.minusMonths(1));
-        model.addAttribute("nextMonth", yearMonth.plusMonths(1));
         model.addAttribute("page", page);
         
         return "transactions/expenses";
     }
     
     /**
-     * 収入一覧
+     * 収入一覧画面を表示する。月の指定がなければ今月を表示する。
+     *
+     * @param authentication 認証情報
+     * @param currentMonth 対象月（yyyy-MM形式、省略可）
+     * @param page ページ番号（0始まり）
+     * @param model ビューモデル
+     * @return 収入一覧テンプレート名
      */
     @GetMapping("/incomes")
     public String incomes(Authentication authentication,
-                         @RequestParam(required = false) String month,
+                         @RequestParam(required = false) String currentMonth,
                          @RequestParam(defaultValue = "0") int page,
                          Model model) {
         Long userId = authenticationUserIdResolver.getUserId(authentication);
         
         // 月の指定がない場合は今月
         YearMonth yearMonth;
-        if (month != null) {
-            yearMonth = YearMonth.parse(month);
+        if (currentMonth != null) {
+            yearMonth = YearMonth.parse(currentMonth);
         } else {
             yearMonth = YearMonth.now();
         }
@@ -118,15 +130,20 @@ public class TransactionController {
         
         model.addAttribute("incomes", incomes);
         model.addAttribute("currentMonth", yearMonth);
-        model.addAttribute("prevMonth", yearMonth.minusMonths(1));
-        model.addAttribute("nextMonth", yearMonth.plusMonths(1));
         model.addAttribute("page", page);
         
         return "transactions/incomes";
     }
     
     /**
-     * 支出詳細
+     * 支出詳細画面を表示する。銀行・カード取引と分割情報を表示する。
+     *
+     * @param id 取引ID
+     * @param type 取引元種別（{@code bank} または {@code card}）
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 支出詳細テンプレート名
+     * @throws IllegalArgumentException 取引が見つからない場合
      */
     @GetMapping("/expenses/{id}")
     public String expenseDetail(@PathVariable Long id,
@@ -174,7 +191,14 @@ public class TransactionController {
     }
     
     /**
-     * 収入詳細
+     * 収入詳細画面を表示する。銀行・カード取引と分割情報を表示する。
+     *
+     * @param id 取引ID
+     * @param type 取引元種別（{@code bank} または {@code card}）
+     * @param authentication 認証情報
+     * @param model ビューモデル
+     * @return 収入詳細テンプレート名
+     * @throws IllegalArgumentException 取引が見つからない場合
      */
     @GetMapping("/incomes/{id}")
     public String incomeDetail(@PathVariable Long id,

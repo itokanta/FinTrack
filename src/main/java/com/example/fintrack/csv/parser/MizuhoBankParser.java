@@ -8,17 +8,28 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * みずほ銀行のCSVパーサー
- * 
- * CSVフォーマット（Shift-JIS）:
- * 照会開始日,照会終了日から12行目以降がデータ
+ * みずほ銀行の CSV パーサー。
+ *
+ * <p>CSV フォーマット（Shift-JIS）:
+ * 照会開始日・照会終了日のあと 12 行目以降がデータ。
+ * <pre>
  * 取引通番,日付,引落金額,預入金額,残高,摘要,メモ,取引店番号,取引区分,科目区分
  * 20251229000020,2025.12.29,3634,,247422,セテイ-ペイデイ-,,,
+ * </pre>
+ *
+ * @author kanta ito
  */
 public class MizuhoBankParser implements CsvParser {
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
     
+    /**
+     * みずほ銀行の 1 行を {@link TransactionDTO} に変換する。
+     * 列不足・日付空・金額空の行は {@code null} を返す。
+     *
+     * @param record パース済みの CSV 行
+     * @return 変換後の取引 DTO。スキップ対象の行は {@code null}
+     */
     @Override
     public TransactionDTO parse(CSVRecord record) {
         // レコードの列数チェック（フッター行などをスキップ）

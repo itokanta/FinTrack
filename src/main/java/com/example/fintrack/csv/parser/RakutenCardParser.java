@@ -11,19 +11,30 @@ import com.example.fintrack.csv.dto.TransactionDTO;
 import com.example.fintrack.domain.TransactionType;
 
 /**
- * 楽天カードのCSVパーサー
- * 
- * CSVフォーマット（UTF-8）:
+ * 楽天カードの CSV パーサー。
+ *
+ * <p>CSV フォーマット（UTF-8）:
+ * <pre>
  * "利用日","利用店名・商品名","利用者","支払方法","利用金額","支払手数料","支払総額","12月支払金額","1月繰越残高","新規サイン"
  * "2025/11/30","ﾔｵｺ-ﾅｶﾞﾚﾔﾏｵｵﾀｶﾉﾓ","本人","1回払い","2044","0","2044","2044","0","*"
- * 
- * 注意: 利用日が空欄の行（詳細情報行など）はスキップされます
+ * </pre>
+ *
+ * <p>利用日が空欄の行（詳細行など）はスキップする。
+ *
+ * @author kanta ito
  */
 public class RakutenCardParser implements CsvParser {
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
     private static final Pattern PAYMENT_MONTH_PATTERN = Pattern.compile("(\\d+)月");
     
+    /**
+     * 楽天カードの 1 行を {@link TransactionDTO} に変換する。
+     * 利用日が空の行は {@code null} を返す。
+     *
+     * @param record パース済みの CSV 行
+     * @return 変換後の取引 DTO。スキップ対象の行は {@code null}
+     */
     @Override
     public TransactionDTO parse(CSVRecord record) {
         // 利用日が空欄の場合はスキップ（詳細情報行など）

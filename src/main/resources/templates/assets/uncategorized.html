@@ -49,22 +49,18 @@
                         <h6 class="mb-0"><i class="bi bi-folder"></i> 1つのカテゴリに全額分配</h6>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="singleCategoryIdExpense" class="form-label">資産カテゴリ</label>
-                                <select class="form-select" id="singleCategoryIdExpense" name="categoryId" required>
-                                    <option value="">選択してください</option>
-                                    <option th:each="category : ${assetCategories}" 
-                                            th:value="${category.id}" 
-                                            th:text="${category.categoryName}">カテゴリ名</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> 選択した項目を分配
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <label for="singleCategoryIdExpense" class="form-label">資産カテゴリ</label>
+                            <select class="form-select" id="singleCategoryIdExpense" name="categoryId" required>
+                                <option value="">選択してください</option>
+                                <option th:each="category : ${assetCategories}" 
+                                        th:value="${category.id}" 
+                                        th:text="${category.categoryName}">カテゴリ名</option>
+                            </select>
                         </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> 選択した項目を分配
+                        </button>
                     </div>
                 </div>
             </form>
@@ -76,22 +72,18 @@
                         <h6 class="mb-0"><i class="bi bi-pie-chart"></i> 分割パターンで分配</h6>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="splitPatternIdExpense" class="form-label">分配パターン</label>
-                                <select class="form-select" id="splitPatternIdExpense" name="patternId" required>
-                                    <option value="">選択してください</option>
-                                    <option th:each="pattern : ${splitPatternGroupList}"
-                                            th:value="${pattern.id}"
-                                            th:text="${pattern.patternName}">パターン名</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-pie-chart"></i> 選択した項目を分配
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <label for="splitPatternIdExpense" class="form-label">分配パターン</label>
+                            <select class="form-select" id="splitPatternIdExpense" name="patternId" required>
+                                <option value="">選択してください</option>
+                                <option th:each="pattern : ${splitPatternGroupList}"
+                                        th:value="${pattern.id}"
+                                        th:text="${pattern.patternName}">パターン名</option>
+                            </select>
                         </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-pie-chart"></i> 選択した項目を分配
+                        </button>
                     </div>
                 </div>
             </form>
@@ -102,22 +94,28 @@
                     <h5 class="mb-0">未分類の支出一覧</h5>
                 </div>
                 <div class="card-body">
+                    <div class="d-md-none mb-2 form-check">
+                        <input type="checkbox" class="form-check-input select-all-expense" id="selectAllExpenseMobile">
+                        <label class="form-check-label" for="selectAllExpenseMobile">全選択</label>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-striped uncategorized-transaction-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">
-                                        <input type="checkbox" id="selectAllExpense" class="form-check-input">
+                                    <th>
+                                        <input type="checkbox" id="selectAllExpense" class="form-check-input select-all-expense">
                                     </th>
                                     <th>取引日</th>
                                     <th>摘要</th>
                                     <th class="text-end">金額</th>
-                                    <th>取引区分</th>
-                                    <th style="width: 100px;"></th>
+                                    <th class="d-none d-md-table-cell">取引区分</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="transaction : ${transactions}">
+                                <tr th:each="transaction : ${transactions}"
+                                    class="monthly-transaction-row-link"
+                                    th:data-href="@{/transactions/expenses/{id}(id=${transaction.transactionId}, type=${transaction.transactionSource == '銀行' ? 'bank' : 'card'})}">
                                     <td>
                                         <input type="checkbox" 
                                                th:value="${transaction.transactionSource == '銀行' ? 'bank_' + transaction.transactionId : 'card_' + transaction.transactionId}"
@@ -126,7 +124,7 @@
                                     <td th:text="${transaction.transactionDate}">2024-01-01</td>
                                     <td th:text="${transaction.description}">摘要</td>
                                     <td class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <span th:if="${transaction.transactionSource == '銀行'}" class="badge bg-primary">
                                             <i class="bi bi-bank"></i> 銀行
                                         </span>
@@ -137,14 +135,14 @@
                                             <i class="bi bi-credit-card-2-front"></i> クレジット
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <a th:href="@{/transactions/expenses/{id}(id=${transaction.transactionId}, type=${transaction.transactionSource == '銀行' ? 'bank' : 'card'})}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> 詳細
                                         </a>
                                     </td>
                                 </tr>
-                                <tr th:if="${#lists.isEmpty(transactions)}">
+                                <tr th:if="${#lists.isEmpty(transactions)}" class="uncategorized-empty-row">
                                     <td colspan="6" class="text-center text-muted">未分類の支出はありません</td>
                                 </tr>
                             </tbody>
@@ -163,22 +161,18 @@
                         <h6 class="mb-0"><i class="bi bi-folder"></i> 1つのカテゴリに全額分配</h6>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="singleCategoryId" class="form-label">資産カテゴリ</label>
-                                <select class="form-select" id="singleCategoryId" name="categoryId" required>
-                                    <option value="">選択してください</option>
-                                    <option th:each="category : ${assetCategories}" 
-                                            th:value="${category.id}" 
-                                            th:text="${category.categoryName}">カテゴリ名</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> 選択した項目を分配
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <label for="singleCategoryId" class="form-label">資産カテゴリ</label>
+                            <select class="form-select" id="singleCategoryId" name="categoryId" required>
+                                <option value="">選択してください</option>
+                                <option th:each="category : ${assetCategories}" 
+                                        th:value="${category.id}" 
+                                        th:text="${category.categoryName}">カテゴリ名</option>
+                            </select>
                         </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> 選択した項目を分配
+                        </button>
                     </div>
                 </div>
             </form>
@@ -190,22 +184,18 @@
                         <h6 class="mb-0"><i class="bi bi-pie-chart"></i> 分割パターンで分配</h6>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="splitPatternId" class="form-label">分配パターン</label>
-                                <select class="form-select" id="splitPatternId" name="patternId" required>
-                                    <option value="">選択してください</option>
-                                    <option th:each="pattern : ${splitPatternGroupList}"
-                                            th:value="${pattern.id}"
-                                            th:text="${pattern.patternName}">パターン名</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-pie-chart"></i> 選択した項目を分配
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <label for="splitPatternId" class="form-label">分配パターン</label>
+                            <select class="form-select" id="splitPatternId" name="patternId" required>
+                                <option value="">選択してください</option>
+                                <option th:each="pattern : ${splitPatternGroupList}"
+                                        th:value="${pattern.id}"
+                                        th:text="${pattern.patternName}">パターン名</option>
+                            </select>
                         </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-pie-chart"></i> 選択した項目を分配
+                        </button>
                     </div>
                 </div>
             </form>
@@ -216,22 +206,28 @@
                     <h5 class="mb-0">未分類の収入一覧</h5>
                 </div>
                 <div class="card-body">
+                    <div class="d-md-none mb-2 form-check">
+                        <input type="checkbox" class="form-check-input select-all-income" id="selectAllIncomeMobile">
+                        <label class="form-check-label" for="selectAllIncomeMobile">全選択</label>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-striped uncategorized-transaction-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">
-                                        <input type="checkbox" id="selectAllIncome" class="form-check-input">
+                                    <th>
+                                        <input type="checkbox" id="selectAllIncome" class="form-check-input select-all-income">
                                     </th>
                                     <th>取引日</th>
                                     <th>摘要</th>
                                     <th class="text-end">金額</th>
-                                    <th>取引区分</th>
-                                    <th style="width: 100px;"></th>
+                                    <th class="d-none d-md-table-cell">取引区分</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="transaction : ${transactions}">
+                                <tr th:each="transaction : ${transactions}"
+                                    class="monthly-transaction-row-link"
+                                    th:data-href="@{/transactions/incomes/{id}(id=${transaction.transactionId}, type=${transaction.transactionSource == '銀行' ? 'bank' : 'card'})}">
                                     <td>
                                         <input type="checkbox" 
                                                th:value="${transaction.transactionSource == '銀行' ? 'bank_' + transaction.transactionId : 'card_' + transaction.transactionId}"
@@ -240,7 +236,7 @@
                                     <td th:text="${transaction.transactionDate}">2024-01-01</td>
                                     <td th:text="${transaction.description}">摘要</td>
                                     <td class="text-end" th:text="${#numbers.formatInteger(transaction.amount, 0, 'COMMA')} + '円'">0円</td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <span th:if="${transaction.transactionSource == '銀行'}" class="badge bg-primary">
                                             <i class="bi bi-bank"></i> 銀行
                                         </span>
@@ -251,14 +247,14 @@
                                             <i class="bi bi-credit-card-2-front"></i> クレジット
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <a th:href="@{/transactions/incomes/{id}(id=${transaction.transactionId}, type=${transaction.transactionSource == '銀行' ? 'bank' : 'card'})}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> 詳細
                                         </a>
                                     </td>
                                 </tr>
-                                <tr th:if="${#lists.isEmpty(transactions)}">
+                                <tr th:if="${#lists.isEmpty(transactions)}" class="uncategorized-empty-row">
                                     <td colspan="6" class="text-center text-muted">未分類の収入はありません</td>
                                 </tr>
                             </tbody>
@@ -276,27 +272,37 @@
     </div>
     
     <script layout:fragment="scripts">
-        // 支出の全選択/全解除
-        const selectAllExpense = document.getElementById('selectAllExpense');
-        if (selectAllExpense) {
-            selectAllExpense.addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('.transaction-checkbox-expense');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
+        function setupSelectAll(selectAllClass, checkboxClass) {
+            document.querySelectorAll('.' + selectAllClass).forEach(function (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    document.querySelectorAll('.' + checkboxClass).forEach(function (checkbox) {
+                        checkbox.checked = selectAll.checked;
+                    });
+                    document.querySelectorAll('.' + selectAllClass).forEach(function (other) {
+                        if (other !== selectAll) {
+                            other.checked = selectAll.checked;
+                        }
+                    });
                 });
             });
         }
-        
-        // 収入の全選択/全解除
-        const selectAllIncome = document.getElementById('selectAllIncome');
-        if (selectAllIncome) {
-            selectAllIncome.addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('.transaction-checkbox-income');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                });
+
+        setupSelectAll('select-all-expense', 'transaction-checkbox-expense');
+        setupSelectAll('select-all-income', 'transaction-checkbox-income');
+
+        document.querySelectorAll('.transaction-checkbox-expense, .transaction-checkbox-income').forEach(function (checkbox) {
+            checkbox.addEventListener('click', function (e) {
+                e.stopPropagation();
             });
-        }
+        });
+
+        document.querySelectorAll('.monthly-transaction-row-link').forEach(function (row) {
+            row.addEventListener('click', function () {
+                if (window.matchMedia('(max-width: 767.98px)').matches && row.dataset.href) {
+                    window.location.href = row.dataset.href;
+                }
+            });
+        });
         
         // 支出の単一カテゴリ分配フォーム
         const singleCategoryFormExpense = document.getElementById('singleCategoryFormExpense');

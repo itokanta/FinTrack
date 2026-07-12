@@ -18,11 +18,11 @@
         
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">登録済みパターン</h5>
+                <h3 class="section-heading mb-0">登録済みパターン</h3>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-striped split-pattern-table">
                         <thead>
                             <tr>
                                 <th>パターン名</th>
@@ -35,6 +35,7 @@
                             <tr th:each="pattern : ${splitPatternGroupList}">
                                 <td>
                                     <strong th:text="${pattern.patternName}">パターン名</strong>
+                                </td>
                                 <td>
                                     <span class="badge" 
                                           th:classappend="${pattern.splitType == 'RATIO' ? 'bg-primary' : 'bg-success'}"
@@ -63,7 +64,7 @@
                                     </form>
                                 </td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(splitPatternGroupList)}">
+                            <tr th:if="${#lists.isEmpty(splitPatternGroupList)}" class="split-pattern-empty-row">
                                 <td colspan="4" class="text-center text-muted">
                                     登録済みのパターンはありません
                                 </td>

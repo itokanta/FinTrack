@@ -12,7 +12,7 @@
         <!-- 取引情報 -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">取引情報</h5>
+                <h3 class="section-heading mb-0">取引情報</h3>
             </div>
             <div class="card-body">
                 <dl class="row">
@@ -60,7 +60,7 @@
         <!-- SINGLE: 単一カテゴリの場合 -->
         <div th:if="${transaction.splitMethod != null && transaction.splitMethod.name() == 'SINGLE'}" class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">分配内容</h5>
+                <h3 class="section-heading mb-0">分配内容</h3>
             </div>
             <div class="card-body">
                 <table class="table">
@@ -89,7 +89,7 @@
         <!-- PATTERN or MANUAL: 分割の場合 -->
         <div th:if="${transaction.splitMethod != null && (transaction.splitMethod.name() == 'PATTERN' || transaction.splitMethod.name() == 'MANUAL')}" class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">分配内容</h5>
+                <h3 class="section-heading mb-0">分配内容</h3>
             </div>
             <div class="card-body">
                 <table class="table">
@@ -120,7 +120,7 @@
             <!-- 全額を1つのカテゴリに登録 -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">全額を1つのカテゴリに分配</h5>
+                    <h3 class="section-heading mb-0">全額を1つのカテゴリに分配</h3>
                 </div>
                 <div class="card-body">
                     <form th:action="@{/split/expense/split-single}" method="post">
@@ -147,7 +147,7 @@
             <!-- 手動で金額を指定して分割 -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">金額を指定して分割</h5>
+                    <h3 class="section-heading mb-0">金額を指定して分割</h3>
                 </div>
                 <div class="card-body">
                     <form th:action="@{/split/expense/split-manual}" method="post" id="manualSplitForm">
@@ -236,7 +236,7 @@
             <!-- 分割パターンで分配 -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">分割パターンで分配</h5>
+                    <h3 class="section-heading mb-0">分割パターンで分配</h3>
                 </div>
                 <div class="card-body">
                     <form th:action="@{/split/expense/split}" method="post">

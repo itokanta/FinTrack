@@ -21,6 +21,11 @@ import com.example.fintrack.security.AuthenticationUserIdResolver;
 import com.example.fintrack.service.CsvImportHistoryService;
 
 
+/**
+ * CSVインポート履歴の一覧・詳細・削除を扱うコントローラー。
+ *
+ * @author kanta ito
+ */
 @Controller
 @RequestMapping("/csv")
 public class CsvImportHistoryController {
@@ -37,6 +42,13 @@ public class CsvImportHistoryController {
     this.csvImportHistoryService = csvImportHistoryService;
   }
 
+  /**
+   * CSVインポート履歴一覧画面を表示する。
+   *
+   * @param authentication 認証情報
+   * @param model ビューモデル
+   * @return インポート履歴一覧テンプレート名
+   */
   @GetMapping("/import/history")
   public String getMethodName(Authentication authentication, Model model) {
     Long userId = authenticationUserIdResolver.getUserId(authentication);
@@ -45,6 +57,14 @@ public class CsvImportHistoryController {
     return "csv/import-history";
   }
 
+  /**
+   * CSVインポート履歴の詳細画面を表示する。銀行・カード取引と更新履歴を種別に応じて表示する。
+   *
+   * @param id インポート履歴ID
+   * @param authentication 認証情報
+   * @param model ビューモデル
+   * @return インポート履歴詳細テンプレート名
+   */
   @GetMapping("/import/history/{id}")
   public String getMethodName(@PathVariable Long id, Authentication authentication, Model model) {
     Long userId = authenticationUserIdResolver.getUserId(authentication);
@@ -66,6 +86,14 @@ public class CsvImportHistoryController {
     return "csv/import-history-detail";
   }
 
+  /**
+   * CSVインポート履歴と関連取引を削除する。
+   *
+   * @param id インポート履歴ID
+   * @param authentication 認証情報
+   * @param redirectAttributes リダイレクト先へのフラッシュ属性
+   * @return インポート履歴一覧へのリダイレクト先
+   */
   @PostMapping("/import/history/{id}/delete")
   public String postMethodName(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
       Long userId = authenticationUserIdResolver.getUserId(authentication);

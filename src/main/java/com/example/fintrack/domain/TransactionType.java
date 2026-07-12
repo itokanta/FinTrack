@@ -1,7 +1,9 @@
 package com.example.fintrack.domain;
 
 /**
- * 収支の種類を表すEnum
+ * 収支の種類を表す Enum。
+ *
+ * @author kanta ito
  */
 public enum TransactionType {
     /**

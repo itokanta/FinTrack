@@ -12,6 +12,11 @@ import org.springframework.stereotype.Repository;
 import com.example.fintrack.domain.User;
 import org.springframework.jdbc.core.RowMapper;
 
+/**
+ * ユーザー（users テーブル）の DB アクセス。
+ *
+ * @author kanta ito
+ */
 @Repository
 public class UserRepository {
 
@@ -31,6 +36,12 @@ public class UserRepository {
         this.template = template;
     }
 
+    /**
+     * ID でユーザーを検索する。
+     *
+     * @param id ユーザー ID
+     * @return 見つかればユーザーを含む Optional、なければ空
+     */
     public Optional<User> findById(Long id) {
         String sql = "SELECT id, username, password, created_at, updated_at FROM users WHERE id = :id";
         MapSqlParameterSource params = new MapSqlParameterSource("id", id);
@@ -41,6 +52,12 @@ public class UserRepository {
         return Optional.of(users.get(0));
     }
 
+    /**
+     * ユーザー名でユーザーを検索する。
+     *
+     * @param username ユーザー名
+     * @return 見つかればユーザーを含む Optional、なければ空
+     */
     public Optional<User> findByUsername(String username) {
         String sql = "SELECT id, username, password, created_at, updated_at FROM users WHERE username = :username";
         MapSqlParameterSource params = new MapSqlParameterSource("username", username);
@@ -51,6 +68,12 @@ public class UserRepository {
         return Optional.of(users.get(0));
     }
 
+    /**
+     * ユーザー名が既に登録されているか確認する。
+     *
+     * @param username ユーザー名
+     * @return 存在すれば {@code true}
+     */
     public boolean existsByUsername(String username) {
         String sql = "SELECT COUNT(*) FROM users WHERE username = :username";
         MapSqlParameterSource params = new MapSqlParameterSource("username", username);
@@ -58,6 +81,12 @@ public class UserRepository {
         return count != null && count > 0;
     }
 
+    /**
+     * ユーザーを新規登録または更新する。ID がなければ INSERT、あれば UPDATE。
+     *
+     * @param user 保存するユーザー
+     * @return ID・タイムスタンプが反映されたユーザー
+     */
     public User save(User user) {
         if (user.getId() == null) {
             String sql = "INSERT INTO users (username, password) " +

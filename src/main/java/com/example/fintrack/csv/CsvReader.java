@@ -11,8 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * CSVファイルを Apache Commons CSV を用いて読み込み、
- * 行単位のデータ（CSVRecord）に変換する
+ * CSV ファイルを Apache Commons CSV で読み込み、
+ * 行単位のデータ（{@link CSVRecord}）に変換する。
+ *
+ * @author kanta ito
  */
 @Component
 public class CsvReader {
