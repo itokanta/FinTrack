@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: fintrack
+          POSTGRES_USER: fintrack
+          POSTGRES_PASSWORD: ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fintrack -d fintrack"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DB_APP: jdbc:postgresql://localhost:5432/fintrack
+      DB_USER: fintrack
+      DB_PASS: ci-only
+      PGHOST: localhost
+      PGUSER: fintrack
+      PGPASSWORD: ci-only
+      PGDATABASE: fintrack
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Lint shell scripts
+        run: shellcheck -S warning deploy/deploy.sh script/ci-init-db.sh
+
+      - name: Initialize database
+        run: bash script/ci-init-db.sh
+
+      - name: Test
+        run: ./mvnw -B test
