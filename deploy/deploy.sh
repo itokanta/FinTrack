@@ -25,6 +25,17 @@ DB_APP_VALUE="$(grep -E '^DB_APP=' /etc/fintrack/fintrack.env | cut -d= -f2- || 
 : "${DB_APP_VALUE:?DB_APP is not set in /etc/fintrack/fintrack.env}"
 DB_NAME="${DB_APP_VALUE##*/}"
 DB_NAME="${DB_NAME%%\?*}"
+
+# 環境ファイルから、DB のユーザー名とパスワードを取り出す（値は画面にもログにも出さない）
+DB_USER_VALUE="$(grep -E '^DB_USER=' /etc/fintrack/fintrack.env | cut -d= -f2- || true)"
+DB_PASS_VALUE="$(grep -E '^DB_PASS=' /etc/fintrack/fintrack.env | cut -d= -f2- || true)"
+: "${DB_USER_VALUE:?DB_USER is not set in /etc/fintrack/fintrack.env}"
+: "${DB_PASS_VALUE:?DB_PASS is not set in /etc/fintrack/fintrack.env}"
+# pg_dump / pg_restore / psql は、PGPASSWORD をパスワードとして読む（コマンドラインには出ない）
+export PGPASSWORD="${DB_PASS_VALUE}"
+# 3つのコマンドに共通する接続先の指定。TCP で 127.0.0.1 へ、アプリと同じユーザーでつなぐ
+PGOPTS=(-h 127.0.0.1 -U "${DB_USER_VALUE}")
+
 # バックアップの置き場（root だけが読める）
 BACKUP_DIR=/var/backups/fintrack-deploy
 # このデプロイのバックアップのファイル名（時刻付き）
@@ -52,9 +63,9 @@ rollback() {
   # バックアップを標準入力で渡して、DB を復元する
   # --single-transaction は、途中で失敗したら復元前の状態のままにする
   # --clean --if-exists は、既存のオブジェクトを消してから作り直す
-  # postgres ユーザーが root 専用のディレクトリを読めないので、ファイルは root 側から渡す
-  if ! runuser -u postgres -- \
-      pg_restore --single-transaction --clean --if-exists -d "${DB_NAME}" < "${BACKUP}"; then
+  # バックアップは root 専用のディレクトリにあるので、root のシェルが読んで標準入力で渡す
+  # 変更: postgres ユーザーではなく、アプリと同じ DB ユーザーで接続する（PGOPTS）
+  if ! pg_restore --single-transaction --clean --if-exists "${PGOPTS[@]}" -d "${DB_NAME}" < "${BACKUP}"; then
     # 復元に失敗したら、中途半端な状態でアプリを起動せず、手作業での復旧を求めて終わる
     echo "!!! database restore failed; manual recovery required (backup: ${BACKUP})" >&2
     KEEP_STOPPED=1
@@ -72,10 +83,24 @@ rollback() {
 # 1. 新しい jar を S3 から /tmp へ取る。権限は EC2 のインスタンスロールが持つ
 aws s3 cp "${URI}" "${TMP}"
 
-# 2. アプリを止めてからバックアップする。止めることで、バックアップ後に書かれるデータをなくす
+# 2. 止める前の事前確認。ここで失敗すれば、アプリを止めないまま中止できる
+# 追加: バックアップが取れない状態で、アプリだけを止めてしまうことを避けるため
+# バックアップの置き場があるか確認する
+if [[ ! -d "${BACKUP_DIR}" ]]; then
+  echo "backup directory ${BACKUP_DIR} does not exist; aborting before stopping the app" >&2
+  exit 1
+fi
+# DB へ接続できるか確認する（-tA は表の装飾を消し、-c は SQL を1つ実行する）
+if ! psql "${PGOPTS[@]}" -d "${DB_NAME}" -tAc 'select 1' > /dev/null; then
+  echo "cannot connect to the database; aborting before stopping the app" >&2
+  exit 1
+fi
+
+# 3. アプリを止めてからバックアップする。止めることで、バックアップ後に書かれるデータをなくす
 systemctl stop fintrack
 # PostgreSQL のカスタム形式でダンプし、ファイルへ書く
-if ! runuser -u postgres -- pg_dump -Fc "${DB_NAME}" > "${BACKUP}"; then
+# 変更: postgres ユーザーではなく、アプリと同じ DB ユーザーで接続する（PGOPTS）
+if ! pg_dump -Fc "${PGOPTS[@]}" "${DB_NAME}" > "${BACKUP}"; then
   # バックアップに失敗したら、今の版のまま終わる。アプリは cleanup が起動し直す
   echo "backup failed; keeping the current version" >&2
   # 中途半端なファイルを消す
@@ -85,7 +110,7 @@ fi
 # 取れたバックアップのパスをログに残す
 echo "backup: ${BACKUP}"
 
-# 3. 今の jar があれば、属性を保ったまま控えへコピーする
+# 4. 今の jar があれば、属性を保ったまま控えへコピーする
 if [[ -f "${JAR}" ]]; then
   cp -a "${JAR}" "${PREV}"
 fi
@@ -94,7 +119,7 @@ install -o fintrack -g fintrack -m 644 "${TMP}" "${JAR}"
 # 一時ファイルを消す
 rm -f "${TMP}"
 
-# 4. 起動する。このときアプリが Flyway を実行し、未適用の V21 以降を DB へ適用する
+# 5. 起動する。このときアプリが Flyway を実行し、未適用の V21 以降を DB へ適用する
 if ! systemctl start fintrack; then
   # 起動の指示そのものが失敗したら、DB と jar を戻して失敗で終わる
   echo "===== $(date --iso-8601=seconds) start failed ====="
@@ -102,7 +127,7 @@ if ! systemctl start fintrack; then
   exit 1
 fi
 
-# 5. 起動確認。2秒おきに最大60回（約120秒）、ログイン画面へ接続する
+# 6. 起動確認。2秒おきに最大60回（約120秒）、ログイン画面へ接続する
 for _ in $(seq 1 60); do
   # -f は HTTP のエラーを失敗にし、-sS は失敗時のエラーだけ表示し、-o は本文を捨てる
   if curl -fsS -o /dev/null "http://127.0.0.1:8080/login"; then
